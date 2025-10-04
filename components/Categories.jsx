@@ -6,27 +6,27 @@ export default function Categories() {
   const categories = [
     {
       title: "NECKLACES & PENDANTS",
-      image: "/images/necklace.jpg",
+      image: "/assets/services4.jpg",
     },
     {
       title: "EARRINGS",
-      image: "/images/earrings.jpg",
+      image: "/assets/services4.jpg",
     },
     {
       title: "RINGS",
-      image: "/images/rings.jpg",
+      image: "/assets/services4.jpg",
     },
     {
       title: "BRACELETS",
-      image: "/images/bracelets.jpg",
+      image: "/assets/services4.jpg",
     },
     {
       title: "WATCHES",
-      image: "/images/watches.jpg",
+      image: "/assets/services4.jpg",
     },
     {
       title: "HOME",
-      image: "/images/home.jpg",
+      image: "/assets/services4.jpg",
     },
   ];
 
