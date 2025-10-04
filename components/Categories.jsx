@@ -4,12 +4,12 @@ import Image from "next/image";
 
 export default function Categories() {
   const categories = [
-    { title: "NECKLACES & PENDANTS", image: "/assets/services4.jpg" },
-    { title: "EARRINGS", image: "/assets/services4.jpg" },
-    { title: "RINGS", image: "/assets/services4.jpg" },
-    { title: "BRACELETS", image: "/assets/services4.jpg" },
-    { title: "WATCHES", image: "/assets/services4.jpg" },
-    { title: "HOME", image: "/assets/services4.jpg" },
+    { title: "NECKLACES & PENDANTS", image: "/assets/1.jfif" },
+    { title: "EARRINGS", image: "/assets/2.jfif" },
+    { title: "RINGS", image: "/assets/3.jfif" },
+    { title: "BRACELETS", image: "/assets/4.jfif" },
+    { title: "WATCHES", image: "/assets/5.jfif" },
+    { title: "HOME", image: "/assets/6.jfif" },
   ];
 
   return (
