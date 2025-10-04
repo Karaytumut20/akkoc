@@ -4,66 +4,47 @@ import Image from "next/image";
 
 export default function Categories() {
   const categories = [
-    {
-      title: "NECKLACES & PENDANTS",
-      image: "/assets/services4.jpg",
-    },
-    {
-      title: "EARRINGS",
-      image: "/assets/services4.jpg",
-    },
-    {
-      title: "RINGS",
-      image: "/assets/services4.jpg",
-    },
-    {
-      title: "BRACELETS",
-      image: "/assets/services4.jpg",
-    },
-    {
-      title: "WATCHES",
-      image: "/assets/services4.jpg",
-    },
-    {
-      title: "HOME",
-      image: "/assets/services4.jpg",
-    },
+    { title: "NECKLACES & PENDANTS", image: "/assets/services4.jpg" },
+    { title: "EARRINGS", image: "/assets/services4.jpg" },
+    { title: "RINGS", image: "/assets/services4.jpg" },
+    { title: "BRACELETS", image: "/assets/services4.jpg" },
+    { title: "WATCHES", image: "/assets/services4.jpg" },
+    { title: "HOME", image: "/assets/services4.jpg" },
   ];
 
   return (
-    <section className="w-full py-16 bg-white">
+    <section className="w-full bg-white">
       <div className="max-w-7xl mx-auto px-4">
         {/* Başlık */}
-        <h2 className="text-3xl sm:text-4xl font-serif text-gray-900 text-center mb-10">
+        <h2 className="text-3xl sm:text-4xl font-serif text-gray-900 text-center mt-12 mb-12">
           Shop By Category
         </h2>
 
-        {/* Kategoriler Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+        {/* Kategoriler Flex Container */}
+        <div className="flex gap-4 overflow-x-auto lg:grid lg:grid-cols-6 lg:gap-6 lg:overflow-x-visible">
           {categories.map((cat, index) => (
             <div
               key={index}
-              className="group cursor-pointer text-center transition-all duration-300"
+              className="flex-shrink-0 w-[40%] sm:w-[30%] md:w-[25%] lg:w-auto
+                         relative cursor-pointer text-center group transition-transform duration-300 hover:scale-105"
             >
               {/* Görsel */}
-              <div className="relative w-full aspect-square overflow-hidden rounded-lg shadow-md">
+              <div className="relative w-full aspect-square rounded-xl shadow-xl overflow-hidden">
                 <Image
                   src={cat.image}
                   alt={cat.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="object-cover"
                 />
               </div>
 
               {/* Başlık */}
-              <h3 className="mt-4 text-sm font-semibold tracking-wide text-gray-800 group-hover:text-teal-600">
+              <h3 className="mt-4 text-base font-semibold tracking-wide text-gray-900 group-hover:text-teal-600">
                 {cat.title}
               </h3>
 
-              {/* Alt çizgi sadece ilk elemana */}
-              {index === 0 && (
-                <div className="w-10 h-[2px] bg-teal-600 mt-1 mx-auto"></div>
-              )}
+              {/* Alt çizgi */}
+              <div className="h-[3px] w-14 mx-auto mt-2 bg-gradient-to-r from-teal-400 via-teal-600 to-teal-400 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
             </div>
           ))}
         </div>
