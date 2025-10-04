@@ -6,22 +6,22 @@ export default function TiffanyIconsGrid() {
   const icons = [
     {
       title: "Knot",
-      image: "/assets/shopnow.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/shopnow.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Pırlantalı düğüm bilezik",
     },
     {
       title: "HardWear",
-      image: "/assets/shopnow2.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/shopnow2.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Altın zincir bileklik",
     },
     {
       title: "Tiffany T",
-      image: "/assets/shopnow3.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/shopnow3.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Pırlantalı T bilezik",
     },
     {
       title: "Lock",
-      image: "/assets/shopnow4.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/shopnow4.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Pırlantalı kilit bilezik",
     },
   ];

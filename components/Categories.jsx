@@ -4,12 +4,12 @@ import Image from "next/image";
 
 export default function Categories() {
   const categories = [
-    { title: "NECKLACES & PENDANTS", image: "/assets/1.jfif" },
-    { title: "EARRINGS", image: "/assets/1.jfif" },
-    { title: "RINGS", image: "/assets/3.jfif" },
-    { title: "BRACELETS", image: "/assets/4.jfif" },
-    { title: "WATCHES", image: "/assets/5.jfif" },
-    { title: "HOME", image: "/assets/6.jfif" },
+    { title: "NECKLACES & PENDANTS", image: "/assets/1.jpg" },
+    { title: "EARRINGS", image: "/assets/1.jpg" },
+    { title: "RINGS", image: "/assets/3.jpg" },
+    { title: "BRACELETS", image: "/assets/4.jpg" },
+    { title: "WATCHES", image: "/assets/5.jpg" },
+    { title: "HOME", image: "/assets/6.jpg" },
   ];
 
   return (
@@ -17,7 +17,7 @@ export default function Categories() {
       <div className="max-w-7xl mx-auto px-4">
         {/* Başlık */}
         <h2 className="text-3xl sm:text-4xl font-serif text-gray-900 text-center mt-12 mb-12">
-          Shop By Category
+          Shop By Categorysssssssss
         </h2>
 
         {/* Kategoriler Flex Container */}

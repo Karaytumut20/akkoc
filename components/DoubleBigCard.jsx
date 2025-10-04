@@ -4,12 +4,12 @@ export default function FeaturedCategories() {
   const featuredItems = [
     {
       title: "Silver Jewelry",
-      image: "/assets/kolye.jfif", // Mevcut JFIF dosyan
+      image: "/assets/kolye.jpg", // Mevcut jpg dosyan
       alt: "Gümüş Zincir Bileklik",
     },
     {
       title: "Elsa Peretti",
-      image: "/assets/kolye2.jfif", // Mevcut JFIF dosyan
+      image: "/assets/kolye2.jpg", // Mevcut jpg dosyan
       alt: "Elsa Peretti Kolye ve Yüzük",
     },
   ];

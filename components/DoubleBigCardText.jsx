@@ -6,7 +6,7 @@ export default function FeaturedCollections() {
   const collections = [
     {
       title: "The Bird on a Rock Collection",
-      image: "/assets/kolyetext.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/kolyetext.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Bird on a Rock kolyeden detay",
       description:
         "Chief Artistic Officer Nathalie Vardaelle introduces a new chapter in fine jewelry with designs that reimagine Jean Schlumberger’s emblematic creation from 1965.",
@@ -15,7 +15,7 @@ export default function FeaturedCollections() {
     },
     {
       title: "The Sixteen Stone Collection",
-      image: "/assets/kolyetext2.jfif", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
+      image: "/assets/kolyetext2.jpg", // Lütfen bu yolu kendi görsel yolunuzla değiştirin.
       alt: "Yüzük, küpe ve bilezik takan model",
       description:
         "Sixteen Stone is a feat of ingenuity conceived by Jean Schlumberger in 1959. Each design showcases Tiffany’s extraordinary diamonds and unparalleled artistry.",
