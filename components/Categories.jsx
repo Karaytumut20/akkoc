@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export default function Categories() {
   const categories = [
     { title: "NECKLACES & PENDANTS", image: "/assets/1.jfif" },
@@ -18,7 +20,7 @@ export default function Categories() {
           Shop By Category
         </h2>
 
-        {/* Kategoriler Container */}
+        {/* Kategoriler Flex Container */}
         <div className="flex gap-4 overflow-x-auto lg:grid lg:grid-cols-6 lg:gap-6 lg:overflow-x-visible">
           {categories.map((cat, index) => (
             <div
@@ -28,11 +30,11 @@ export default function Categories() {
             >
               {/* Görsel */}
               <div className="relative w-full aspect-square rounded-xl shadow-xl overflow-hidden">
-                <img
+                <Image
                   src={cat.image}
                   alt={cat.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
                 />
               </div>
 
