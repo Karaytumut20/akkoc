@@ -37,6 +37,7 @@ const Product = () => {
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
   const [userReview, setUserReview] = useState(null);
+  const [hasPurchased, setHasPurchased] = useState(false); // 🛍 Satın alma kontrolü için
 
   // 📥 Ürün ve yorumları çek
   const fetchProductDetails = useCallback(async () => {
@@ -93,9 +94,37 @@ const Product = () => {
     setLoading(false);
   }, [id, user]);
 
+  // 🛍 Kullanıcı ürünü satın almış mı kontrol et
+  const checkIfUserPurchased = useCallback(async () => {
+    if (!user || !id) return;
+
+    const { data, error } = await supabase
+      .from("order_items")
+      .select(`
+        id,
+        product_id,
+        orders!inner (user_id)
+      `)
+      .eq("product_id", id)
+      .eq("orders.user_id", user.id)
+      .limit(1);
+
+    if (error) {
+      console.error("Satın alma kontrol hatası:", error);
+      setHasPurchased(false);
+      return;
+    }
+
+    setHasPurchased(data.length > 0);
+  }, [user, id]);
+
   useEffect(() => {
     fetchProductDetails();
   }, [id, fetchProductDetails]);
+
+  useEffect(() => {
+    checkIfUserPurchased();
+  }, [checkIfUserPurchased]);
 
   // 📌 İlgili ürünleri filtrele
   useEffect(() => {
@@ -150,6 +179,11 @@ const Product = () => {
     if (!user) {
       toast.error("Yorum yapmak için giriş yapın.");
       router.push("/auth");
+      return;
+    }
+
+    if (!hasPurchased) {
+      toast.error("Yorum yazabilmek için ürünü satın almış olmanız gerekiyor.");
       return;
     }
 
@@ -251,7 +285,7 @@ const Product = () => {
                 </span>
               </div>
 
-              {/* 📝 Ürün Açıklaması + Detaylar (lüks görünüm) */}
+              {/* 📝 Ürün Açıklaması + Detaylar */}
               <div className="mt-10 space-y-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <div className="border-b pb-4">
                   <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
@@ -352,24 +386,35 @@ const Product = () => {
               )}
             </div>
 
-            {/* ✍️ Yorum yazma alanı (eğer daha önce yazmamışsa) */}
+            {/* ✍️ Yorum yazma alanı (satın alma kontrolü) */}
             {!userReview && user && (
               <>
-                <div className="flex justify-center mb-3">
-                  <StarRating rating={userRating} onRatingChange={setUserRating} />
-                </div>
-                <textarea
-                  value={userComment}
-                  onChange={(e) => setUserComment(e.target.value)}
-                  placeholder="Yorumunuzu yazın..."
-                  className="w-full h-20 border rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-teal-500 outline-none resize-none mb-3"
-                />
-                <button
-                  onClick={handleSubmitReview}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg transition"
-                >
-                  Gönder
-                </button>
+                {hasPurchased ? (
+                  <>
+                    <div className="flex justify-center mb-3">
+                      <StarRating
+                        rating={userRating}
+                        onRatingChange={setUserRating}
+                      />
+                    </div>
+                    <textarea
+                      value={userComment}
+                      onChange={(e) => setUserComment(e.target.value)}
+                      placeholder="Yorumunuzu yazın..."
+                      className="w-full h-20 border rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-teal-500 outline-none resize-none mb-3"
+                    />
+                    <button
+                      onClick={handleSubmitReview}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg transition"
+                    >
+                      Gönder
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-center text-gray-500 text-sm py-4 border-t">
+                    Yorum yazmak için önce bu ürünü satın almalısınız 🛍️
+                  </p>
+                )}
               </>
             )}
           </div>

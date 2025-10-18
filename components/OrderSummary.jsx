@@ -5,12 +5,11 @@ import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
 import React, { useState } from "react";
 import toast from 'react-hot-toast';
+import { FaDollarSign } from "react-icons/fa"; // 💲 dolar ikonu için eklendi
 
 const OrderSummary = () => {
   const { currency, cartItems, user, updateCartQuantity, getCartCount, getCartAmount, setCartItems, addresses, router } = useAppContext();
-  // selectedAddress'in başlangıç değeri boş bir string olmaya devam ediyor.
   const [selectedAddress, setSelectedAddress] = useState(""); 
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [coupon, setCoupon] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,32 +29,27 @@ const OrderSummary = () => {
       router.push('/auth');
       return;
     }
-    // 🛑 KULLANICININ İSTEĞİ ÜZERİNE ADRES KONTROLÜ KALDIRILDI.
-    // Artık adres seçimi yapılmasa bile ödeme adımına geçebiliriz.
-    setLoading(true);
 
+    if (!selectedAddress) {
+      toast.error("Lütfen bir adres seçin.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      // API'ye gönderilecek addressId. Kullanıcı seçmediyse boş string ("") gider.
-      const addressIdToSend = selectedAddress || "no-address-selected"; 
-      
       const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/checkout_sessions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: Object.values(cartItems),
           userId: user.id,
-          addressId: addressIdToSend, // API'ye gönderilir. Webhook tarafı bunu yönetecek.
+          addressId: selectedAddress,
         }),
       });
 
       const { url, error } = await response.json();
 
-      if (error) {
-        throw new Error(error.message);
-      }
-      
+      if (error) throw new Error(error.message);
       if (url) {
         window.location.href = url;
       } else {
@@ -71,8 +65,9 @@ const OrderSummary = () => {
 
   return (
     <div className="w-full md:w-[500px] lg:w-[600px] bg-white shadow-2xl rounded-3xl p-6 md:p-8 mx-auto">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b pb-3">Checkout</h2>
+      <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b pb-3 text-center">Checkout</h2>
 
+      {/* 🛒 Ürünler */}
       <div className="space-y-5 mb-6 max-h-[60vh] md:max-h-[500px] overflow-y-auto">
         {Object.keys(cartItems).length === 0 ? (
           <p className="text-gray-500 text-center py-10">Sepetiniz boş.</p>
@@ -80,7 +75,7 @@ const OrderSummary = () => {
           Object.values(cartItems).map((item, idx) => (
             <div
               key={item.product.id || idx}
-              className="flex items-center justify-between bg-gray-50 p-3 md:p-4 rounded-2xl hover:shadow-md transition"
+              className="flex items-center justify-between bg-gray-50 p-3 md:p-4 rounded-2xl hover:shadow-lg transition"
             >
               <div className="w-16 h-16 md:w-20 md:h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                 <Image
@@ -92,7 +87,10 @@ const OrderSummary = () => {
               </div>
               <div className="flex-1 px-3 md:px-4">
                 <p className="font-semibold text-gray-800 text-sm md:text-base">{item.product.name}</p>
-                <p className="text-xs md:text-sm text-gray-500">{currency}{item.product.price}</p>
+                <div className="flex items-center gap-1 text-orange-600 font-bold text-sm md:text-base">
+                  <FaDollarSign className="text-lg" />
+                  {item.product.price}
+                </div>
               </div>
               <div className="flex items-center border rounded-lg overflow-hidden">
                 <button
@@ -105,54 +103,38 @@ const OrderSummary = () => {
                   className="px-2 py-1 md:px-3 md:py-1 bg-gray-200 hover:bg-gray-300 transition"
                 >+</button>
               </div>
-              <div className="ml-2 md:ml-4 font-semibold text-gray-900 text-sm md:text-base">
-                {currency}{(item.product.price * item.quantity).toFixed(2)}
+              <div className="ml-2 md:ml-4 flex items-center gap-1 font-semibold text-gray-900 text-base md:text-lg bg-white px-2 py-1 rounded-lg shadow-sm">
+                <FaDollarSign className="text-orange-500" />
+                {(item.product.price * item.quantity).toFixed(2)}
               </div>
             </div>
           ))
         )}
       </div>
 
+      {/* 🏠 Adres Seçimi */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-            <label className="block text-gray-700 font-medium">Select Address</label>
-            <button onClick={() => router.push('/account/addresses')} className="text-sm text-orange-600 hover:underline">Adres Ekle/Düzenle</button>
+          <label className="block text-gray-700 font-medium">Select Address</label>
+          <button onClick={() => router.push('/account/addresses')} className="text-sm text-orange-600 hover:underline">Adres Ekle/Düzenle</button>
         </div>
         <select
           value={selectedAddress}
           onChange={(e) => setSelectedAddress(e.target.value)}
           className="w-full border rounded-lg p-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400"
         >
-          <option value="" >-- Adres seçin (Opsiyonel) --</option>
+          <option value="">-- Adres seçin --</option>
           {addresses.length > 0 ? (
             addresses.map(addr => (
-                <option key={addr.id} value={addr.id}>{`${addr.full_name} - ${addr.area}, ${addr.city}`}</option>
+              <option key={addr.id} value={addr.id}>{`${addr.full_name} - ${addr.area}, ${addr.city}`}</option>
             ))
           ) : (
             <option value="" disabled>Kayıtlı adresiniz bulunmuyor.</option>
           )}
         </select>
       </div>
-      
-      <div className="mb-6">
-        <label className="block text-gray-700 font-medium mb-2">Payment Method</label>
-        <div className="flex gap-4">
-          <button
-            onClick={() => setPaymentMethod("card")}
-            className={`flex-1 py-3 rounded-lg font-medium transition ${paymentMethod === "card" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700"}`}
-          >
-            Credit Card
-          </button>
-          <button
-            onClick={() => setPaymentMethod("cash")}
-            disabled
-            className={`flex-1 py-3 rounded-lg font-medium transition ${paymentMethod === "cash" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700"} disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            Cash on Delivery
-          </button>
-        </div>
-      </div>
 
+      {/* 💸 Kupon */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Coupon Code</label>
         <div className="flex gap-2">
@@ -169,20 +151,28 @@ const OrderSummary = () => {
         </div>
       </div>
 
+      {/* 🧾 Toplam */}
       <div className="mt-6 border-t pt-4 space-y-3">
         <div className="flex justify-between text-gray-700 font-medium">
           <span>Items ({getCartCount()})</span>
-          <span>{currency}{getCartAmount().toFixed(2)}</span>
+          <div className="flex items-center gap-1 text-gray-800 font-bold text-base">
+            <FaDollarSign className="text-orange-500" />
+            {getCartAmount().toFixed(2)}
+          </div>
         </div>
-        <div className="flex justify-between text-gray-900 font-bold text-xl">
+        <div className="flex justify-between items-center text-gray-900 font-bold text-2xl">
           <span>Total</span>
-          <span>{currency}{getCartAmount().toFixed(2)}</span>
+          <div className="flex items-center gap-1 text-orange-600 text-2xl drop-shadow-sm">
+            <FaDollarSign />
+            {getCartAmount().toFixed(2)}
+          </div>
         </div>
       </div>
 
+      {/* 🛍️ Siparişi Tamamla Butonu */}
       <button
         onClick={handlePlaceOrder}
-        disabled={getCartCount() === 0 || loading} // Adres kontrolü kaldırıldı.
+        disabled={getCartCount() === 0 || loading || !selectedAddress}
         className="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-2xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Yönlendiriliyor...' : 'Şimdi Öde'}
@@ -190,5 +180,5 @@ const OrderSummary = () => {
     </div>
   );
 };
- 
+
 export default OrderSummary;
