@@ -14,7 +14,7 @@ const Navbar = () => {
         onClick={signOut} 
         className='bg-red-600 text-white px-5 py-2 sm:px-7 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-red-700 transition'
       >
-        Logout
+        Logoutss
       </button>
     </div>
   )

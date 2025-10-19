@@ -13,7 +13,6 @@ import VideoBar from "@/components/VideoBar";
 
 const Home = () => {
   return (
-    // Navbar ve Footer buradan tamamen kaldırıldı!
     <>
       <div className="px-6 md:px-16 lg:px-32">
 

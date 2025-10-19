@@ -3,7 +3,6 @@
 'use client'
 import React from "react";
 import OrderSummary from "@/components/OrderSummary";
-// Navbar import'u ve kullanımı kaldırıldı
 
 const Cart = () => {
   return (

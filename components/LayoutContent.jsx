@@ -8,6 +8,9 @@ import React from "react";
 export default function LayoutContent({ children }) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  
+  // Seller sayfaları ve alt sayfaları için kontrol
+  const isSellerPage = pathname.startsWith("/seller");
 
   return (
     <>
@@ -18,8 +21,9 @@ export default function LayoutContent({ children }) {
         </>
       ) : (
         <>
-          <MainNavbar />
-          <div className="pt-20">{children}</div>
+          {/* Seller sayfalarında Navbar gösterme */}
+          {!isSellerPage && <MainNavbar />}
+          <div className={!isSellerPage ? "pt-20" : ""}>{children}</div>
         </>
       )}
     </>
