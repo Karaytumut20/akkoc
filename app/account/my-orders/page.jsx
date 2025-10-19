@@ -6,6 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 import Loading from "@/components/Loading";
 import Image from "next/image";
 import { getSafeImageUrl } from "@/lib/utils";
+import Link from "next/link"; // Link bileşenini import ediyoruz
 
 const MyOrdersPage = () => {
     const { currency, myOrders, fetchMyOrders, user, authLoading } = useAppContext();
@@ -14,7 +15,7 @@ const MyOrdersPage = () => {
         if (user) {
             fetchMyOrders(user.id);
         }
-    }, [user]);
+    }, [user, fetchMyOrders]);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -50,6 +51,19 @@ const MyOrdersPage = () => {
                                     </span>
                                 </div>
                             </div>
+
+                            {/* KARGO TAKİP BİLGİSİ */}
+                            {order.tracking_number && (
+                                <div className="my-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-sm text-blue-800">
+                                        Kargo Takip Numaranız: 
+                                        <Link href={`https://parcelsapp.com/en/tracking/${order.tracking_number}`} target="_blank" rel="noopener noreferrer" className="font-bold underline ml-2 hover:text-blue-600">
+                                            {order.tracking_number}
+                                        </Link>
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="border-t pt-4 mt-4">
                                 {order.order_items.map(item => (
                                     <div key={item.id} className="flex items-center gap-4 mb-3">
