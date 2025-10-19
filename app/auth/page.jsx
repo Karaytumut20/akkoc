@@ -1,8 +1,11 @@
+// app/auth/page.jsx
+
 'use client';
 
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
+import Link from 'next/link'; // next/link'i import ediyoruz
 
 export default function AuthPage() {
   const { signIn, signUp } = useAppContext();
@@ -54,6 +57,19 @@ export default function AuthPage() {
             required
             autoComplete="current-password"
           />
+          
+          {/* --- YENİ EKLENEN KISIM --- */}
+          <div className="text-sm text-right">
+            {isLogin && (
+              <Link href="/auth/forgot-password">
+                <span className="font-medium text-orange-600 hover:text-orange-500 cursor-pointer">
+                  Şifremi Unuttum
+                </span>
+              </Link>
+            )}
+          </div>
+          {/* --- YENİ EKLENEN KISIM SONU --- */}
+          
           <button
             type="submit"
             disabled={loading}
