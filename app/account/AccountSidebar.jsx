@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FiGrid, FiPackage, FiHeart, FiStar, FiMapPin, FiLock, FiBell, FiLogOut, FiChevronRight, FiCreditCard } from 'react-icons/fi';
+import { FiGrid, FiPackage, FiHeart, FiStar, FiMapPin, FiLock, FiBell, FiLogOut, FiChevronRight, FiCreditCard, FiUser } from 'react-icons/fi'; // FiUser eklendi
 import { useAppContext } from "@/context/AppContext";
 
 export default function AccountSidebar() {
@@ -12,13 +12,15 @@ export default function AccountSidebar() {
 
     const menuItems = [
         { name: "Kontrol Paneli", href: "/account?tab=dashboard", activeIdentifier: "dashboard", isTab: true, icon: <FiGrid /> },
+        // YENİ EKLENDİ
+        { name: "Profil Bilgileri", href: "/account?tab=profile", activeIdentifier: "profile", isTab: true, icon: <FiUser /> },
         { name: "Siparişlerim", href: "/account/my-orders", activeIdentifier: "/account/my-orders", isTab: false, icon: <FiPackage /> },
         { name: "Favorilerim", href: "/account/wishlist", activeIdentifier: "/account/wishlist", isTab: false, icon: <FiHeart /> },
         { name: "Değerlendirmelerim", href: "/account?tab=reviews", activeIdentifier: "reviews", isTab: true, icon: <FiStar /> },
         { name: "Adreslerim", href: "/account/addresses", activeIdentifier: "/account/addresses", isTab: false, icon: <FiMapPin /> },
         { name: "Parola Güvenliği", href: "/account?tab=password", activeIdentifier: "password", isTab: true, icon: <FiLock /> },
         { name: "Bildirim Tercihleri", href: "/account?tab=notifications", activeIdentifier: "notifications", isTab: true, icon: <FiBell /> },
-        { name: "Kayıtlı Kartlarım", href: "/account?tab=saved-cards", activeIdentifier: "saved-cards", isTab: true, icon: <FiCreditCard /> } // <-- YENİ EKLENEN SATIR
+        { name: "Kayıtlı Kartlarım", href: "/account?tab=saved-cards", activeIdentifier: "saved-cards", isTab: true, icon: <FiCreditCard /> }
     ];
     
     const activeTab = searchParams.get('tab');
@@ -31,7 +33,7 @@ export default function AccountSidebar() {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 text-xl font-bold">
-                    {user.email.charAt(0).toUpperCase()}
+                    {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                 </div>
                 <div className="ml-3 overflow-hidden">
                     <p className="font-semibold text-gray-800 truncate">{user?.user_metadata?.full_name || user.email.split('@')[0]}</p>

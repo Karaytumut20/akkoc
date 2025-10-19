@@ -2,7 +2,7 @@
 'use client';
 import { useAppContext } from "@/context/AppContext";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import { getSafeImageUrl } from "@/lib/utils";
 import FloatingLabelInput from "@/components/ui/FloatingLabelInput";
 
 // ===================================================================
-// BİLEŞENLER (TÜMÜNÜN İÇİ DOLDURULDU)
+// BİLEŞENLER
 // ===================================================================
 
 const AccountDashboard = () => {
@@ -39,9 +39,9 @@ const AccountDashboard = () => {
                 <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
                      <h3 className="font-semibold text-gray-700 mb-3">Hızlı Erişim</h3>
                      <div className="space-y-2">
+                        <Link href="/account?tab=profile" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Profil Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
                         <Link href="/account/addresses" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Adres Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
-                        <Link href="/account/wishlist" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Favori Ürünlerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
-                         <Link href="/account?tab=password" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Parola Güvenliği</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
+                        <Link href="/account?tab=password" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Parola Güvenliği</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
                      </div>
                 </div>
             </div>
@@ -49,6 +49,73 @@ const AccountDashboard = () => {
     );
 };
 
+const ProfileSettings = () => {
+    const { user, updateUserData } = useAppContext();
+    const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState(''); // Yeni state
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if(user?.user_metadata) {
+            setFullName(user.user_metadata.full_name || '');
+            setPhone(user.user_metadata.phone || ''); // Telefon numarasını state'e ata
+        }
+    }, [user]);
+
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+        if (!fullName.trim() || !phone.trim()) {
+            return toast.error("Tüm alanları doldurmanız gerekmektedir.");
+        }
+        setLoading(true);
+        await updateUserData({ 
+            full_name: fullName,
+            phone: phone // Güncellenecek veriye telefonu ekle
+        });
+        setLoading(false);
+    }
+
+    return (
+        <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Profil Bilgileri</h2>
+            <form onSubmit={handleProfileUpdate} className="space-y-8 max-w-lg">
+                <FloatingLabelInput 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    label="E-posta Adresi (Değiştirilemez)" 
+                    value={user?.email || ''} 
+                    disabled 
+                    readOnly
+                />
+                <FloatingLabelInput 
+                    id="fullName" 
+                    name="fullName" 
+                    type="text" 
+                    label="Ad Soyad" 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required 
+                />
+                {/* YENİ EKLENEN TELEFON ALANI */}
+                <FloatingLabelInput 
+                    id="phone" 
+                    name="phone" 
+                    type="tel" 
+                    label="Telefon Numarası" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required 
+                />
+                <button type="submit" disabled={loading} className="py-2 px-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none disabled:bg-orange-300">
+                    {loading ? 'Güncelleniyor...' : 'Bilgileri Güncelle'}
+                </button>
+            </form>
+        </div>
+    );
+};
+
+// ... (Diğer bileşenler aynı kalacak: ChangePassword, AddCardModal, SavedCards, MyReviews, NotificationPreferences) ...
 const ChangePassword = () => {
     const { changeUserPassword } = useAppContext();
     const [currentPassword, setCurrentPassword] = useState('');
@@ -267,6 +334,7 @@ const NotificationPreferences = () => {
     )
 };
 
+
 // ANA SAYFA İÇERİK YÖNETİCİSİ
 const AccountPageContent = () => {
     const searchParams = useSearchParams();
@@ -274,6 +342,7 @@ const AccountPageContent = () => {
 
     const renderContent = () => {
         switch (activeTab) {
+            case 'profile': return <ProfileSettings />;
             case 'password': return <ChangePassword />;
             case 'reviews': return <MyReviews />;
             case 'notifications': return <NotificationPreferences />;

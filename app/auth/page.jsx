@@ -1,15 +1,14 @@
-// app/auth/page.jsx
-
 'use client';
 
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
-import Link from 'next/link'; // next/link'i import ediyoruz
 
 export default function AuthPage() {
   const { signIn, signUp } = useAppContext();
   const [isLogin, setIsLogin] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState(''); // Yeni state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +20,8 @@ export default function AuthPage() {
       if (isLogin) {
         await signIn(email, password, 'customer');
       } else {
-        await signUp(email, password);
+        // signUp fonksiyonuna `phone` bilgisini de gönderiyoruz
+        await signUp(email, password, fullName, phone);
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -37,6 +37,30 @@ export default function AuthPage() {
           {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
         </h2>
         <form className="space-y-8" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <FloatingLabelInput
+                id="fullName"
+                name="fullName"
+                type="text"
+                label="Ad Soyad"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                autoComplete="name"
+              />
+              <FloatingLabelInput
+                id="phone"
+                name="phone"
+                type="tel"
+                label="Telefon Numarası"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                autoComplete="tel"
+              />
+            </>
+          )}
           <FloatingLabelInput
             id="email"
             name="email"
@@ -51,25 +75,12 @@ export default function AuthPage() {
             id="password"
             name="password"
             type="password"
-            label="Şifre"
+            label="Şifre (en az 6 karakter)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
           />
-          
-          {/* --- YENİ EKLENEN KISIM --- */}
-          <div className="text-sm text-right">
-            {isLogin && (
-              <Link href="/auth/forgot-password">
-                <span className="font-medium text-orange-600 hover:text-orange-500 cursor-pointer">
-                  Şifremi Unuttum
-                </span>
-              </Link>
-            )}
-          </div>
-          {/* --- YENİ EKLENEN KISIM SONU --- */}
-          
           <button
             type="submit"
             disabled={loading}

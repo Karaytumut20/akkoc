@@ -1,3 +1,5 @@
+// context/AppContext.jsx
+
 'use client'
 
 import { useRouter } from "next/navigation";
@@ -43,8 +45,7 @@ export const AppContextProvider = (props) => {
 
     const resetInactivityTimer = useCallback(() => {
         clearTimeout(inactivityTimer.current);
-        // 10 dakika
-        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000);
+        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000); // 10 dakika
     }, [signOutAfterInactivity]);
 
     useEffect(() => {
@@ -65,6 +66,14 @@ export const AppContextProvider = (props) => {
         const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
             const currentUser = session?.user;
             setUser(currentUser || null);
+            if (!currentUser) {
+                setCartItems({});
+                setAddresses([]);
+                setMyOrders([]);
+                setWishlist([]);
+                setMyReviews([]);
+                setSavedCards([]);
+            }
             setAuthLoading(false);
         });
 
@@ -73,8 +82,28 @@ export const AppContextProvider = (props) => {
         };
     }, []);
     
-    const signUp = async (email, password) => {
-        const { error } = await supabase.auth.signUp({ email, password });
+    // GÜNCELLENDİ: signUp fonksiyonu artık `phone` parametresi alıyor
+    const signUp = async (email, password, fullName, phone) => {
+        if (!fullName.trim()) {
+            toast.error('Lütfen adınızı ve soyadınızı girin.');
+            return false;
+        }
+        if (!phone.trim()) {
+            toast.error('Lütfen telefon numaranızı girin.');
+            return false;
+        }
+        
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    phone: phone // Telefon numarasını metadata'ya ekliyoruz
+                }
+            }
+        });
+
         if (error) {
             toast.error(error.message);
             return false;
@@ -82,6 +111,7 @@ export const AppContextProvider = (props) => {
         toast.success('Kayıt başarılı! Lütfen e-postanızı doğrulayın.');
         return true;
     };
+
 
     const signIn = async (email, password, source) => {
         const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
@@ -143,9 +173,13 @@ export const AppContextProvider = (props) => {
             toast.error("Bilgiler güncellenirken hata: " + error.message, { id: toastId });
             return false;
         }
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+
         toast.success("Bilgileriniz başarıyla güncellendi!", { id: toastId });
         return true;
     };
+
 
     const fetchProducts = async () => {
         setLoading(true); setError(null);
@@ -273,6 +307,16 @@ export const AppContextProvider = (props) => {
         }
     };
     
+    useEffect(() => {
+        if (user) {
+            fetchAddresses(user.id);
+            fetchMyOrders(user.id);
+            fetchWishlist(user.id);
+            fetchMyReviews(user.id);
+            fetchSavedCards(user.id);
+        }
+    }, [user]);
+
     const addAddress = async (addressData) => {
         if (!user) return toast.error("Adres eklemek için giriş yapmalısınız.");
         const toastId = toast.loading("Adresiniz ekleniyor...");
@@ -318,210 +362,45 @@ export const AppContextProvider = (props) => {
     };
 
 
-    // ===============================================
-    // YENİ SEPET MANTIKLARI (DB İLE ENTEGRASYON)
-    // ===============================================
+    useEffect(() => {
+        try { const storedCart = localStorage.getItem("cartItems"); if (storedCart) setCartItems(JSON.parse(storedCart)); } catch (e) { console.error(e); }
+    }, []);
 
-    const fetchUserCart = async (userId) => {
-        const { data: cartData, error } = await supabase
-            .from('user_cart')
-            .select('product_id, quantity, products(*)') // products(*) ile ürün detaylarını da çekiyoruz
-            .eq('user_id', userId);
-
-        if (error) {
-            console.error('Sepet veritabanından alınırken hata:', error.message);
-            return {};
-        }
-
-        if (cartData && cartData.length > 0) {
-            const newCartItems = {};
-            cartData.forEach(item => {
-                if (item.products) {
-                    newCartItems[item.product_id] = { 
-                        product: { 
-                            ...item.products, 
-                            image_urls: Array.isArray(item.products.image_urls) ? item.products.image_urls : [],
-                        }, 
-                        quantity: item.quantity 
-                    };
-                }
-            });
-            return newCartItems;
-        }
-        return {};
-    };
-    
-    // Sepet öğesi güncelleme/silme işlemini DB'de yapan helper fonksiyon
-    const updateCartItemDB = useCallback(async (productId, quantity, isRemove = false) => {
-        if (!user) return;
-        
-        if (isRemove || quantity <= 0) {
-            // Silme işlemi
-            await supabase.from('user_cart').delete().match({ user_id: user.id, product_id: productId });
+    useEffect(() => {
+        if (Object.keys(cartItems).length > 0) {
+            localStorage.setItem("cartItems", JSON.stringify(cartItems));
         } else {
-            // Ekleme/Güncelleme işlemi
-            const { error } = await supabase.from('user_cart').upsert({
-                user_id: user.id,
-                product_id: productId,
-                quantity: quantity,
-            }, { onConflict: 'user_id, product_id' });
-            
-            if (error) {
-                console.error("Sepet DB güncelleme hatası:", error.message);
-            }
+            localStorage.removeItem("cartItems");
         }
-    }, [user]);
+    }, [cartItems]);
 
-    // Sepeti DB'de temizleyen helper fonksiyon
-    const clearCartDB = useCallback(async () => {
-        if (!user) return;
-        const { error } = await supabase.from('user_cart').delete().eq('user_id', user.id);
-        if (error) {
-            console.error("Sepet DB temizleme hatası:", error.message);
-        }
-    }, [user]);
-
-    // Sepete ürün ekleme
     const addToCart = (product) => {
         const currentQuantityInCart = cartItems[product.id]?.quantity || 0;
         if (product.stock <= currentQuantityInCart) {
             return toast.error("Üzgünüz, bu ürünün stoğu tükendi.");
         }
 
-        const newQuantity = currentQuantityInCart + 1;
-        setCartItems(prev => ({ ...prev, [product.id]: { product, quantity: newQuantity } }));
-        
-        if (user) {
-            updateCartItemDB(product.id, newQuantity);
-        }
-        
+        setCartItems(prev => ({ ...prev, [product.id]: { product, quantity: (prev[product.id]?.quantity || 0) + 1 } }));
         toast.success(`${product.name} sepete eklendi!`);
     };
 
-    // Sepet miktarını güncelleme (artırma/azaltma)
     const updateCartQuantity = (productId, quantity) => {
         setCartItems(prev => {
             const newItems = { ...prev };
             const product = newItems[productId]?.product;
-            let finalQuantity = quantity;
 
-            if (product) {
-                if (quantity > product.stock) {
-                    toast.error(`Maksimum ${product.stock} adet ekleyebilirsiniz.`);
-                    finalQuantity = product.stock;
-                }
-
-                if (finalQuantity <= 0) {
-                    delete newItems[productId];
-                    // user'ı check etmeye gerek yok, updateCartItemDB içinde zaten var
-                    updateCartItemDB(productId, 0, true);
-                } else {
-                    newItems[productId].quantity = finalQuantity;
-                    updateCartItemDB(productId, finalQuantity);
-                }
+            if (product && quantity > product.stock) {
+                toast.error(`Maksimum ${product.stock} adet ekleyebilirsiniz.`);
+                newItems[productId].quantity = product.stock;
+                return newItems;
             }
+
+            if (quantity <= 0) delete newItems[productId];
+            else if (newItems[productId]) newItems[productId].quantity = quantity;
             return newItems;
         });
     };
 
-    // Public API için sepeti set eden fonksiyon
-    const setLoadedCartItems = (newItems) => {
-        setCartItems(newItems);
-    }
-    
-    // Sepeti temizleyen ve DB'yi de temizleyen tek fonksiyon - useCallback ile sonsuz döngüden kaçınılır
-    const clearCart = useCallback(async () => {
-        setCartItems({});
-        // Sadece user varsa DB'den temizler (Webhook da temizlediği için burada tekrar çağırmak sorun olmaz)
-        if (user) { 
-            await clearCartDB(); 
-        } else {
-            // User yoksa local storage'dan temizler
-            localStorage.removeItem("cartItems");
-        }
-    }, [user, clearCartDB]);
-    
-    // ===============================================
-    // USEEFFECT & SYNC MANTIKLARI
-    // ===============================================
-
-    // [1] İlk Yükleme: Kullanıcı yoksa localStorage'dan yükle
-    useEffect(() => {
-        if (!user) {
-            try { 
-                const storedCart = localStorage.getItem("cartItems"); 
-                if (storedCart) {
-                     setCartItems(JSON.parse(storedCart));
-                } else {
-                     setCartItems({});
-                }
-            } catch (e) { 
-                console.error("Local Storage sepet yükleme hatası:", e); 
-            }
-        }
-    }, [user]);
-
-    // [2] Anonim Kullanıcı için Local Storage Sync
-    useEffect(() => {
-        if (!user) {
-            if (Object.keys(cartItems).length > 0) {
-                localStorage.setItem("cartItems", JSON.stringify(cartItems));
-            } else {
-                localStorage.removeItem("cartItems");
-            }
-        }
-        // Not: user var iken sepeti localStorage'a yazmıyoruz.
-    }, [cartItems, user]);
-
-    // [3] Kullanıcı Girişi/Çıkışı: DB'den Yükle ve Diğer Verileri Çek
-    useEffect(() => {
-        if (user) {
-            const loadAndSyncCart = async () => {
-                const dbCart = await fetchUserCart(user.id);
-                const localCartJson = localStorage.getItem("cartItems");
-                
-                if (Object.keys(dbCart).length === 0 && localCartJson) {
-                    // DB boşsa ve localStorage doluysa: localStorage'ı DB'ye taşı
-                    const localCart = JSON.parse(localCartJson);
-                    const cartItemsToInsert = Object.values(localCart).map(item => ({
-                        user_id: user.id,
-                        product_id: item.product.id,
-                        quantity: item.quantity,
-                    }));
-                    if (cartItemsToInsert.length > 0) {
-                        // Batch insert
-                        const { error: insertError } = await supabase.from('user_cart').insert(cartItemsToInsert);
-                        if (insertError) {
-                            console.error("Local Cart DB'ye taşınırken hata:", insertError.message);
-                        }
-                    }
-                    setCartItems(localCart);
-                    localStorage.removeItem("cartItems"); // Taşıma başarılı, localStorage'ı temizle
-                } else {
-                    // DB doluysa: DB'den çek
-                    setCartItems(dbCart);
-                    localStorage.removeItem("cartItems"); // DB varken local tutma
-                }
-                
-                // Diğer user verilerini de yükle
-                fetchAddresses(user.id);
-                fetchMyOrders(user.id);
-                fetchWishlist(user.id);
-                fetchMyReviews(user.id);
-                fetchSavedCards(user.id);
-            }
-            loadAndSyncCart();
-        } else {
-            // Kullanıcı çıkış yapınca diğer state'leri sıfırla
-            setAddresses([]);
-            setMyOrders([]);
-            setWishlist([]);
-            setMyReviews([]);
-            setSavedCards([]);
-        }
-    }, [user, authLoading]);
-    
-    // Sepet hesaplama fonksiyonları
     const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0);
     const getCartAmount = () => Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     
@@ -529,7 +408,7 @@ export const AppContextProvider = (props) => {
 
     const value = {
         currency, router, products, loading, error, fetchProducts,
-        cartItems, setCartItems: setLoadedCartItems, addToCart, updateCartQuantity, getCartCount, getCartAmount, clearCart,
+        cartItems, setCartItems, addToCart, updateCartQuantity, getCartCount, getCartAmount,
         user, authLoading, signUp, signIn, signOut, 
         changeUserPassword, 
         updateUserData,
