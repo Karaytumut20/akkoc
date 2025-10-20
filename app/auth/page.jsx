@@ -207,7 +207,7 @@ export default function AuthPage() {
                 setIsLogin(!isLogin);
                 setFullName('');
                 setPhone('');
-                setEmail('');
+                setEmail(''); 
                 setPassword('');
                 setTermsAccepted(false);
               }}
