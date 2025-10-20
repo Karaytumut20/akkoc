@@ -65,7 +65,7 @@ export default function TiffanyIconsGrid() {
                   href={`/shop/${item.title.toLowerCase().replace(/\s/g, '-')}`}
                   className="text-xs font-semibold tracking-widest uppercase text-gray-900 border-b border-gray-900 pb-1 hover:text-teal-600 hover:border-teal-600 transition duration-150"
                 >
-                  SHOP NOW
+                  SHOP NOW  
                 </a>
               </div>
             </div>
