@@ -4,21 +4,18 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { assets } from '@/assets/assets';
 import { useAppContext } from '@/context/AppContext';
-import { FiHeart } from 'react-icons/fi'; // react-icons'tan kalp ikonu
+import { FiHeart } from 'react-icons/fi';
 
 const ProductCard = ({ product }) => {
   const { router, wishlist, addToWishlist, removeFromWishlist } = useAppContext();
 
-  if (!product) {
-    return null;
-  }
+  if (!product) return null;
 
   const isFavorited = wishlist.some(item => item.product_id === product.id);
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); // Kartın tıklama olayını tetiklemesini engelle
+    e.stopPropagation();
     if (isFavorited) {
       removeFromWishlist(product.id);
     } else {
@@ -40,21 +37,19 @@ const ProductCard = ({ product }) => {
 
   return (
     <div
-      onClick={() => {
-        router.push('/product/' + product.id);
-      }}
-      className="flex flex-col items-start w-full max-w-[210px] cursor-pointer group"
+      onClick={() => router.push('/product/' + product.id)}
+      className="flex flex-col items-start w-full max-w-[260px] cursor-pointer group"
     >
-      <div className="relative rounded-lg w-full aspect-[3.4/4] overflow-hidden bg-gray-100">
+      <div className="relative rounded-none w-full aspect-[4/4] overflow-hidden bg-gray-100">
         <Image
           src={getValidImage(product.image_urls)}
-          alt={product.name || 'Product image'}
+          alt="Product image"
           className="group-hover:scale-105 transition-transform duration-300 object-cover w-full h-full"
           fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 25vw"
         />
 
-        {/* 🔴 FAVORİ BUTONU ARTIK HER ZAMAN GÖRÜNÜR */}
+        {/* Favori butonu */}
         <button
           onClick={handleFavoriteClick}
           className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md transition-all z-10 hover:scale-110"
@@ -66,10 +61,6 @@ const ProductCard = ({ product }) => {
           />
         </button>
       </div>
-
-      <p className="text-base font-medium pt-2 w-full truncate text-center">
-        {product.name}
-      </p>
     </div>
   );
 };

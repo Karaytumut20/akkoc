@@ -374,21 +374,24 @@ export const AppContextProvider = (props) => {
     }
   }, [cartItems]);
 
-  const addToCart = (product) => {
-    const currentQuantityInCart = cartItems[product.id]?.quantity || 0;
-    if (product.stock <= currentQuantityInCart) {
-      return toast.error("Üzgünüz, bu ürünün stoğu tükendi.");
-    }
+const addToCart = (product, quantity = 1) => {
+  const currentQuantityInCart = cartItems[product.id]?.quantity || 0;
 
-    setCartItems(prev => ({
-      ...prev,
-      [product.id]: {
-        product,
-        quantity: (prev[product.id]?.quantity || 0) + 1
-      }
-    }));
-    toast.success(`${product.name} sepete eklendi!`);
-  };
+  if (product.stock < currentQuantityInCart + quantity) {
+    return toast.error(`Stokta en fazla ${product.stock} adet var.`);
+  }
+
+  setCartItems(prev => ({
+    ...prev,
+    [product.id]: {
+      product,
+      quantity: (prev[product.id]?.quantity || 0) + quantity
+    }
+  }));
+
+  toast.success(`${product.name} sepete eklendi!`);
+};
+
 
   const updateCartQuantity = (productId, quantity) => {
     setCartItems(prev => {

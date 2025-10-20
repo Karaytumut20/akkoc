@@ -57,8 +57,13 @@ export default function MainNavbar() {
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  // 🌐 Dil seçici
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
+  const languageMenuRef = useRef(null);
 
   const cartCount = getCartCount();
   const isHomePage = pathname === "/";
@@ -70,6 +75,9 @@ export default function MainNavbar() {
       }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
+      }
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+        setLanguageMenuOpen(false);
       }
     }
 
@@ -119,10 +127,10 @@ export default function MainNavbar() {
   };
 
   const navLinks = [
-    { name: "High Jewelry", href: "/all-products" },
-    { name: "Jewelry", href: "/all-products" },
-    { name: "Love & Engagement", href: "/all-products" },
-    { name: "Fine Watches", href: "/all-products" },
+    { name: "HOME", href: "/all-products" },
+    { name: "PRODUCTS", href: "/all-products" },
+    { name: "COLLECTIONS", href: "/all-products" },
+    { name: "CONTACT", href: "/all-products" },
   ];
 
   const headerClasses = isSticky
@@ -136,6 +144,8 @@ export default function MainNavbar() {
       className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}
     >
       <div className="flex items-center justify-between relative">
+
+        {/* SOL TARAF - MENU & SEARCH */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             aria-label="Menu"
@@ -161,6 +171,7 @@ export default function MainNavbar() {
           </button>
         </div>
 
+        {/* ORTA - LOGO */}
         <div
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
           onClick={() => router.push("/")}
@@ -175,7 +186,49 @@ export default function MainNavbar() {
           />
         </div>
 
+        {/* SAĞ TARAF - DİL, USER, CART */}
         <div className="flex items-center space-x-2 sm:space-x-4">
+
+          {/* 🌐 DİL SEÇİCİ */}
+          <div className="relative" ref={languageMenuRef}>
+            <button
+              onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+              className={`flex items-center gap-1 p-2 rounded-full hover:bg-black/10 transition text-xs sm:text-sm uppercase ${
+                isSticky ? "text-gray-800" : "text-white"
+              }`}
+            >
+              {selectedLanguage}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {languageMenuOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-50 text-gray-800">
+                {["English", "Türkçe"].map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => {
+                      setSelectedLanguage(lang);
+                      setLanguageMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 👤 USER */}
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -232,6 +285,7 @@ export default function MainNavbar() {
             </button>
           )}
 
+          {/* 🛍️ CART */}
           <button
             aria-label="Shopping Bag"
             className="p-2 rounded-full hover:bg-black/10 transition relative"
@@ -247,6 +301,7 @@ export default function MainNavbar() {
         </div>
       </div>
 
+      {/* 🔍 ARAMA */}
       {isSearchVisible && (
         <div ref={searchRef} className="relative mt-4 max-w-md mx-auto">
           <form onSubmit={handleSearchSubmit} className="flex">
@@ -292,6 +347,7 @@ export default function MainNavbar() {
         </div>
       )}
 
+      {/* ALT MENU */}
       <nav
         className={`mt-6 hidden lg:flex justify-center space-x-10 text-sm font-light tracking-[0.25em] uppercase ${
           isSticky ? "text-gray-700" : "text-gray-200"
@@ -309,6 +365,7 @@ export default function MainNavbar() {
         ))}
       </nav>
 
+      {/* MOBILE MENU */}
       {menuOpen && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-50 flex flex-col items-center justify-center text-center space-y-8 text-white text-lg font-light uppercase tracking-widest animate-fadeIn">
           <button
