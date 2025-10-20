@@ -127,7 +127,7 @@ export default function MainNavbar() {
   };
 
   const navLinks = [
-    { name: "HOME", href: "/all-products" },
+    { name: "HOME", href: "/" },
     { name: "PRODUCTS", href: "/all-products" },
     { name: "COLLECTIONS", href: "/all-products" },
     { name: "CONTACT", href: "/all-products" },

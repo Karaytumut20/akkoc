@@ -48,24 +48,9 @@ const AllProducts = () => {
             <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-[70vh]">
                 <div className="w-full pt-12">
                     <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                         <div className="flex flex-col items-start">
-                            <p className="text-2xl font-medium">Tüm Ürünler</p>
-                            <div className="w-16 h-0.5 bg-orange-600 rounded-full mt-1"></div>
-                        </div>
+                         
                         
-                        {/* Filtreleme Kontrolü */}
-                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                            <select
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 w-full sm:w-40"
-                            >
-                                <option value="all">Tüm Kategoriler</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
+                       
                     </div>
                     
                     {filteredProducts.length > 0 ? (

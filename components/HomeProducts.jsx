@@ -46,26 +46,10 @@ const HomeProducts = () => {
   return (
     <div className="flex flex-col items-center my-16 w-full">
       <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
-        <div className="flex flex-col items-center sm:items-start">
-            <p className="text-3xl font-medium text-center sm:text-left">
-                Öne Çıkan <span className="font-medium text-orange-600">Ürünler</span>
-            </p>
-            <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
-        </div>
+        
         
         {/* Filtreleme ve Sıralama Kontrolleri */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 w-full sm:w-40"
-            >
-                <option value="all">Tüm Kategoriler</option>
-                {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-            </select>
-        </div>
+       
       </div>
 
       {productsToShow.length > 0 ? (
