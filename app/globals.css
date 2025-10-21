@@ -37,3 +37,24 @@
     color: transparent;
   }
 }
+
+
+
+html, body, #__next {
+  min-height: 100%;
+  background-color: #FFFFF0; /* ivory */
+}
+
+/* (Opsiyonel) scrollbar vb. için ışık tema ipucu */
+:root { color-scheme: light; }
+
+
+/* globals.css — SONUNA ekle: */
+@layer utilities {
+  /* Beyaz background kullanan blokları ivory'e çevir */
+  .bg-white { background-color: #FFFFF0 !important; }
+  .bg-gray-50 { background-color: #FFFFF0 !important; }
+  .bg-gray-100 { background-color: #FFFFF0 !important; }
+  /* Kart/transparan istemediğin birkaç varyant daha ekleyebilirsin: */
+  .backdrop-blur-sm.bg-white\/80 { background-color: #FFFFF0CC !important; } /* %80 */
+}

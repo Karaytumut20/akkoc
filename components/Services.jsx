@@ -5,13 +5,6 @@ import Image from "next/image";
 export default function Services() {
   const services = [
     {
-      title: "Book An Appointment",
-      description:
-        "We’re happy to assist with in-store or virtual appointments.",
-      linkText: "BOOK NOW",
-      image: "/assets/services1.jpg",
-    },
-    {
       title: "Shipping & Returns",
       description: "Complimentary shipping and returns on all orders.",
       linkText: "LEARN MORE",
@@ -24,9 +17,8 @@ export default function Services() {
       image: "/assets/services3.jpg",
     },
     {
-      title: "Iconic Blue Box",
-      description:
-        "Your purchase comes wrapped in our Blue Box packaging.",
+      title: "Iconic Dinner Set",
+      description: "Your purchase comes wrapped in our Dinner Set packaging.",
       linkText: "EXPLORE",
       image: "/assets/services4.jpg",
     },
@@ -34,15 +26,16 @@ export default function Services() {
 
   return (
     <section className="w-full py-16 sm:py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 text-center">
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8">
+        {/* Mobilde yatay scroll — büyük ekranda grid */}
+        <div className="flex gap-6 overflow-x-auto pl-4 pr-12 sm:grid sm:grid-cols-3 sm:gap-8 lg:gap-12 sm:overflow-visible scrollbar-hide snap-x snap-mandatory">
           {services.map((item, index) => (
             <div
               key={index}
-              className="flex flex-col items-center group transition-all duration-300"
+              className="flex flex-col items-center justify-center text-center min-w-[80%] sm:min-w-0 flex-shrink-0 group transition-all duration-300 snap-start"
             >
               {/* Görsel */}
-              <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 mb-3 sm:mb-4 overflow-hidden">
+              <div className="relative w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 mb-4 overflow-hidden flex items-center justify-center">
                 <Image
                   src={item.image}
                   alt={item.title}
@@ -52,12 +45,12 @@ export default function Services() {
               </div>
 
               {/* Başlık */}
-              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-serif text-gray-900 mb-1 sm:mb-2 leading-snug">
+              <h3 className="text-base md:text-lg lg:text-xl font-serif text-gray-900 mb-2 leading-snug">
                 {item.title}
               </h3>
 
               {/* Açıklama */}
-              <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-2 sm:mb-3 max-w-[120px] sm:max-w-[180px] md:max-w-[220px] lg:max-w-[260px] mx-auto leading-relaxed">
+              <p className="text-sm md:text-base text-gray-600 mb-3 max-w-[260px] leading-relaxed">
                 {item.description}
               </p>
 

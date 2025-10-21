@@ -55,7 +55,6 @@ export default function MainNavbar() {
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // 🌐 Dil seçici
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
@@ -68,15 +67,9 @@ export default function MainNavbar() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchVisible(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
-        setLanguageMenuOpen(false);
-      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) setIsSearchVisible(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) setLanguageMenuOpen(false);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -89,9 +82,7 @@ export default function MainNavbar() {
       return;
     }
 
-    const handleScroll = () => {
-      setIsSticky(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsSticky(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
@@ -130,7 +121,7 @@ export default function MainNavbar() {
   ];
 
   const headerClasses = isSticky
-    ? "fixed top-0 left-0 right-0 z-50 bg-white text-gray-800 shadow-md animate-fadeInDown"
+    ? "fixed top-0 left-0 right-0 z-50 bg-[#FFFFF0] text-gray-800 shadow-md animate-fadeInDown"
     : "absolute top-0 left-0 right-0 z-20 text-white";
 
   const logoSrc = assets.logo;
@@ -154,9 +145,7 @@ export default function MainNavbar() {
         </div>
 
         {/* ORTA - LOGO */}
-        <div
-          className="flex justify-center items-center flex-grow absolute left-0 right-0 pointer-events-none"
-        >
+        <div className="flex justify-center items-center flex-grow absolute left-0 right-0 pointer-events-none">
           <Image
             onClick={() => router.push("/")}
             className="w-24 sm:w-28 md:w-32 cursor-pointer pointer-events-auto"
@@ -179,7 +168,6 @@ export default function MainNavbar() {
                 isSticky ? "text-gray-800" : "text-white"
               }`}
             >
-              {/* Mobilde icon - desktopta metin */}
               <span className="hidden sm:inline">{selectedLanguage}</span>
               <span className="sm:hidden">
                 <icons.Globe className="w-5 h-5" />
@@ -187,7 +175,7 @@ export default function MainNavbar() {
             </button>
 
             {languageMenuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-50 text-gray-800">
+              <div className="absolute right-0 mt-2 w-32 bg-[#FFFFF0] rounded-md shadow-lg z-50 text-gray-800">
                 {["English", "Türkçe", "Spanish"].map((lang) => (
                   <button
                     key={lang}
@@ -224,7 +212,7 @@ export default function MainNavbar() {
                 </span>
               </button>
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-gray-800">
+                <div className="absolute right-0 mt-2 w-48 bg-[#FFFFF0] rounded-md shadow-lg py-1 z-20 text-gray-800">
                   <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">
                     Hesabım
                   </Link>
@@ -284,7 +272,7 @@ export default function MainNavbar() {
             />
           </form>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-white text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+            <div className="absolute top-full left-0 w-full bg-[#FFFFF0] text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
               <ul>
                 {searchResults.map((product) => (
                   <li key={product.id}>
@@ -300,9 +288,7 @@ export default function MainNavbar() {
                           className="object-cover rounded-md"
                         />
                       </div>
-                      <span className="font-medium text-gray-800">
-                        {product.name}
-                      </span>
+                      <span className="font-medium text-gray-800">{product.name}</span>
                     </div>
                   </li>
                 ))}

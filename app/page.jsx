@@ -10,6 +10,7 @@ import DoubleBigCard from "@/components/DoubleBigCard";
 import DoubleBigCardText from "@/components/DoubleBigCardText";
 import ShopNow from "@/components/ShopNow";
 import VideoBar from "@/components/VideoBar";
+import Footer from "@/components/Footer";
 
 const Home = () => {
   return (
@@ -23,7 +24,7 @@ const Home = () => {
         <ShopNow/>
         <DoubleBigCardText/>
         <NewsLetter />
-
+         <Footer />
       </div>
     </>
   );
