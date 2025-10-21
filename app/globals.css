@@ -42,7 +42,7 @@
 
 html, body, #__next {
   min-height: 100%;
-  background-color: #FFFFF0; /* ivory */
+  background-color:   #ECE4DC; /* ivory */
 }
 
 /* (Opsiyonel) scrollbar vb. için ışık tema ipucu */
@@ -52,9 +52,9 @@ html, body, #__next {
 /* globals.css — SONUNA ekle: */
 @layer utilities {
   /* Beyaz background kullanan blokları ivory'e çevir */
-  .bg-white { background-color: #FFFFF0 !important; }
-  .bg-gray-50 { background-color: #FFFFF0 !important; }
-  .bg-gray-100 { background-color: #FFFFF0 !important; }
+  .bg-white { background-color:  #ECE4DC !important; }
+  .bg-gray-50 { background-color:  #ECE4DC !important; }
+  .bg-gray-100 { background-color:  #ECE4DC !important; }
   /* Kart/transparan istemediğin birkaç varyant daha ekleyebilirsin: */
-  .backdrop-blur-sm.bg-white\/80 { background-color: #FFFFF0CC !important; } /* %80 */
+  .backdrop-blur-sm.bg-white\/80 { background-color:  #ECE4DC !important; } /* %80 */
 }

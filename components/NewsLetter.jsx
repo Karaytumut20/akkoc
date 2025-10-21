@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 
@@ -47,7 +48,8 @@ const NewsLetter = () => {
   const closeModal = () => setShowModal(false);
 
   return (
-    <div className="bg-[#FFFFF0]">
+    <div className="bg-[#ECE4DC] min-h-fit">
+      {/* Popup Modal */}
       {showModal && (
         <div
           onClick={closeModal}
@@ -55,7 +57,7 @@ const NewsLetter = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#FFFFF0] backdrop-blur-lg p-10 rounded-2xl shadow-2xl max-w-md w-full relative animate-fade-in transition-all duration-300"
+            className="bg-[#ECE4DC] backdrop-blur-lg p-10 rounded-2xl shadow-2xl max-w-md w-full relative animate-fade-in transition-all duration-300"
           >
             <button
               onClick={closeModal}
@@ -68,7 +70,8 @@ const NewsLetter = () => {
             </h1>
             <div className="flex items-center justify-between mb-2">
               <input
-                className="border border-gray-300 rounded-md h-12 w-full px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200"
+                style={{ backgroundColor: "#FFFFFF" }}
+                className="border border-gray-300 rounded-md h-12 w-full px-4 text-gray-700 !bg-[#FFFFFF] placeholder:text-gray-400 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200"
                 type="text"
                 placeholder="Enter your email"
                 value={email}
@@ -86,13 +89,14 @@ const NewsLetter = () => {
       )}
 
       {/* Alt form */}
-      <div className="flex flex-col items-center justify-center text-center space-y-2 pt-4 pb-4">
+      <div className="flex flex-col items-center justify-center text-center space-y-4 pt-4 pb-4">
         <h1 className="md:text-4xl text-2xl font-medium text-gray-800">
           Subscribe now & get 20% off
         </h1>
         <div className="flex items-center justify-between max-w-2xl w-full md:h-14 h-12">
           <input
-            className="border border-gray-500/30 rounded-md h-full border-r-0 outline-none w-full rounded-r-none px-3 text-gray-500 bg-[#FFFFF0]"
+            style={{ backgroundColor: "#FFFFFF" }}
+            className="border border-gray-500/30 rounded-md h-full border-r-0 outline-none w-full rounded-r-none px-3 text-gray-700 !bg-[#FFFFFF] placeholder:text-gray-400 appearance-none"
             type="text"
             placeholder="Enter your email id"
             value={email}
