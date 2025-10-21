@@ -8,13 +8,13 @@ export default function Services() {
       title: "Shipping & Returns",
       description: "Complimentary shipping and returns on all orders.",
       linkText: "LEARN MORE",
-      image: "/assets/shipping.png",
+      image: "/assets/Shipping.png",
     },
     {
       title: "At Your Service",
       description: "Our client care experts are always here to help.",
       linkText: "CONTACT US",
-      image: "/assets/service.png",
+      image: "/assets/Service.png",
     },
     {
       title: "Iconic Dinner Set",
