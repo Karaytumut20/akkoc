@@ -108,6 +108,12 @@ export default function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ⚠️ Şifre kontrolü (6 karakterden azsa uyar)
+    if (password.length < 6) {
+      toast.error('⚠️ Password must be at least 6 characters long.');
+      return;
+    }
+
     if (!isLogin && !termsAccepted) {
       toast.error('You must accept the Terms and Privacy Policy.');
       return;
@@ -116,7 +122,6 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (isLogin) {
-        // Giriş
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -137,7 +142,6 @@ export default function AuthPage() {
         }
 
       } else {
-        // Kayıt
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -171,7 +175,6 @@ export default function AuthPage() {
 
       <div className="flex items-center justify-center min-h-screen bg-[#FFFFF0] p-4">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl relative">
-          {/* Logo */}
           <div className="flex justify-center mb-4">
             <Image src={logo} alt="Logo" width={80} height={80} />
           </div>

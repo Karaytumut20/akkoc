@@ -7,11 +7,11 @@ export default function ContactPage() {
   const mailLink = `https://mail.google.com/mail/?view=cm&fs=1&tf=cm&to=nestcomecontact@gmail.com&su=Contact%20Request&body=Hello%2C%20I%20would%20like%20to%20get%20in%20touch%20with%20you.`
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFFF0] px-4">
       <div className="max-w-lg w-full bg-white p-10 rounded-2xl shadow-2xl text-center space-y-6">
         <h1 className="text-3xl font-bold text-gray-800">Contact</h1>
         <p className="text-gray-600">
-          Bize aşağıdaki kanallardan ulaşabilirsiniz 👇
+          You can reach us through the following channels 👇
         </p>
 
         {/* Instagram */}
