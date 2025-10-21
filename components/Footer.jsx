@@ -51,7 +51,7 @@ mission is to elevate your dining experience with elegant, functional, and susta
             <div className="text-sm space-y-2">
               <p>
                 <a
-                  href="https://www.instagram.com/senin_instagram_adresin"
+                  href="https://www.instagram.com/nestcome.kitchen"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:underline transition text-blue-600"
@@ -61,7 +61,7 @@ mission is to elevate your dining experience with elegant, functional, and susta
               </p>
               <p>
                 <a
-                  href="mailto:info@seninsiten.com"
+                  href="mailto:nestcomecontact@gmail.com"
                   className="hover:underline transition text-blue-600"
                 >
                   nestcomecontact@gmail.com
