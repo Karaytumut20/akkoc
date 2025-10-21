@@ -3,34 +3,9 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import toast, { Toaster } from 'react-hot-toast';
 import logo from '@/assets/logo.svg';
 import { supabase } from '@/lib/supabaseClient';
-
-// === AUTH CONTEXT ===
-const useAppContext = () => ({
-  signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
-  },
-  signUp: async (email, password, fullName, phone) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: phone,
-        },
-      },
-    });
-    if (error) throw error;
-    return data;
-  },
-});
 
 // === INPUT ===
 const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, autoComplete }) => (
@@ -63,25 +38,20 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
 
   const content = isPrivacy ? (
     <div className="space-y-4 text-gray-700">
-      <p><strong>1. Information Collected:</strong> We collect personal information you provide during registration.</p>
-      <p><strong>2. Use of Information:</strong> This information is used to provide services to you.</p>
-      <p><strong>3. Data Security:</strong> We protect your information with security measures.</p>
-      <p><strong>4. Sharing:</strong> No third-party sharing without consent.</p>
+      <p><strong>1.</strong> We collect your personal information only for providing services.</p>
+      <p><strong>2.</strong> We protect your data with security measures.</p>
+      <p><strong>3.</strong> We do not share your data with third parties without consent.</p>
     </div>
   ) : (
     <div className="space-y-4 text-gray-700">
-      <p><strong>1. Acceptance:</strong> By using our services, you agree to all terms.</p>
-      <p><strong>2. Obligations:</strong> You agree to respect intellectual property and other users.</p>
-      <p><strong>3. Account Security:</strong> You are responsible for your account.</p>
-      <p><strong>4. Termination:</strong> Violation may lead to account suspension.</p>
+      <p><strong>1.</strong> By using our services, you agree to these terms.</p>
+      <p><strong>2.</strong> You must keep your account secure.</p>
+      <p><strong>3.</strong> Violations may lead to suspension.</p>
     </div>
   );
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
         className="bg-[#FFFFFF] rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6 relative"
         onClick={(e) => e.stopPropagation()}
@@ -114,9 +84,7 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
 
 // === AUTH PAGE ===
 export default function AuthPage() {
-  const { signIn, signUp } = useAppContext();
   const router = useRouter();
-
   const [isLogin, setIsLogin] = useState(true);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -139,28 +107,56 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!isLogin && !termsAccepted) {
-      alert('Please accept Terms and Privacy Policy.');
+      toast.error('You must accept the Terms and Privacy Policy.');
       return;
     }
+
     setLoading(true);
     try {
       if (isLogin) {
-        const data = await signIn(email, password);
-        if (data?.user) {
-          router.push('/'); // ✅ giriş başarılı → anasayfaya yönlendir
+        // Giriş
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            toast.error('⚠️ Please verify your email address before logging in.');
+          } else {
+            toast.error(error.message);
+          }
+          return;
         }
+
+        if (data?.user) {
+          toast.success('✅ Login successful!');
+          router.push('/');
+        }
+
       } else {
-        const data = await signUp(email, password, fullName, phone);
-        if (data?.user) {
-          router.push('/'); // ✅ kayıt başarılı → anasayfaya yönlendir
-        } else {
-          alert('Check your email to confirm your account.');
-        }
+        // Kayıt
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName, phone: phone },
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+
+        if (error) throw error;
+
+        toast.success('📩 Check your email and verify your account.');
+        setIsLogin(true);
+        setFullName('');
+        setPhone('');
+        setPassword('');
       }
     } catch (error) {
-      console.error('Auth error:', error.message);
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -168,6 +164,7 @@ export default function AuthPage() {
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
       {isModalOpen && (
         <PolicyModal isOpen={isModalOpen} onClose={closeModal} type={modalContentType} />
       )}

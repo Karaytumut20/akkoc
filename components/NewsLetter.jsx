@@ -9,7 +9,7 @@ const NewsLetter = () => {
   useEffect(() => {
     const lastSeen = localStorage.getItem("popupLastSeen");
     const now = Date.now();
-    const fiveMinutes = 0.1 * 60 * 1000;
+    const fiveMinutes = 5 * 60 * 1000;
 
     if (!lastSeen || now - parseInt(lastSeen) >= fiveMinutes) {
       setShowModal(true);
