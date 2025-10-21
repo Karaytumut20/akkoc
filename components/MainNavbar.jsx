@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -7,42 +7,40 @@ import Image from "next/image";
 import Link from "next/link";
 import { assets } from "@/assets/assets";
 
-// === SVG ICONS ===
 const icons = {
   Menu: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="4" x2="20" y1="12" y2="12" />
       <line x1="4" x2="20" y1="6" y2="6" />
       <line x1="4" x2="20" y1="18" y2="18" />
     </svg>
   ),
   Close: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Search: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
   ),
   ShoppingBag: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
       <path d="M3 6h18" />
       <path d="M16 10a4 4 0 0 1-8 0" />
     </svg>
   ),
+  Globe: (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  )
 };
 
 export default function MainNavbar() {
@@ -82,9 +80,7 @@ export default function MainNavbar() {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -130,7 +126,7 @@ export default function MainNavbar() {
     { name: "HOME", href: "/" },
     { name: "PRODUCTS", href: "/all-products" },
     { name: "COLLECTIONS", href: "/all-products" },
-    { name: "CONTACT", href: "/all-products" },
+    { name: "CONTACT", href: "/contact" },
   ];
 
   const headerClasses = isSticky
@@ -140,44 +136,30 @@ export default function MainNavbar() {
   const logoSrc = assets.logo;
 
   return (
-    <header
-      className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}
-    >
-      <div className="flex items-center justify-between relative">
+    <header className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}>
+      <div className="flex items-center justify-between relative w-full">
 
-        {/* SOL TARAF - MENU & SEARCH */}
+        {/* SOL TARAF */}
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            aria-label="Menu"
-            className="p-2 rounded-full hover:bg-black/10 transition lg:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? (
-              <icons.Close className="w-6 h-6" />
-            ) : (
-              <icons.Menu className="w-6 h-6" />
-            )}
+          <button aria-label="Menu" className="p-2 rounded-full hover:bg-black/10 transition lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
           </button>
 
-          <button
-            aria-label="Search"
-            className="p-2 rounded-full hover:bg-black/10 transition"
-            onClick={(e) => {
-                e.stopPropagation();
-                setIsSearchVisible(!isSearchVisible);
-            }}
-          >
+          <button aria-label="Search" className="p-2 rounded-full hover:bg-black/10 transition" onClick={(e) => {
+            e.stopPropagation();
+            setIsSearchVisible(!isSearchVisible);
+          }}>
             <icons.Search className="w-5 h-5" />
           </button>
         </div>
 
         {/* ORTA - LOGO */}
         <div
-          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-          onClick={() => router.push("/")}
+          className="flex justify-center items-center flex-grow absolute left-0 right-0 pointer-events-none"
         >
           <Image
-            className="w-28 md:w-32"
+            onClick={() => router.push("/")}
+            className="w-24 sm:w-28 md:w-32 cursor-pointer pointer-events-auto"
             src={logoSrc}
             alt="logo"
             style={{
@@ -186,8 +168,8 @@ export default function MainNavbar() {
           />
         </div>
 
-        {/* SAĞ TARAF - DİL, USER, CART */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        {/* SAĞ TARAF */}
+        <div className="flex items-center space-x-2 sm:space-x-4 relative z-10">
 
           {/* 🌐 DİL SEÇİCİ */}
           <div className="relative" ref={languageMenuRef}>
@@ -197,22 +179,16 @@ export default function MainNavbar() {
                 isSticky ? "text-gray-800" : "text-white"
               }`}
             >
-              {selectedLanguage}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-4 h-4"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              {/* Mobilde icon - desktopta metin */}
+              <span className="hidden sm:inline">{selectedLanguage}</span>
+              <span className="sm:hidden">
+                <icons.Globe className="w-5 h-5" />
+              </span>
             </button>
 
             {languageMenuOpen && (
               <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-50 text-gray-800">
-                {["English", "Türkçe"].map((lang) => (
+                {["English", "Türkçe", "Spanish"].map((lang) => (
                   <button
                     key={lang}
                     onClick={() => {
@@ -249,11 +225,7 @@ export default function MainNavbar() {
               </button>
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-gray-800">
-                  <Link
-                    href="/account"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  >
+                  <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">
                     Hesabım
                   </Link>
                   <button
@@ -269,10 +241,7 @@ export default function MainNavbar() {
               )}
             </div>
           ) : (
-            <button
-              onClick={() => router.push("/auth")}
-              className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition"
-            >
+            <button onClick={() => router.push("/auth")} className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition">
               <Image
                 className="w-5 h-5"
                 src={assets.user_icon}
@@ -286,11 +255,7 @@ export default function MainNavbar() {
           )}
 
           {/* 🛍️ CART */}
-          <button
-            aria-label="Shopping Bag"
-            className="p-2 rounded-full hover:bg-black/10 transition relative"
-            onClick={() => router.push("/cart")}
-          >
+          <button aria-label="Shopping Bag" className="p-2 rounded-full hover:bg-black/10 transition relative" onClick={() => router.push("/cart")}>
             <icons.ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-white text-xs">
@@ -354,11 +319,7 @@ export default function MainNavbar() {
         }`}
       >
         {navLinks.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="relative group hover:text-current transition"
-          >
+          <Link key={item.name} href={item.href} className="relative group hover:text-current transition">
             {item.name}
             <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
           </Link>
