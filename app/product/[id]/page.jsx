@@ -49,8 +49,10 @@ const Product = () => {
     const [userReview, setUserReview] = useState(null);
     const [hasPurchased, setHasPurchased] = useState(false);
 
-    // 🎯 DÜZELTME: Büyük görsellerin bulunduğu kaydırılabilir alana referans
+    // Büyük (LG+) ekranlardaki dikey kaydırılabilir alana referans
     const imageContainerRef = useRef(null); 
+    // MOBİL (LG-) ekranlardaki yatay kaydırılabilir alana referans
+    const mobileCarouselRef = useRef(null); 
 
     const fetchProductDetails = useCallback(async () => {
         if (!id) return;
@@ -148,31 +150,27 @@ const Product = () => {
         }
     }, [productData, allProducts]);
 
-    // 🎯 DÜZELTME: LG ve üzeri için scroll handler'ı güncelledik (inner container scroll'u)
+    // LG ve üzeri için scroll ile görsel değiştirme mantığı (Dikey)
     useEffect(() => {
-        if (!productData || !imageContainerRef.current || productData.image_urls.length <= 1) return;
+        if (!productData || !imageContainerRef.current || window.innerWidth < 1024) return;
 
-        const isLargeScreen = window.innerWidth >= 1024; 
-        if (!isLargeScreen) return; 
-
-        // Tahmin: Her bir görüntü 90vh yüksekliğinde ve space-y-8 (2rem = ~32px) boşluk var.
         const imageWrapperHeight = window.innerHeight * 0.9;
         const spacing = 32; 
 
+        let timeoutId;
         const handleScroll = () => {
             const container = imageContainerRef.current;
             if (!container) return;
 
-            const currentScrollTop = container.scrollTop;
-            
-            // Hangi görselin en üstte olduğunu (veya en yakın olduğunu) hesapla
-            let nextIndex = Math.round(currentScrollTop / (imageWrapperHeight + spacing));
-            
-            nextIndex = Math.max(0, Math.min(nextIndex, productData.image_urls.length - 1));
-
-            if (nextIndex !== currentImageIndex) {
-                setCurrentImageIndex(nextIndex);
-            }
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                const currentScrollTop = container.scrollTop;
+                const newIndex = Math.round(currentScrollTop / (imageWrapperHeight + spacing));
+                
+                if (newIndex !== currentImageIndex) {
+                    setCurrentImageIndex(Math.max(0, Math.min(newIndex, productData.image_urls.length - 1)));
+                }
+            }, 100);
         };
 
         const containerElement = imageContainerRef.current;
@@ -180,8 +178,47 @@ const Product = () => {
 
         return () => {
             containerElement.removeEventListener("scroll", handleScroll);
+            clearTimeout(timeoutId);
         };
     }, [productData, currentImageIndex]);
+
+    // Mobil (LG-) için index değişimine göre yatay kaydırma senkronizasyonu
+    useEffect(() => {
+        if (!productData || !mobileCarouselRef.current || window.innerWidth >= 1024) return;
+        
+        const container = mobileCarouselRef.current;
+
+        // currentImageIndex değiştiğinde (buton/indikatör ile), konteyneri kaydır
+        container.scrollTo({
+            left: container.clientWidth * currentImageIndex,
+            behavior: 'smooth'
+        });
+
+        // Mobil kaydırmada indeksi güncelleme (Kullanıcı kaydırmayı bitirdiğinde)
+        let timeoutId;
+        const handleScrollEnd = () => {
+            const scrollPosition = container.scrollLeft;
+            const imageWidth = container.clientWidth;
+            
+            const newIndex = Math.round(scrollPosition / imageWidth);
+            
+            if (newIndex !== currentImageIndex) {
+                setCurrentImageIndex(newIndex);
+            }
+        };
+
+        const handleScroll = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(handleScrollEnd, 150); // Debounce
+        };
+
+        container.addEventListener("scroll", handleScroll);
+
+        return () => {
+            container.removeEventListener("scroll", handleScroll);
+            clearTimeout(timeoutId);
+        };
+    }, [currentImageIndex, productData]);
 
 
     const isFavorited = wishlist.some((item) => item.product_id === productData?.id);
@@ -275,21 +312,19 @@ const Product = () => {
         fetchProductDetails();
     };
 
-    // 🎯 DÜZELTME: YAN THUMBNAIL'E TIKLAMA İŞLEVİ
+    // YAN THUMBNAIL'E TIKLAMA İŞLEVİ (LG ve üzeri)
     const handleThumbnailClick = (index) => {
         setCurrentImageIndex(index);
         
         const container = imageContainerRef.current;
         if (!container) return;
 
-        // Her bir resim 90vh yüksekliğinde ve 32px (space-y-8) boşluk var.
         const imageWrapperHeight = window.innerHeight * 0.9;
         const spacing = 32; 
         
-        // Hedef scroll pozisyonu: Index * (Resim Yüksekliği + Boşluk)
         const targetScrollTop = index * (imageWrapperHeight + spacing); 
         
-        // 🎯 Pencereyi değil, iç konteyneri kaydır
+        // Pencereyi değil, iç konteyneri kaydır
         container.scrollTo({
             top: targetScrollTop,
             behavior: 'smooth'
@@ -298,11 +333,9 @@ const Product = () => {
 
     return (
         <>
-            {/* Genel sayfa arka planı #FFFFF0 olarak ayarlandı */}
             <div className="min-h-screen mt-0 md:mt-8 lg:mt-16 bg-[#FFFFF0]"> 
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
 
-                    {/* GÖRSEL VE BİLGİ KISMI */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-6 xl:gap-x-12">
                         
                         {/* 🖼️ GÖRSEL BÖLÜMÜ - LG: Sol ve Orta Sütun */}
@@ -311,16 +344,30 @@ const Product = () => {
                             style={{ top: '20px' }} 
                         >
                             {/* ------------------------------------- */}
-                            {/* 1. MOBİL/TABLET GÖRÜNÜMÜ (<= lg) - Slider/Carousel */}
+                            {/* 1. MOBİL/TABLET GÖRÜNÜMÜ (<= lg) - Swipeable Carousel */}
                             {/* ------------------------------------- */}
                             <div className="lg:hidden w-full relative min-h-[60vh] rounded-lg overflow-hidden mb-4 shadow-md border border-gray-100"> 
-                                <Image
-                                    src={productData.image_urls[currentImageIndex] || getSafeImageUrl(productData.image_urls, 0)}
-                                    alt={productData.name}
-                                    fill
-                                    className="object-contain object-center transition-all duration-300"
-                                    priority
-                                />
+                                {/* Yatay kaydırılabilir görsel listesi */}
+                                <div 
+                                    ref={mobileCarouselRef} 
+                                    className="absolute inset-0 flex overflow-x-scroll snap-x snap-mandatory scroll-smooth"
+                                >
+                                    {productData.image_urls.map((url, index) => (
+                                        <div 
+                                            key={`mobile-${index}`} 
+                                            className="flex-shrink-0 w-full h-full relative snap-center"
+                                            style={{ minWidth: '100%' }} // Her zaman bir görselin tam genişliğini almasını sağlar
+                                        >
+                                            <Image
+                                                src={url}
+                                                alt={`${productData.name} - ${index + 1}`}
+                                                fill
+                                                className="object-contain object-center"
+                                                priority={index === 0}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                                 
                                 {/* Mobil Navigasyon Butonları */}
                                 {productData.image_urls.length > 1 && (
@@ -339,11 +386,11 @@ const Product = () => {
                                         </button>
                                         
                                         {/* İndikatörler */}
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1">
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
                                             {productData.image_urls.map((_, index) => (
                                                 <div 
                                                     key={index}
-                                                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                                    className={`w-2 h-2 rounded-full transition-colors duration-300 cursor-pointer ${
                                                          index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300' 
                                                      }`}
                                                      onClick={() => setCurrentImageIndex(index)}
@@ -634,7 +681,6 @@ const Product = () => {
                             <div className="pt-4 border-t">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Yorumunuzu Yazın</h3>
                                 <div className="flex justify-center mb-3">
-                                    {/* StarRating bileşeninin onRatingChange prop'unu desteklemediğini varsayarak onClick handler'ı ile düzeltme yapıyoruz */}
                                     <div className="flex items-center">
                                         {[...Array(5)].map((_, i) => (
                                             <button key={i} type="button" onClick={() => setUserRating(i + 1)} className="focus:outline-none">

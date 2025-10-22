@@ -1,3 +1,5 @@
+// karaytumut20/akkoc/akkoc-5d22abddfbdb608ed63a7118f16d75c890f4721a/app/seller/product-list/page.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,7 +13,7 @@ const BUCKET_NAME = 'product-images';
 
 const LIMITS = {
   bigcard: 1,
-  doublebigcardtext: 4, // ✅ tek hale getirildi
+  doublebigcardtext: 4, 
   icons: 6,
   brandicon: 4,
 };
@@ -127,18 +129,34 @@ export default function ProductsTable() {
     }));
   };
 
+  // ✅ BU KISMI DÜZELTİYORUZ
   const handleDelete = async (id) => {
     if (!confirm('Bu ürünü silmek istediğine emin misin?')) return;
     setActionLoading(true);
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) {
+
+    // Düzeltme: delete() işleminden sonra select() kullanarak etkilenen satır sayısını kontrol et.
+    const { data, error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .select('id'); // Silinen satırın ID'sini döndür
+
+    setActionLoading(false);
+
+    if (error) {
+      // 1. Ağ veya veritabanı bağlantı hatası (Nadiren)
+      toast.error('Silme işlemi sırasında bir veritabanı hatası oluştu: ' + error.message);
+    } else if (data && data.length > 0) {
+      // 2. Başarılı silme (En az bir satır silindi)
       setProducts(products.filter(p => p.id !== id));
       toast.success('Ürün başarıyla silindi!');
     } else {
-      toast.error('Silme işlemi başarısız: ' + error.message);
+      // 3. Silme işlemi sunucuda başarılı göründü, ancak 0 satır silindi. (RLS Engeli)
+      toast.error('Silme işlemi başarısız oldu. Ürün bulunamadı veya yetkiniz yok. Lütfen Supabase RLS politikalarınızı kontrol edin.');
     }
-    setActionLoading(false);
   };
+  // ✅ DÜZELTİLMİŞ handleDelete SONU
+
 
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
@@ -399,7 +417,27 @@ export default function ProductsTable() {
                     onChange={handleFormChange}
                   />
 
-                  {/* ✅ Checkbox alanları */}
+                  {/* ✅ Görsel ve Vitrin Ayarları kısımları devam ediyor... */}
+                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi</h3>
+                    <div className="mb-6 pb-4 border-b border-indigo-100">
+                      <h4 className="text-sm font-semibold mb-3 text-gray-600">Mevcut Görseller ({formData.image_urls.length} adet)</h4>
+                      <div className="flex flex-wrap gap-3">
+                        {formData.image_urls.map((url, index) => (
+                          <div key={`existing-${index}`} className="relative w-20 h-20 border-2 border-white rounded-lg overflow-hidden shadow-md group">
+                            <Image src={url} alt={`Görsel ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                            <button onClick={() => handleRemoveImage(url)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <FiTrash2 className="text-white w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                        {formData.image_urls.length === 0 && (<p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p>)}
+                      </div>
+                    </div>
+                    
+                    {/* Yeni görsel yükleme alanı burada devam ediyor... */}
+                  </div>
+                  
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">
                       Vitrin Ayarları
