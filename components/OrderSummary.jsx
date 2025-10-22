@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import toast from 'react-hot-toast';
 import { FaDollarSign } from "react-icons/fa";
+import Swal from 'sweetalert2'; // ✅ Modern popup
 
 const OrderSummary = () => {
   const { 
@@ -22,11 +23,32 @@ const OrderSummary = () => {
   const [coupon, setCoupon] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleQuantityChange = (productId, newQuantity) => {
+  // ✅ Modern Popup ile ürün silme
+  const handleQuantityChange = async (productId, newQuantity) => {
     if (newQuantity <= 0) {
+      const result = await Swal.fire({
+        title: 'Remove Item?',
+        text: "Are you sure you want to remove this item from your cart?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0d9488', // turkuaz
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it',
+        cancelButtonText: 'Cancel',
+        background: '#fff',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl',
+          title: 'text-gray-800 font-semibold',
+          htmlContainer: 'text-gray-600',
+        }
+      });
+
+      if (!result.isConfirmed) return;
+
       const updatedCart = { ...cartItems };
       delete updatedCart[productId];
       setCartItems(updatedCart);
+      toast.success("Item removed from cart");
     } else {
       updateCartQuantity(productId, newQuantity);
     }

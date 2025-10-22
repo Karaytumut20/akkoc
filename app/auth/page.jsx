@@ -37,23 +37,99 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
   const title = isPrivacy ? 'Privacy Policy' : 'Terms of Service';
 
   const content = isPrivacy ? (
-    <div className="space-y-4 text-gray-700">
-      <p><strong>1.</strong> We collect your personal information only for providing services.</p>
-      <p><strong>2.</strong> We protect your data with security measures.</p>
-      <p><strong>3.</strong> We do not share your data with third parties without consent.</p>
+    <div className="space-y-4 text-gray-700 leading-relaxed">
+      <p>
+        At <strong>Your Company</strong>, we value your trust and are committed to safeguarding
+        your personal information. This Privacy Policy explains how we collect, use, store, and
+        protect your data when you use our services.
+      </p>
+      <p>
+        <strong>1. Information We Collect:</strong> We collect personal information you provide
+        during account registration, checkout, or communication with our support team. This may
+        include your name, email address, phone number (optional), shipping address, and payment
+        details.
+      </p>
+      <p>
+        <strong>2. How We Use Your Information:</strong> We use your information to process
+        transactions, deliver products, improve user experience, send order updates, and ensure
+        secure account management.
+      </p>
+      <p>
+        <strong>3. Data Protection:</strong> Your data is stored securely on encrypted servers.
+        We implement industry-standard security protocols to protect against unauthorized access,
+        disclosure, or misuse.
+      </p>
+      <p>
+        <strong>4. Third-Party Disclosure:</strong> We do not sell or rent your data. Limited
+        data may be shared with trusted third parties (e.g., payment gateways, logistics partners)
+        solely for order fulfillment.
+      </p>
+      <p>
+        <strong>5. Your Rights:</strong> You have the right to access, modify, or delete your data
+        at any time. You can also manage your communication preferences or withdraw consent for
+        data processing.
+      </p>
+      <p>
+        <strong>6. Policy Updates:</strong> We may update this policy to reflect legal,
+        technological, or business changes. All updates will be announced through our platform.
+      </p>
+      <p>
+        By continuing to use our platform, you acknowledge that you have read and understood this
+        Privacy Policy.
+      </p>
     </div>
   ) : (
-    <div className="space-y-4 text-gray-700">
-      <p><strong>1.</strong> By using our services, you agree to these terms.</p>
-      <p><strong>2.</strong> You must keep your account secure.</p>
-      <p><strong>3.</strong> Violations may lead to suspension.</p>
+    <div className="space-y-4 text-gray-700 leading-relaxed">
+      <p>
+        Welcome to <strong>Your Company</strong>. These Terms of Service outline the rules and
+        regulations for using our website and services. By accessing our platform, you agree to
+        comply with these terms.
+      </p>
+      <p>
+        <strong>1. Account Responsibility:</strong> You are responsible for maintaining the
+        confidentiality of your login credentials and all activities under your account.
+        We reserve the right to suspend or terminate accounts for policy violations.
+      </p>
+      <p>
+        <strong>2. Acceptable Use:</strong> You agree to use our services only for lawful
+        purposes. Fraudulent activities or misuse of our platform will result in immediate
+        termination and possible legal action.
+      </p>
+      <p>
+        <strong>3. Orders & Payments:</strong> All transactions must be valid and authorized.
+        We reserve the right to cancel orders in case of payment issues, pricing errors, or
+        stock unavailability.
+      </p>
+      <p>
+        <strong>4. Intellectual Property:</strong> All text, images, graphics, and software are
+        the property of <strong>Your Company</strong> and protected under applicable laws.
+        Unauthorized use is strictly prohibited.
+      </p>
+      <p>
+        <strong>5. Limitation of Liability:</strong> We are not liable for any indirect,
+        incidental, or consequential damages resulting from the use of our services to the
+        maximum extent permitted by law.
+      </p>
+      <p>
+        <strong>6. Changes to Terms:</strong> We may update these Terms at any time to reflect
+        new legal requirements or business practices. Continued use of the platform constitutes
+        acceptance of these changes.
+      </p>
+      <p>
+        <strong>7. Governing Law:</strong> These Terms are governed by applicable local laws.
+        Any disputes will be resolved under the exclusive jurisdiction of the competent courts.
+      </p>
+      <p>
+        By creating an account or using our services, you confirm that you have read, understood,
+        and agreed to these Terms of Service.
+      </p>
     </div>
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[#FFFFFF] rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6 relative"
+        className="bg-[#FFFFFF] rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -66,9 +142,7 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
           <Image src={logo} alt="Logo" width={40} height={40} />
           <h3 className="text-2xl font-semibold text-teal-700">{title}</h3>
         </div>
-        <div className="max-h-[60vh] overflow-y-auto text-sm leading-relaxed">
-          {content}
-        </div>
+        <div className="max-h-[70vh] overflow-y-auto text-sm pr-2">{content}</div>
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
@@ -108,14 +182,13 @@ export default function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ⚠️ Şifre kontrolü (6 karakterden azsa uyar)
     if (password.length < 6) {
       toast.error('⚠️ Password must be at least 6 characters long.');
       return;
     }
 
     if (!isLogin && !termsAccepted) {
-      toast.error('You must accept the Terms and Privacy Policy.');
+      toast.error('Please accept the Terms of Service and Privacy Policy.');
       return;
     }
 
@@ -146,7 +219,10 @@ export default function AuthPage() {
           email,
           password,
           options: {
-            data: { full_name: fullName, phone: phone },
+            data: { 
+              full_name: fullName, 
+              phone: phone || null 
+            },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
@@ -200,10 +276,9 @@ export default function AuthPage() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  label="Phone Number"
+                  label="Phone Number (optional)"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  required
                   autoComplete="tel"
                 />
               </>
@@ -242,12 +317,12 @@ export default function AuthPage() {
                     className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-600"
                   />
                 </div>
-                <div className="ml-3 text-sm text-gray-700">
-                  I agree to the{' '}
+                <div className="ml-3 text-sm text-gray-700 leading-snug">
+                  By signing up, you agree to our{' '}
                   <button
                     type="button"
                     onClick={() => openModal('privacy')}
-                    className="text-teal-600 hover:underline"
+                    className="text-teal-600 font-semibold hover:underline"
                   >
                     Privacy Policy
                   </button>{' '}
@@ -255,7 +330,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => openModal('terms')}
-                    className="text-teal-600 hover:underline"
+                    className="text-teal-600 font-semibold hover:underline"
                   >
                     Terms of Service
                   </button>.
