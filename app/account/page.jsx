@@ -31,17 +31,17 @@ const AccountDashboard = () => {
                         <div>
                             <div className="flex justify-between items-center text-sm mb-2"><span className="text-gray-500">Sipariş ID:</span><span className="font-medium text-gray-800">#{latestOrder.id.slice(0, 8)}</span></div>
                             <div className="flex justify-between items-center text-sm mb-2"><span className="text-gray-500">Tarih:</span><span className="font-medium text-gray-800">{new Date(latestOrder.created_at).toLocaleDateString()}</span></div>
-                            <div className="flex justify-between items-center text-sm mb-4"><span className="text-gray-500">Tutar:</span><span className="font-bold text-lg text-orange-600">${latestOrder.total_amount.toFixed(2)}</span></div>
-                            <Link href="/account/my-orders" className="text-sm font-semibold text-orange-600 hover:underline flex items-center gap-1">Tüm Siparişleri Gör <FiChevronRight /></Link>
+                            <div className="flex justify-between items-center text-sm mb-4"><span className="text-gray-500">Tutar:</span><span className="font-bold text-lg text-teal-600">${latestOrder.total_amount.toFixed(2)}</span></div>
+                            <Link href="/account/my-orders" className="text-sm font-semibold text-teal-600 hover:underline flex items-center gap-1">Tüm Siparişleri Gör <FiChevronRight /></Link>
                         </div>
                     ) : (<p className="text-sm text-gray-500 py-4 text-center">Henüz bir sipariş vermediniz.</p>)}
                 </div>
                 <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
                      <h3 className="font-semibold text-gray-700 mb-3">Hızlı Erişim</h3>
                      <div className="space-y-2">
-                        <Link href="/account?tab=profile" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Profil Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
-                        <Link href="/account/addresses" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Adres Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
-                        <Link href="/account?tab=password" className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 transition group"><span>Parola Güvenliği</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
+                        <Link href="/account?tab=profile" className="flex items-center justify-between text-sm text-gray-600 hover:text-teal-600 transition group"><span>Profil Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
+                        <Link href="/account/addresses" className="flex items-center justify-between text-sm text-gray-600 hover:text-teal-600 transition group"><span>Adres Bilgilerim</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
+                        <Link href="/account?tab=password" className="flex items-center justify-between text-sm text-gray-600 hover:text-teal-600 transition group"><span>Parola Güvenliği</span><FiChevronRight className="transform transition-transform group-hover:translate-x-1"/></Link>
                      </div>
                 </div>
             </div>
@@ -52,13 +52,13 @@ const AccountDashboard = () => {
 const ProfileSettings = () => {
     const { user, updateUserData } = useAppContext();
     const [fullName, setFullName] = useState('');
-    const [phone, setPhone] = useState(''); // Yeni state
+    const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if(user?.user_metadata) {
             setFullName(user.user_metadata.full_name || '');
-            setPhone(user.user_metadata.phone || ''); // Telefon numarasını state'e ata
+            setPhone(user.user_metadata.phone || '');
         }
     }, [user]);
 
@@ -70,7 +70,7 @@ const ProfileSettings = () => {
         setLoading(true);
         await updateUserData({ 
             full_name: fullName,
-            phone: phone // Güncellenecek veriye telefonu ekle
+            phone: phone
         });
         setLoading(false);
     }
@@ -97,7 +97,6 @@ const ProfileSettings = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     required 
                 />
-                {/* YENİ EKLENEN TELEFON ALANI */}
                 <FloatingLabelInput 
                     id="phone" 
                     name="phone" 
@@ -107,7 +106,7 @@ const ProfileSettings = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     required 
                 />
-                <button type="submit" disabled={loading} className="py-2 px-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none disabled:bg-orange-300">
+                <button type="submit" disabled={loading} className="py-2 px-4 text-white bg-teal-600 rounded-md hover:bg-teal-700 focus:outline-none disabled:bg-teal-300">
                     {loading ? 'Güncelleniyor...' : 'Bilgileri Güncelle'}
                 </button>
             </form>
@@ -115,7 +114,6 @@ const ProfileSettings = () => {
     );
 };
 
-// ... (Diğer bileşenler aynı kalacak: ChangePassword, AddCardModal, SavedCards, MyReviews, NotificationPreferences) ...
 const ChangePassword = () => {
     const { changeUserPassword } = useAppContext();
     const [currentPassword, setCurrentPassword] = useState('');
@@ -145,7 +143,9 @@ const ChangePassword = () => {
                 <FloatingLabelInput id="currentPassword" name="currentPassword" type="password" label="Mevcut Parola" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
                 <FloatingLabelInput id="newPassword" name="newPassword" type="password" label="Yeni Parola" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
                 <FloatingLabelInput id="confirmPassword" name="confirmPassword" type="password" label="Yeni Parolayı Onayla" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-                <button type="submit" disabled={loading} className="py-2 px-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none disabled:bg-orange-300">{loading ? 'Güncelleniyor...' : 'Parolayı Güncelle'}</button>
+                <button type="submit" disabled={loading} className="py-2 px-4 text-white bg-teal-600 rounded-md hover:bg-teal-700 focus:outline-none disabled:bg-teal-300">
+                    {loading ? 'Güncelleniyor...' : 'Parolayı Güncelle'}
+                </button>
             </form>
         </div>
     );
@@ -193,7 +193,9 @@ const AddCardModal = ({ onClose }) => {
                             <FloatingLabelInput id="cvc" name="cvc" label="CVC" value={cardData.cvc} onChange={handleChange} required />
                         </div>
                     </div>
-                    <button type="submit" disabled={loading} className="w-full mt-8 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-orange-400">{loading ? "Kaydediliyor..." : "Kartı Kaydet"}</button>
+                    <button type="submit" disabled={loading} className="w-full mt-8 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-teal-400">
+                        {loading ? "Kaydediliyor..." : "Kartı Kaydet"}
+                    </button>
                 </form>
             </div>
         </div>
@@ -208,7 +210,7 @@ const SavedCards = () => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Kayıtlı Kartlarım</h2>
-                <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition shadow-md text-sm"><FiCreditCard /><span>Yeni Kart Ekle</span></button>
+                <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition shadow-md text-sm"><FiCreditCard /><span>Yeni Kart Ekle</span></button>
             </div>
             {savedCards.length > 0 ? (
                 <div className="space-y-4">
@@ -266,7 +268,7 @@ const MyReviews = () => {
                                         </Link>
                                         <div className="ml-4">
                                             <Link href={`/product/${review.products.id}`}>
-                                                <p className="font-semibold text-gray-800 hover:text-orange-600 transition">{review.products.name}</p>
+                                                <p className="font-semibold text-gray-800 hover:text-teal-600 transition">{review.products.name}</p>
                                             </Link>
                                             <p className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString()}</p>
                                         </div>
@@ -310,30 +312,29 @@ const NotificationPreferences = () => {
             <div className="space-y-4 max-w-lg">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                     <label className="font-medium text-gray-700">Kampanya ve indirim E-postaları</label>
-                    <button onClick={() => handleToggle('campaigns')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.campaigns ? 'bg-orange-600' : 'bg-gray-300'}`}>
+                    <button onClick={() => handleToggle('campaigns')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.campaigns ? 'bg-teal-600' : 'bg-gray-300'}`}>
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.campaigns ? 'translate-x-6' : 'translate-x-1'}`}/>
                     </button>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                     <label className="font-medium text-gray-700">Sipariş durumu bildirimleri</label>
-                    <button onClick={() => handleToggle('orderStatus')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.orderStatus ? 'bg-orange-600' : 'bg-gray-300'}`}>
+                    <button onClick={() => handleToggle('orderStatus')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.orderStatus ? 'bg-teal-600' : 'bg-gray-300'}`}>
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.orderStatus ? 'translate-x-6' : 'translate-x-1'}`}/>
                     </button>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                     <label className="font-medium text-gray-700">Kişiye özel teklifler</label>
-                    <button onClick={() => handleToggle('specialOffers')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.specialOffers ? 'bg-orange-600' : 'bg-gray-300'}`}>
+                    <button onClick={() => handleToggle('specialOffers')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.specialOffers ? 'bg-teal-600' : 'bg-gray-300'}`}>
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.specialOffers ? 'translate-x-6' : 'translate-x-1'}`}/>
                     </button>
                 </div>
-                <button onClick={handleSave} disabled={loading} className="py-2 px-4 mt-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:bg-orange-300">
+                <button onClick={handleSave} disabled={loading} className="py-2 px-4 mt-4 text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:bg-teal-300">
                     {loading ? "Kaydediliyor..." : "Tercihleri Kaydet"}
                 </button>
             </div>
         </div>
     )
 };
-
 
 // ANA SAYFA İÇERİK YÖNETİCİSİ
 const AccountPageContent = () => {

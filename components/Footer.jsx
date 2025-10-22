@@ -10,8 +10,8 @@ const Footer = () => {
         <div className="w-4/5">
           <Image className="w-28 md:w-32" src={assets.logo} alt="logo" />
           <p className="mt-6 text-sm">
-           Nestcome specializes in premium-quality tableware crafted with care and precision.
-mission is to elevate your dining experience with elegant, functional, and sustainable designs.
+            Nestcome specializes in premium-quality tableware crafted with care and precision.
+            mission is to elevate your dining experience with elegant, functional, and sustainable designs.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ mission is to elevate your dining experience with elegant, functional, and susta
                   href="https://www.instagram.com/nestcome.kitchen"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline transition text-blue-600"
+                  className="hover:underline transition text-[#0D9488]"
                 >
                   @nestcome.kitchen
                 </a>
@@ -62,7 +62,7 @@ mission is to elevate your dining experience with elegant, functional, and susta
               <p>
                 <a
                   href="mailto:nestcomecontact@gmail.com"
-                  className="hover:underline transition text-blue-600"
+                  className="hover:underline transition text-[#0D9488]"
                 >
                   nestcomecontact@gmail.com
                 </a>
