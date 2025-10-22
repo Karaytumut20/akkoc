@@ -1,18 +1,23 @@
-"use client";
-
+'use client'
 import { useState, useEffect, useMemo } from "react";
-import ProductCard2 from "@/components/ProductCard2";
+import ProductCard2 from "@/components/ProductCard2"; 
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
 import { supabase } from "@/lib/supabaseClient";
 import Loading from "@/components/Loading";
 import { FiChevronDown } from "react-icons/fi";
+import { useSearchParams } from "next/navigation";
 
 const AllProducts = () => {
   const { products, loading: productsLoading } = useAppContext();
+  const searchParams = useSearchParams(); 
 
+  // URL'den category_id parametresi varsa al
+  const categoryFromUrl = searchParams.get('category_id');
+  
+  // Eğer category_id parametresi varsa onunla başla, yoksa 'all' yap
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "all"); 
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState(null);
   const [priceFilter, setPriceFilter] = useState(null);
   const [openSection, setOpenSection] = useState(null);
@@ -25,27 +30,45 @@ const AllProducts = () => {
     fetchCategories();
   }, []);
 
+  // URL parametresi değiştiğinde filtreyi güncelle
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    } else {
+      setSelectedCategory("all"); // URL boşsa tüm ürünleri göster
+    }
+  }, [categoryFromUrl]);
+
   const filteredProducts = useMemo(() => {
     let processed = [...products];
 
-    if (selectedCategory !== "all") {
-      processed = processed.filter((p) => p.category_id === selectedCategory);
+    // Kategori Filtresi
+    if (selectedCategory && selectedCategory !== "all") {
+      processed = processed.filter(
+        (p) => String(p.category_id) === String(selectedCategory)
+      );
     }
 
+    // Stok filtresi
     if (availabilityFilter === "inStock") {
       processed = processed.filter((p) => p.stock > 0);
     } else if (availabilityFilter === "outOfStock") {
       processed = processed.filter((p) => p.stock <= 0);
     }
 
+    // Fiyat sıralaması
     if (priceFilter === "low") {
-      processed = processed.sort((a, b) => a.price - b.price);
+      processed.sort((a, b) => a.price - b.price);
     } else if (priceFilter === "high") {
-      processed = processed.sort((a, b) => b.price - a.price);
+      processed.sort((a, b) => b.price - a.price);
     }
 
     return processed;
   }, [products, selectedCategory, availabilityFilter, priceFilter]);
+
+  const toggleSection = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
 
   if (productsLoading) {
     return (
@@ -56,15 +79,13 @@ const AllProducts = () => {
     );
   }
 
-  const toggleSection = (section) => {
-    setOpenSection(openSection === section ? null : section);
-  };
-
   return (
     <>
       <div className="flex flex-col lg:flex-row items-start px-6 md:px-16 lg:px-32 min-h-[70vh] gap-8 mt-0 sm:mt-4 md:mt-6 lg:mt-10">
+        
         {/* 🧭 Filtre Menüsü */}
-        <div className="w-full lg:w-1/4 bg-white rounded-lg shadow-sm p-4 border border-gray-200 mt-0 sm:mt-4 md:mt-6 lg:mt-10">
+        <div className="w-full lg:w-1/4 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          
           {/* Availability */}
           <div className="border-b border-gray-200 py-2">
             <button
@@ -73,9 +94,7 @@ const AllProducts = () => {
             >
               AVAILABILITY
               <FiChevronDown
-                className={`transform transition-transform ${
-                  openSection === "availability" ? "rotate-180" : ""
-                }`}
+                className={`transform transition-transform ${openSection === "availability" ? "rotate-180" : ""}`}
               />
             </button>
             {openSection === "availability" && (
@@ -119,9 +138,7 @@ const AllProducts = () => {
             >
               PRICE
               <FiChevronDown
-                className={`transform transition-transform ${
-                  openSection === "price" ? "rotate-180" : ""
-                }`}
+                className={`transform transition-transform ${openSection === "price" ? "rotate-180" : ""}`}
               />
             </button>
             {openSection === "price" && (
@@ -157,7 +174,7 @@ const AllProducts = () => {
             )}
           </div>
 
-          {/* Product Type */}
+          {/* Category */}
           <div className="py-2">
             <button
               className="w-full flex justify-between items-center text-left font-medium text-gray-800"
@@ -165,9 +182,7 @@ const AllProducts = () => {
             >
               PRODUCT TYPE
               <FiChevronDown
-                className={`transform transition-transform ${
-                  openSection === "category" ? "rotate-180" : ""
-                }`}
+                className={`transform transition-transform ${openSection === "category" ? "rotate-180" : ""}`}
               />
             </button>
             {openSection === "category" && (
@@ -182,15 +197,12 @@ const AllProducts = () => {
                   All
                 </label>
                 {categories.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
+                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="category"
                       onChange={() => setSelectedCategory(cat.id)}
-                      checked={selectedCategory === cat.id}
+                      checked={String(selectedCategory) === String(cat.id)}
                     />
                     {cat.name}
                   </label>
@@ -201,7 +213,7 @@ const AllProducts = () => {
         </div>
 
         {/* 🛍 Ürünler */}
-        <div className="w-full lg:w-3/4 mt-0 sm:mt-4 md:mt-6 lg:mt-10">
+        <div className="w-full lg:w-3/4">
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-14">
               {filteredProducts.map((product) => (

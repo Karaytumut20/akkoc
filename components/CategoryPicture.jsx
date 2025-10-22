@@ -1,12 +1,12 @@
-// components/CategoryPicture.jsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
+import { useAppContext } from '@/context/AppContext'; // Next.js router'ı almak için varsayıyorum
 
 export default function Categories() {
+  const { router } = useAppContext(); // Next.js Router hook'u (veya useAppContext içindeki karşılığı)
   const [iconProducts, setIconProducts] = useState([]);
 
   useEffect(() => {
@@ -14,9 +14,10 @@ export default function Categories() {
   }, []);
 
   const fetchIconProducts = async () => {
+    // category_id'yi seçtiğinizden emin olmalıyız.
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, image_urls')
+      .select('id, name, image_urls, category_id') // <-- category_id eklendi
       .eq('icons', true);
 
     if (error) {
@@ -33,12 +34,18 @@ export default function Categories() {
     }
   };
 
-  // GÜVENLİ FONKSİYON
   const getValidImage = (imageArray) => {
     if (Array.isArray(imageArray) && imageArray.length > 0 && typeof imageArray[0] === 'string' && imageArray[0].trim() !== '') {
         return imageArray[0];
     }
     return '/assets/placeholder.jpg'; // Varsayılan resim
+  };
+
+  // Tıklanan kategori ID'si ile yönlendirme yap
+  const handleCategoryClick = (categoryId) => {
+    // all-products sayfasına, category_id'yi sorgu parametresi olarak ekleyerek yönlendiriyoruz.
+    // Bu sayede hedef sayfada filtre otomatik uygulanacak.
+    router.push(`/all-products?category_id=${categoryId}`);
   };
 
   if (iconProducts.length === 0) return null;
@@ -54,6 +61,8 @@ export default function Categories() {
           {iconProducts.map((product) => (
             <div
               key={product.id}
+              // Tıklama olayını category_id ile bağlıyoruz.
+              onClick={() => handleCategoryClick(product.category_id)} 
               className="flex-shrink-0 w-[40%] sm:w-[30%] md:w-[25%] lg:w-auto
                          relative cursor-pointer text-center group transition-transform duration-300 hover:scale-105"
             >
