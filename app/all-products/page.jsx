@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useMemo } from "react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard2 from "@/components/ProductCard2";
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -205,7 +205,7 @@ const AllProducts = () => {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-14">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard2 key={product.id} product={product} />
               ))}
             </div>
           ) : (
