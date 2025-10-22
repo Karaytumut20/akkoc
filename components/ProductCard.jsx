@@ -43,7 +43,7 @@ const ProductCard = ({ product }) => {
       <div className="relative rounded-none w-full aspect-[4/4] overflow-hidden bg-gray-100">
         <Image
           src={getValidImage(product.image_urls)}
-          alt="Product image"
+          alt={product.name || 'Product image'}
           className="group-hover:scale-105 transition-transform duration-300 object-cover w-full h-full"
           fill
           sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 25vw"
@@ -60,6 +60,13 @@ const ProductCard = ({ product }) => {
             }`}
           />
         </button>
+      </div>
+
+      {/* Ürün ismi */}
+      <div className="mt-3 w-full text-center">
+        <h3 className="text-base font-medium text-gray-800 truncate hover:text-teal-600 transition-colors">
+          {product.name}
+        </h3>
       </div>
     </div>
   );

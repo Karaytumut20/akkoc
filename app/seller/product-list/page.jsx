@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
-import { FiTrash2, FiX, FiEdit3, FiUploadCloud } from 'react-icons/fi';
+import { FiTrash2, FiX, FiEdit3 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
@@ -11,8 +11,7 @@ const BUCKET_NAME = 'product-images';
 
 const LIMITS = {
   bigcard: 1,
-  doublebigcard: 2,
-  doublebigcardtext: 2,
+  doublebigcardtext: 4, // ✅ tek hale getirildi
   icons: 6,
   brandicon: 4,
 };
@@ -33,7 +32,6 @@ export default function ProductsTable() {
     stock: '',
     image_urls: [],
     bigcard: false,
-    doublebigcard: false,
     doublebigcardtext: false,
     icons: false,
     brandicon: false,
@@ -98,15 +96,23 @@ export default function ProductsTable() {
     const newImageUrls = [];
     for (const fileObj of filesToUpload) {
       const file = fileObj.file;
-      const safeName = formData.name ? formData.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') : 'unnamed_product';
-      const filePath = `${safeName}/${Date.now()}_${Math.random().toString(36).substring(2)}_${file.name.replace(/\s/g, '_')}`;
-      const { data, error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file);
+      const safeName = formData.name
+        ? formData.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_')
+        : 'unnamed_product';
+      const filePath = `${safeName}/${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2)}_${file.name.replace(/\s/g, '_')}`;
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file);
       if (error) {
         console.error('Dosya yükleme hatası:', error);
         toast.error(`Dosya yüklenemedi: ${file.name}`);
         continue;
       }
-      const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(data.path);
       if (publicUrlData) newImageUrls.push(publicUrlData.publicUrl);
     }
     filesToUpload.forEach(fileObj => URL.revokeObjectURL(fileObj.preview));
@@ -126,10 +132,10 @@ export default function ProductsTable() {
     setActionLoading(true);
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (!error) {
-        setProducts(products.filter(p => p.id !== id));
-        toast.success('Ürün başarıyla silindi!');
+      setProducts(products.filter(p => p.id !== id));
+      toast.success('Ürün başarıyla silindi!');
     } else {
-        toast.error('Silme işlemi başarısız: ' + error.message);
+      toast.error('Silme işlemi başarısız: ' + error.message);
     }
     setActionLoading(false);
   };
@@ -145,7 +151,6 @@ export default function ProductsTable() {
       stock: product.stock,
       image_urls: product.image_urls || [],
       bigcard: product.bigcard || false,
-      doublebigcard: product.doublebigcard || false,
       doublebigcardtext: product.doublebigcardtext || false,
       icons: product.icons || false,
       brandicon: product.brandicon || false,
@@ -176,10 +181,10 @@ export default function ProductsTable() {
 
     setActionLoading(true);
     const toastId = toast.loading('Ürün güncelleniyor...');
-    
+
     const uploadedUrls = await uploadFiles();
     const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
-    
+
     const { error } = await supabase
       .from('products')
       .update({
@@ -190,7 +195,6 @@ export default function ProductsTable() {
         stock: parseInt(formData.stock),
         image_urls: finalImageUrls,
         bigcard: formData.bigcard,
-        doublebigcard: formData.doublebigcard,
         doublebigcardtext: formData.doublebigcardtext,
         icons: formData.icons,
         brandicon: formData.brandicon,
@@ -206,18 +210,25 @@ export default function ProductsTable() {
     }
     setActionLoading(false);
   };
-  
-  if (loading) return <div className="flex justify-center items-center h-screen text-lg text-gray-700">Ürünler yükleniyor...</div>;
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen text-lg text-gray-700">
+        Ürünler yükleniyor...
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <div className="p-4 sm:p-6 lg:p-8">
         <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">
-            Ürünler Yönetim Paneli
+          Ürünler Yönetim Paneli
         </h1>
 
         {products.length === 0 ? (
-          <p className="text-center text-xl text-gray-500 py-10">Henüz ürün bulunmuyor.</p>
+          <p className="text-center text-xl text-gray-500 py-10">
+            Henüz ürün bulunmuyor.
+          </p>
         ) : (
           <div className="overflow-x-auto shadow-2xl rounded-xl border border-gray-100/70 bg-white">
             <table className="min-w-full divide-y divide-gray-200/60">
@@ -235,34 +246,82 @@ export default function ProductsTable() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.map(product => (
-                  <tr key={product.id} className="hover:bg-indigo-50/20 transition duration-150">
+                  <tr
+                    key={product.id}
+                    className="hover:bg-indigo-50/20 transition duration-150"
+                  >
                     <td className="px-4 py-3 sm:px-6">
                       {getValidImage(product.image_urls) ? (
-                        <Image src={getValidImage(product.image_urls)} alt={product.name} width={56} height={56} className="rounded-lg object-cover w-14 h-14 border border-gray-200" />
+                        <Image
+                          src={getValidImage(product.image_urls)}
+                          alt={product.name}
+                          width={56}
+                          height={56}
+                          className="rounded-lg object-cover w-14 h-14 border border-gray-200"
+                        />
                       ) : (
-                        <div className="w-14 h-14 bg-gray-100 flex items-center justify-center text-gray-400 rounded-lg text-xs text-center p-1">Görsel Yok</div>
+                        <div className="w-14 h-14 bg-gray-100 flex items-center justify-center text-gray-400 rounded-lg text-xs text-center p-1">
+                          Görsel Yok
+                        </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 sm:px-6 font-medium text-gray-900">{product.name}</td>
-                    <td className="px-4 py-3 sm:px-6 hidden md:table-cell text-sm text-gray-600 truncate max-w-xs">{product.description}</td>
+                    <td className="px-4 py-3 sm:px-6 font-medium text-gray-900">
+                      {product.name}
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 hidden md:table-cell text-sm text-gray-600 truncate max-w-xs">
+                      {product.description}
+                    </td>
                     <td className="px-4 py-3 sm:px-6 hidden sm:table-cell">
-                        <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full">{product.categories?.name || 'Kategorisiz'}</span>
+                      <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {product.categories?.name || 'Kategorisiz'}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 sm:px-6 text-right text-lg font-bold text-indigo-600">{product.price} ₺</td>
-                    <td className="px-4 py-3 sm:px-6 text-center font-medium">{product.stock}</td>
-                    <td className="px-4 py-3 sm:px-6 text-center space-x-1">
-                      {product.bigcard && <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full mr-1">Big</span>}
-                      {product.doublebigcard && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mr-1">Double</span>}
-                      {product.doublebigcardtext && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full mr-1">Text</span>}
-                      {product.icons && <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full mr-1">Icons</span>}
-                      {product.brandicon && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Brand</span>}
+                    <td className="px-4 py-3 sm:px-6 text-right text-lg font-bold text-indigo-600">
+                      {product.price} ₺
                     </td>
+                    <td className="px-4 py-3 sm:px-6 text-center font-medium">
+                      {product.stock}
+                    </td>
+
+                    {/* ✨ Vitrin kısmı */}
+                    <td className="px-4 py-3 sm:px-6 text-center">
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {product.bigcard && (
+                          <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full whitespace-nowrap">
+                            Big
+                          </span>
+                        )}
+                        {product.doublebigcardtext && (
+                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full whitespace-nowrap">
+                            Double Text
+                          </span>
+                        )}
+                        {product.icons && (
+                          <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full whitespace-nowrap">
+                            Icons
+                          </span>
+                        )}
+                        {product.brandicon && (
+                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full whitespace-nowrap">
+                            Brand
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
                     <td className="px-4 py-3 sm:px-6 text-center space-y-1 sm:space-x-2 sm:space-y-0 flex flex-col sm:flex-row justify-center items-center">
-                      <button onClick={() => handleEditClick(product)} className="w-full sm:w-auto px-3 py-1 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition shadow-md flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => handleEditClick(product)}
+                        className="w-full sm:w-auto px-3 py-1 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition shadow-md flex items-center justify-center gap-1"
+                      >
                         <FiEdit3 className="w-4 h-4" /> Düzenle
                       </button>
-                      <button onClick={() => handleDelete(product.id)} disabled={actionLoading} className="w-full sm:w-auto px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition shadow-md disabled:opacity-50 flex items-center justify-center gap-1">
-                         <FiTrash2 className="w-4 h-4" /> Sil
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        disabled={actionLoading}
+                        className="w-full sm:w-auto px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition shadow-md disabled:opacity-50 flex items-center justify-center gap-1"
+                      >
+                        <FiTrash2 className="w-4 h-4" /> Sil
                       </button>
                     </td>
                   </tr>
@@ -272,86 +331,110 @@ export default function ProductsTable() {
           </div>
         )}
 
+        {/* Düzenleme modalı */}
         {editingProduct && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center p-0 sm:p-4">
             <div className="bg-white rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-2xl overflow-y-auto transform transition-all duration-300 shadow-3xl">
               <div className="p-4 sm:p-8">
                 <div className="flex justify-between items-center border-b pb-4 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Ürünü Güncelle</h2>
-                    <button onClick={() => { setEditingProduct(null); setFilesToUpload([]); }} className="text-gray-500 hover:text-gray-800 transition">
-                        <FiX className="w-6 h-6" />
-                    </button>
+                  <h2 className="text-2xl font-bold text-gray-900">Ürünü Güncelle</h2>
+                  <button
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setFilesToUpload([]);
+                    }}
+                    className="text-gray-500 hover:text-gray-800 transition"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
                 </div>
-                
+
                 <div className="space-y-8">
-                  <FloatingLabelInput id="edit-name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} />
-                  <FloatingLabelInput as="textarea" id="edit-description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
-                  
-                  <select name="category_id" value={formData.category_id} onChange={handleFormChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    <option value="" disabled>Kategori Seç</option>
-                    {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  <FloatingLabelInput
+                    id="edit-name"
+                    name="name"
+                    label="Ürün Adı"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                  />
+                  <FloatingLabelInput
+                    as="textarea"
+                    id="edit-description"
+                    name="description"
+                    label="Açıklama"
+                    value={formData.description}
+                    onChange={handleFormChange}
+                  />
+
+                  <select
+                    name="category_id"
+                    value={formData.category_id}
+                    onChange={handleFormChange}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  >
+                    <option value="" disabled>
+                      Kategori Seç
+                    </option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
 
-                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} />
-                  <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
-                  
-                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
-                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi</h3>
-                    <div className="mb-6 pb-4 border-b border-indigo-100">
-                      <h4 className="text-sm font-semibold mb-3 text-gray-600">Mevcut Görseller ({formData.image_urls.length} adet)</h4>
-                      <div className="flex flex-wrap gap-3">
-                        {formData.image_urls.map((url, index) => (
-                          <div key={`existing-${index}`} className="relative w-20 h-20 border-2 border-white rounded-lg overflow-hidden shadow-md group">
-                            <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover'}} />
-                            <button onClick={() => handleRemoveImage(url)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <FiTrash2 className="text-white w-5 h-5" />
-                            </button>
-                          </div>
-                        ))}
-                        {formData.image_urls.length === 0 && ( <p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p> )}
-                      </div>
-                    </div>
+                  <FloatingLabelInput
+                    id="edit-price"
+                    name="price"
+                    type="number"
+                    label="Fiyat"
+                    value={formData.price}
+                    onChange={handleFormChange}
+                  />
+                  <FloatingLabelInput
+                    id="edit-stock"
+                    name="stock"
+                    type="number"
+                    label="Stok Adedi"
+                    value={formData.stock}
+                    onChange={handleFormChange}
+                  />
 
-                    <div>
-                      <label htmlFor="file-upload-modal" className="block text-sm font-semibold text-indigo-700 mb-2 cursor-pointer">
-                        <span className="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-lg">Yeni Görsel Yükle</span>
-                      </label>
-                      <input id="file-upload-modal" type="file" name="files" onChange={handleFileChange} multiple accept="image/*" className="hidden" />
-                      {filesToUpload.length > 0 && (
-                        <div className="mt-4">
-                            <h4 className="text-sm font-semibold mb-3 text-gray-600">Yüklenecekler ({filesToUpload.length} adet)</h4>
-                            <div className="flex flex-wrap gap-3">
-                                {filesToUpload.map((fileObj, index) => (
-                                    <div key={`new-${index}`} className="relative w-20 h-20 border-2 border-green-500 rounded-lg overflow-hidden shadow-md group">
-                                        <Image src={fileObj.preview} alt={fileObj.file.name} fill style={{objectFit: 'cover'}} />
-                                        <button onClick={() => handleRemoveNewImage(fileObj.preview)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <FiX className="text-white w-5 h-5" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
+                  {/* ✅ Checkbox alanları */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
-                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4">
+                      Vitrin Ayarları
+                    </h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {Object.entries(LIMITS).map(([key, value]) => (
-                         <label key={key} className="flex items-center gap-2">
-                            <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" /> 
-                            {key} (Max: {value})
-                         </label>
+                        <label key={key} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            name={key}
+                            checked={formData[key]}
+                            onChange={handleFormChange}
+                            className="h-4 w-4 rounded"
+                          />
+                          {key} (Max: {value})
+                        </label>
                       ))}
                     </div>
                   </div>
 
                   <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={handleUpdate} disabled={actionLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50">
+                    <button
+                      onClick={handleUpdate}
+                      disabled={actionLoading}
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50"
+                    >
                       {actionLoading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
                     </button>
-                    <button onClick={() => { setEditingProduct(null); setFilesToUpload([]); }} className="px-6 py-3 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition shadow-md">
+                    <button
+                      onClick={() => {
+                        setEditingProduct(null);
+                        setFilesToUpload([]);
+                      }}
+                      className="px-6 py-3 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition shadow-md"
+                    >
                       İptal
                     </button>
                   </div>
