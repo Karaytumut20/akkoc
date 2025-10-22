@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import ProductCard from "@/components/ProductCard";
@@ -16,8 +16,6 @@ import {
     FiX, 
     FiPlus, 
     FiMinus, 
-    FiTruck, 
-    FiBox,
     FiCheckCircle 
 } from "react-icons/fi";
 import toast from "react-hot-toast";
@@ -51,7 +49,8 @@ const Product = () => {
     const [userReview, setUserReview] = useState(null);
     const [hasPurchased, setHasPurchased] = useState(false);
 
-    const imageContainerRef = useRef(null);
+    // 🎯 DÜZELTME: Büyük görsellerin bulunduğu kaydırılabilir alana referans
+    const imageContainerRef = useRef(null); 
 
     const fetchProductDetails = useCallback(async () => {
         if (!id) return;
@@ -149,25 +148,26 @@ const Product = () => {
         }
     }, [productData, allProducts]);
 
-
+    // 🎯 DÜZELTME: LG ve üzeri için scroll handler'ı güncelledik (inner container scroll'u)
     useEffect(() => {
         if (!productData || !imageContainerRef.current || productData.image_urls.length <= 1) return;
 
         const isLargeScreen = window.innerWidth >= 1024; 
         if (!isLargeScreen) return; 
 
-        const imageWrapperHeight = window.innerHeight * 0.9; 
+        // Tahmin: Her bir görüntü 90vh yüksekliğinde ve space-y-8 (2rem = ~32px) boşluk var.
+        const imageWrapperHeight = window.innerHeight * 0.9;
+        const spacing = 32; 
 
         const handleScroll = () => {
             const container = imageContainerRef.current;
             if (!container) return;
 
-            const containerTop = container.getBoundingClientRect().top;
-            const scrollStartOffset = 200; 
-
-            const totalScrollY = (scrollStartOffset - containerTop);
-            let nextIndex = Math.floor(totalScrollY / imageWrapperHeight);
-
+            const currentScrollTop = container.scrollTop;
+            
+            // Hangi görselin en üstte olduğunu (veya en yakın olduğunu) hesapla
+            let nextIndex = Math.round(currentScrollTop / (imageWrapperHeight + spacing));
+            
             nextIndex = Math.max(0, Math.min(nextIndex, productData.image_urls.length - 1));
 
             if (nextIndex !== currentImageIndex) {
@@ -175,10 +175,11 @@ const Product = () => {
             }
         };
 
-        window.addEventListener("scroll", handleScroll);
+        const containerElement = imageContainerRef.current;
+        containerElement.addEventListener("scroll", handleScroll);
 
         return () => {
-            window.removeEventListener("scroll", handleScroll);
+            containerElement.removeEventListener("scroll", handleScroll);
         };
     }, [productData, currentImageIndex]);
 
@@ -274,6 +275,26 @@ const Product = () => {
         fetchProductDetails();
     };
 
+    // 🎯 DÜZELTME: YAN THUMBNAIL'E TIKLAMA İŞLEVİ
+    const handleThumbnailClick = (index) => {
+        setCurrentImageIndex(index);
+        
+        const container = imageContainerRef.current;
+        if (!container) return;
+
+        // Her bir resim 90vh yüksekliğinde ve 32px (space-y-8) boşluk var.
+        const imageWrapperHeight = window.innerHeight * 0.9;
+        const spacing = 32; 
+        
+        // Hedef scroll pozisyonu: Index * (Resim Yüksekliği + Boşluk)
+        const targetScrollTop = index * (imageWrapperHeight + spacing); 
+        
+        // 🎯 Pencereyi değil, iç konteyneri kaydır
+        container.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+        });
+    }
 
     return (
         <>
@@ -284,7 +305,7 @@ const Product = () => {
                     {/* GÖRSEL VE BİLGİ KISMI */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-6 xl:gap-x-12">
                         
-                        {/* 🖼️ GÖRSEL BÖLÜMÜ - Mobil: Üstte Carousel, LG: Sol ve Orta Sütun */}
+                        {/* 🖼️ GÖRSEL BÖLÜMÜ - LG: Sol ve Orta Sütun */}
                         <div 
                             className="lg:col-span-2 flex flex-col md:flex-row gap-4 lg:sticky lg:top-20 lg:self-start lg:h-[90vh]" 
                             style={{ top: '20px' }} 
@@ -323,9 +344,9 @@ const Product = () => {
                                                 <div 
                                                     key={index}
                                                     className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                                        index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300' 
-                                                    }`}
-                                                    onClick={() => setCurrentImageIndex(index)}
+                                                         index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300' 
+                                                     }`}
+                                                     onClick={() => setCurrentImageIndex(index)}
                                                 />
                                             ))}
                                         </div>
@@ -350,7 +371,7 @@ const Product = () => {
 
                             {/* 📸 Küçük Görsel Önizlemeler - Sol Sütun (Sadece LG ve üzeri) */}
                             {productData.image_urls.length > 1 && (
-                                <div className="hidden lg:flex flex-shrink-0 md:flex-col gap-2 overflow-x-auto md:overflow-y-auto w-full md:w-20 lg:w-24 pb-2 md:pb-0 lg:sticky lg:top-20 lg:self-start">
+                                <div className="hidden lg:flex flex-shrink-0 md:flex-col gap-2 overflow-x-auto md:overflow-y-auto w-full md:w-20 lg:w-24 pb-2 md:pb-0 lg:self-start">
                                     {productData.image_urls.map((url, index) => (
                                         <div
                                             key={index}
@@ -359,18 +380,7 @@ const Product = () => {
                                                     ? "border-2 border-teal-500 scale-105 shadow-md"
                                                     : "border border-gray-200 hover:opacity-80"
                                             }`}
-                                            onClick={() => {
-                                                setCurrentImageIndex(index);
-                                                const imageWrapperHeight = window.innerHeight * 0.9;
-                                                const targetScrollY = 
-                                                    (imageContainerRef.current ? imageContainerRef.current.offsetTop : 0) + 
-                                                    (imageWrapperHeight * index);
-                                                
-                                                window.scrollTo({
-                                                    top: targetScrollY - 200, 
-                                                    behavior: 'smooth'
-                                                });
-                                            }}
+                                            onClick={() => handleThumbnailClick(index)}
                                         >
                                             <Image
                                                 src={url}
@@ -384,11 +394,11 @@ const Product = () => {
                                 </div>
                             )}
 
-                            {/* 🖼️ TÜM GÖRSELLERİN ALT ALTA LİSTESİ - Orta Sütun (Sadece LG ve üzeri, kendi içinde kaydırılabilir) */}
+                            {/* 🖼️ TÜM GÖRSELLERİN ALT ALTA LİSTESİ - Orta Sütun (Sadece LG ve üzeri, Kendi içinde kaydırılabilir) */}
                             <div 
                                 className="hidden lg:block flex-grow space-y-8 overflow-y-auto pr-2" 
                                 ref={imageContainerRef}
-                                style={{ maxHeight: 'calc(90vh - 20px)' }} 
+                                style={{ maxHeight: 'calc(90vh - 4px)' }} 
                             >
                                 
                                 {productData.image_urls.map((url, index) => (
@@ -425,13 +435,13 @@ const Product = () => {
                             </div>
                         </div>
 
-                        {/* 🧾 ÜRÜN BİLGİLERİ - Sağ Sütun (MOBİLDE AKIŞKAN, LG VE ÜZERİNDE STICKY) */}
+                        {/* 🧾 ÜRÜN BİLGİLERİ - Sağ Sütun */}
                         <div 
                             className="w-full flex flex-col justify-start mt-4 lg:mt-0 lg:col-span-1 lg:sticky lg:top-20 lg:self-start z-10"
                             style={{ top: '20px' }} 
                         >
                             
-                            {/* TÜM BİLGİLERİ İÇEREN ANA BLOK - BG-[#FFFFF0] OLARAK GÜNCELLENDİ */}
+                            {/* TÜM BİLGİLERİ İÇEREN ANA BLOK */}
                             <div className="bg-[#FFFFF0] p-4 sm:p-6 rounded-xl shadow-lg border border-gray-100">
                                 
                                 {/* Başlık ve Fiyat */}
@@ -456,7 +466,7 @@ const Product = () => {
                                     </span>
                                 </div>
                                 
-                                {/* Miktar Seçici - BG-[#f0fff0] OLARAK GÜNCELLENDİ */}
+                                {/* Miktar Seçici */}
                                 <div className="mt-6 flex items-center justify-between p-2 bg-[#f0fff0] rounded-lg border border-gray-100"> 
                                     <label htmlFor="quantity" className="text-lg font-medium text-gray-700">Miktar</label>
                                     <div className="flex items-center">
@@ -471,7 +481,7 @@ const Product = () => {
                                             type="number" 
                                             id="quantity"
                                             value={quantity}
-                                            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                                            onChange={(e) => setQuantity(Math.max(1, Math.min(productData.stock, Number(e.target.value))))}
                                             className="w-10 text-center bg-transparent py-1 outline-none text-lg font-semibold text-gray-800"
                                             min="1"
                                             max={productData.stock}
@@ -502,7 +512,7 @@ const Product = () => {
                                     </button>
                                 </div>
 
-                                {/* Ürün Açıklaması ve Detayları - BG GRADIENT TONLARI GÜNCELLENDİ */}
+                                {/* Ürün Açıklaması ve Detayları */}
                                 <div className="mt-8 space-y-6 bg-gradient-to-br from-[#FFFFF0] to-[#f0fff0] rounded-xl border border-gray-100 p-6 shadow-sm">
                                     <div className="border-b pb-4">
                                         
@@ -535,11 +545,10 @@ const Product = () => {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
-                    {/* 🛍️ İLGİLİ ÜRÜNLER - Border-t rengi güncellendi */}
+                    {/* 🛍️ İLGİLİ ÜRÜNLER */}
                     {relatedProducts.length > 0 && (
                         <div className="py-16 border-t border-teal-100 mt-16">
                             <div className="text-center mb-10">
@@ -557,7 +566,7 @@ const Product = () => {
                 </div>
             </div>
             
-            {/* 🚀 MOBİL CTA BUTON ALANI - BG-[#FFFFF0] OLARAK GÜNCELLENDİ */}
+            {/* 🚀 MOBİL CTA BUTON ALANI */}
             <div 
                 className="lg:hidden p-4 bg-[#FFFFF0] border-t border-gray-200 z-50 shadow-2xl" 
                 style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} 
@@ -575,10 +584,10 @@ const Product = () => {
                 </button>
             </div>
 
-            {/* ✨ POPUP — Yorumlar + Yorum Yazma - BG-[#FFFFF0] OLARAK GÜNCELLENDİ */}
+            {/* ✨ POPUP — Yorumlar + Yorum Yazma */}
             {isReviewModalOpen && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                    <div className="bg-[#FFFF3] rounded-2xl p-8 w-full max-w-lg relative max-h-[90vh] flex flex-col border border-gray-100 shadow-xl"> 
+                    <div className="bg-[#FFFFF0] rounded-2xl p-8 w-full max-w-lg relative max-h-[90vh] flex flex-col border border-gray-100 shadow-xl"> 
                         <button
                             onClick={() => setIsReviewModalOpen(false)}
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
@@ -625,11 +634,16 @@ const Product = () => {
                             <div className="pt-4 border-t">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Yorumunuzu Yazın</h3>
                                 <div className="flex justify-center mb-3">
-                                    <StarRating
-                                        rating={userRating}
-                                        onRatingChange={setUserRating}
-                                        size={30}
-                                    />
+                                    {/* StarRating bileşeninin onRatingChange prop'unu desteklemediğini varsayarak onClick handler'ı ile düzeltme yapıyoruz */}
+                                    <div className="flex items-center">
+                                        {[...Array(5)].map((_, i) => (
+                                            <button key={i} type="button" onClick={() => setUserRating(i + 1)} className="focus:outline-none">
+                                                <svg className={`w-7 h-7 transition-colors duration-200 ${i < userRating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.561-.955L10 0l2.95 5.955 6.561.955-4.756 4.635 1.123 6.545z" />
+                                                </svg>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <textarea
                                     value={userComment}
