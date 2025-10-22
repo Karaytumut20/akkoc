@@ -25,11 +25,7 @@ const Footer = () => {
                   Home
                 </a>
               </li>
-              <li>
-                <a className="hover:underline transition" href="#">
-                  About us
-                </a>
-              </li>
+              
               <li>
                 <a className="hover:underline transition" href="#">
                   Contact us

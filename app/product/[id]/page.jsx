@@ -13,14 +13,33 @@ import {
     FiChevronLeft, 
     FiChevronRight, 
     FiHeart, 
-    FiX, 
-    FiPlus, 
-    FiMinus, 
-    FiCheckCircle 
+    FiCheckCircle,
+    FiTruck, // Kargo
+    FiRefreshCw, // İade
+    FiLock // Güvenli Ödeme
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { getSafeImageUrl } from "@/lib/utils";
 import StarRating from "@/components/StarRating";
+
+// --- YENİ BİLEŞEN: GÜVEN ROZETLERİ ---
+const TrustBadges = () => (
+    <div className="flex justify-around items-center text-center mt-6 py-4 border-t border-b border-gray-100 bg-[#f8fcf8] rounded-lg">
+        <div className="flex flex-col items-center gap-1">
+            <FiTruck className="w-6 h-6 text-teal-600" />
+            <span className="text-xs font-medium text-gray-700">Ücretsiz Kargo</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+            <FiRefreshCw className="w-6 h-6 text-teal-600" />
+            <span className="text-xs font-medium text-gray-700">Kolay İade</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+            <FiLock className="w-6 h-6 text-teal-600" />
+            <span className="text-xs font-medium text-gray-700">Güvenli Ödeme</span>
+        </div>
+    </div>
+);
+// ----------------------------------------
 
 const Product = () => {
     const { id } = useParams();
@@ -42,8 +61,11 @@ const Product = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0); 
     
     const [quantity, setQuantity] = useState(1); 
+    
+    // Aktif Sekmeyi tutar. Değerler string olarak tutulur ('description' veya 'reviews').
+    const [activeTab, setActiveTab] = useState('description'); 
 
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    // Yorum Yazma Formu State'leri
     const [userRating, setUserRating] = useState(0);
     const [userComment, setUserComment] = useState("");
     const [userReview, setUserReview] = useState(null);
@@ -79,7 +101,7 @@ const Product = () => {
 
             const { data: reviewData } = await supabase
                 .from("reviews")
-                .select("*")
+                .select("*, user_profiles(full_name)")
                 .eq("product_id", id)
                 .order("created_at", { ascending: false });
             setReviews(reviewData || []);
@@ -100,6 +122,7 @@ const Product = () => {
             );
             setAverageRating(avgRatingData || 0);
         } catch (err) {
+            console.error(err);
             toast.error("Veri çekilirken bir sorun oluştu.");
         }
         setLoading(false);
@@ -150,7 +173,7 @@ const Product = () => {
         }
     }, [productData, allProducts]);
 
-    // LG ve üzeri için scroll ile görsel değiştirme mantığı (Dikey)
+    // LG ve üzeri için scroll ile görsel değiştirme mantığı (Dikey) - Orijinal mantık korundu
     useEffect(() => {
         if (!productData || !imageContainerRef.current || window.innerWidth < 1024) return;
 
@@ -165,8 +188,10 @@ const Product = () => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
                 const currentScrollTop = container.scrollTop;
-                const newIndex = Math.round(currentScrollTop / (imageWrapperHeight + spacing));
+                const threshold = (imageWrapperHeight + spacing) / 2;
                 
+                const newIndex = Math.floor((currentScrollTop + threshold) / (imageWrapperHeight + spacing));
+
                 if (newIndex !== currentImageIndex) {
                     setCurrentImageIndex(Math.max(0, Math.min(newIndex, productData.image_urls.length - 1)));
                 }
@@ -182,7 +207,7 @@ const Product = () => {
         };
     }, [productData, currentImageIndex]);
 
-    // Mobil (LG-) için index değişimine göre yatay kaydırma senkronizasyonu
+    // Mobil (LG-) için index değişimine göre yatay kaydırma senkronizasyonu - Orijinal mantık korundu
     useEffect(() => {
         if (!productData || !mobileCarouselRef.current || window.innerWidth >= 1024) return;
         
@@ -261,13 +286,9 @@ const Product = () => {
         setQuantity(1); 
     }
 
-    const approvedReviews = reviews.filter((r) => r.is_approved == true);
-    if (loading || !productData) return <Loading />;
+    const approvedReviews = reviews.filter((r) => r.is_approved === true);
     
-    const handleStarClick = () => {
-        setIsReviewModalOpen(true);
-    };
-
+    // Yorumu Gönderme İşlevi
     const handleSubmitReview = async () => {
         if (!user) {
             toast.error("Yorum yapmak için giriş yapın.");
@@ -289,30 +310,38 @@ const Product = () => {
             toast.error("Lütfen bir yıldız puanı seçin.");
             return;
         }
-
-        const { error } = await supabase.from("reviews").insert([
-            {
-                product_id: productData.id,
-                user_id: user.id,
-                rating: Number(userRating),
-                comment: userComment,
-                is_approved: false,
-            },
-        ]);
-
-        if (error) {
-            toast.error("Yorum gönderilemedi.");
+        
+        if (userComment.trim().length < 10) {
+            toast.error("Yorumunuz en az 10 karakter olmalıdır.");
             return;
         }
 
-        toast.success("Yorumunuz incelenmek üzere gönderildi!");
-        setIsReviewModalOpen(false);
-        setUserRating(0);
-        setUserComment("");
-        fetchProductDetails();
+        try {
+            const { error } = await supabase.from("reviews").insert([
+                {
+                    product_id: productData.id,
+                    user_id: user.id,
+                    rating: Number(userRating),
+                    comment: userComment,
+                    is_approved: false, // Onay bekliyor
+                },
+            ]);
+
+            if (error) {
+                console.error(error);
+                throw new Error("Supabase insert error");
+            }
+
+            toast.success("Yorumunuz incelenmek üzere gönderildi! Teşekkür ederiz.");
+            setUserRating(0);
+            setUserComment("");
+            fetchProductDetails(); // Yorumu yenile
+        } catch (e) {
+             toast.error("Yorum gönderilemedi.");
+        }
     };
 
-    // YAN THUMBNAIL'E TIKLAMA İŞLEVİ (LG ve üzeri)
+    // YAN THUMBNAIL'E TIKLAMA İŞLEVİ (LG ve üzeri) - Orijinal mantık korundu
     const handleThumbnailClick = (index) => {
         setCurrentImageIndex(index);
         
@@ -331,6 +360,153 @@ const Product = () => {
         });
     }
 
+    if (loading || !productData) return <Loading />;
+    
+    // --- BİLEŞEN: YORUM YAZMA FORMU ---
+    const ReviewForm = () => {
+        if (!user) {
+            return (
+                <p className="text-center text-red-500 text-sm py-4 border-t border-gray-100">
+                    Yorum yazmak için lütfen <button onClick={() => router.push("/auth")} className="text-teal-600 font-semibold underline hover:no-underline">giriş yapın</button>.
+                </p>
+            );
+        }
+
+        if (userReview) {
+            return (
+                <div className="bg-green-50 text-green-700 p-4 rounded-lg flex items-center gap-3">
+                    <FiCheckCircle className="w-5 h-5 flex-shrink-0" />
+                    <div>
+                        <p className="font-semibold">Yorumunuz Gönderildi!</p>
+                        <p className="text-sm">Bu ürün için zaten bir yorum yaptınız. Yorumunuz onay sürecindedir.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        if (!hasPurchased) {
+            return (
+                <div className="bg-yellow-50 text-yellow-700 p-4 rounded-lg flex items-center gap-3">
+                    <FiCheckCircle className="w-5 h-5 flex-shrink-0" />
+                    <div>
+                        <p className="font-semibold">Satın Alma Gerekli</p>
+                        <p className="text-sm">Yorum yazabilmek için ürünü **satın almış olmanız** gerekiyor 🛍️</p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="pt-4 border-t border-gray-100">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Sizin Yorumunuz</h3>
+                <div className="flex justify-center mb-3">
+                    <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                            <button 
+                                key={i} 
+                                type="button" 
+                                onClick={() => setUserRating(i + 1)} 
+                                className="focus:outline-none"
+                            >
+                                <svg 
+                                    className={`w-7 h-7 transition-colors duration-200 ${i < userRating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`} 
+                                    fill="currentColor" 
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.561-.955L10 0l2.95 5.955 6.561.955-4.756 4.635 1.123 6.545z" />
+                                </svg>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <textarea
+                    value={userComment}
+                    onChange={(e) => setUserComment(e.target.value)}
+                    placeholder="Ürünle ilgili düşüncelerinizi yazın (min. 10 karakter)..."
+                    rows={4}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none mb-3 transition"
+                    maxLength={500}
+                />
+                <button
+                    onClick={handleSubmitReview}
+                    disabled={userRating === 0 || userComment.trim().length < 10}
+                    className={`w-full font-semibold py-3 rounded-lg transition duration-300 ${
+                        userRating === 0 || userComment.trim().length < 10
+                            ? "bg-gray-400 cursor-not-allowed text-gray-100"
+                            : "bg-teal-600 hover:bg-teal-700 text-white shadow-md"
+                    }`}
+                >
+                    Yorumu Gönder
+                </button>
+            </div>
+        );
+    };
+
+
+    // --- BİLEŞEN: YORUMLAR LİSTESİ ---
+    const ReviewsList = () => (
+        <div className="pt-4 space-y-4">
+            {approvedReviews.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Bu ürün için henüz onaylanmış bir yorum yok.</p>
+            ) : (
+                approvedReviews.map((review) => (
+                    <div
+                        key={review.id}
+                        className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2"
+                    >
+                        <div className="flex items-center justify-between">
+                            <StarRating rating={Number(review.rating)} size={20} />
+                            <span className={`text-sm font-medium ${review.user_id === user?.id ? "text-teal-600" : "text-gray-600"}`}>
+                                {review.user_id === user?.id 
+                                    ? "Siz (Yorumunuz)" 
+                                    : review.user_profiles?.full_name ? `${review.user_profiles.full_name.split(' ')[0]}...` : "Kullanıcı"}
+                            </span>
+                        </div>
+                        <p className="text-gray-800 text-base leading-relaxed">"{review.comment}"</p>
+                        <span className="text-xs text-gray-400">
+                            {new Date(review.created_at).toLocaleDateString("tr-TR", { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+
+
+    // --- BİLEŞEN: AÇIKLAMA İÇERİĞİ ---
+    const DescriptionContent = () => (
+        <div className="mt-6 space-y-6 bg-gradient-to-br from-[#FFFFF0] to-[#f0fff0] rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="border-b pb-4">
+                <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
+                    Ürün Açıklaması
+                </h2>
+                <p className="text-gray-700 leading-relaxed text-base">
+                    {productData.description || "Bu ürün için bir açıklama mevcut değil."}
+                </p>
+            </div>
+
+            <div>
+                <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
+                    Ürün Detayları
+                </h2>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
+                    <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                    <strong>Kategori:</strong>{" "}
+                    {productData.categories?.name || "Belirtilmemiş"}
+                    </span>
+                    <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                    <strong>Stok:</strong> {productData.stock} adet
+                    </span>
+                    <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
+                    <strong>Kod:</strong>{" "}
+                    {productData.id.substring(0, 8)}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+
+    // --- RENDER BÖLÜMÜ ---
     return (
         <>
             <div className="min-h-screen mt-0 md:mt-8 lg:mt-16 bg-[#FFFFF0]"> 
@@ -343,9 +519,7 @@ const Product = () => {
                             className="lg:col-span-2 flex flex-col md:flex-row gap-4 lg:sticky lg:top-20 lg:self-start lg:h-[90vh]" 
                             style={{ top: '20px' }} 
                         >
-                            {/* ------------------------------------- */}
                             {/* 1. MOBİL/TABLET GÖRÜNÜMÜ (<= lg) - Swipeable Carousel */}
-                            {/* ------------------------------------- */}
                             <div className="lg:hidden w-full relative min-h-[60vh] rounded-lg overflow-hidden mb-4 shadow-md border border-gray-100"> 
                                 {/* Yatay kaydırılabilir görsel listesi */}
                                 <div 
@@ -356,7 +530,7 @@ const Product = () => {
                                         <div 
                                             key={`mobile-${index}`} 
                                             className="flex-shrink-0 w-full h-full relative snap-center"
-                                            style={{ minWidth: '100%' }} // Her zaman bir görselin tam genişliğini almasını sağlar
+                                            style={{ minWidth: '100%' }} 
                                         >
                                             <Image
                                                 src={url}
@@ -391,15 +565,15 @@ const Product = () => {
                                                 <div 
                                                     key={index}
                                                     className={`w-2 h-2 rounded-full transition-colors duration-300 cursor-pointer ${
-                                                         index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300' 
-                                                     }`}
-                                                     onClick={() => setCurrentImageIndex(index)}
+                                                        index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300' 
+                                                    }`}
+                                                    onClick={() => setCurrentImageIndex(index)}
                                                 />
                                             ))}
                                         </div>
                                     </>
                                 )}
-                                    {/* Favori Butonu */}
+                                        {/* Favori Butonu */}
                                 <button
                                     onClick={handleFavoriteClick}
                                     className="absolute top-3 right-3 z-10 p-2 bg-white rounded-full border border-gray-200 hover:scale-110 transition shadow"
@@ -412,9 +586,7 @@ const Product = () => {
                                 </button>
                             </div>
 
-                            {/* ------------------------------------- */}
                             {/* 2. LG VE ÜZERİ GÖRÜNÜMÜ (> lg) - Sticky Scroll Effect */}
-                            {/* ------------------------------------- */}
 
                             {/* 📸 Küçük Görsel Önizlemeler - Sol Sütun (Sadece LG ve üzeri) */}
                             {productData.image_urls.length > 1 && (
@@ -482,7 +654,7 @@ const Product = () => {
                             </div>
                         </div>
 
-                        {/* 🧾 ÜRÜN BİLGİLERİ - Sağ Sütun */}
+                        {/* 🧾 ÜRÜN BİLGİLERİ - Sağ Sütun (CTA kısmı) */}
                         <div 
                             className="w-full flex flex-col justify-start mt-4 lg:mt-0 lg:col-span-1 lg:sticky lg:top-20 lg:self-start z-10"
                             style={{ top: '20px' }} 
@@ -497,9 +669,9 @@ const Product = () => {
                                 </h1>
                                 <p className="text-3xl font-bold text-teal-600 mt-2">${productData.price}</p>
 
-                                {/* Yorumlar */}
+                                {/* Yorum Puanı ve Sayısı (Yorum sekmesine geçiş) */}
                                 <div
-                                    onClick={handleStarClick}
+                                    onClick={() => setActiveTab('reviews')} // Yorum sekmesine geçiş
                                     className="inline-flex items-center gap-3 mt-4 cursor-pointer group pb-4 border-b border-gray-100"
                                 >
                                     {approvedReviews.length > 0 && (
@@ -509,7 +681,7 @@ const Product = () => {
                                     )}
                                     <StarRating rating={averageRating} size={24} /> 
                                     <span className="text-gray-500 text-sm underline group-hover:text-gray-800 transition">
-                                    {approvedReviews.length} Yorumu Gör
+                                    {approvedReviews.length} Yorum
                                     </span>
                                 </div>
                                 
@@ -522,7 +694,8 @@ const Product = () => {
                                             disabled={quantity <= 1}
                                             className="p-2 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition rounded-l-md"
                                         >
-                                            <FiMinus className="w-4 h-4" />
+                                            <span className="sr-only">Miktarı azalt</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path></svg>
                                         </button>
                                         <input 
                                             type="number" 
@@ -539,12 +712,13 @@ const Product = () => {
                                             disabled={quantity >= productData.stock}
                                             className="p-2 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition rounded-r-md"
                                         >
-                                            <FiPlus className="w-4 h-4" />
+                                            <span className="sr-only">Miktarı artır</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                                         </button>
                                     </div>
                                 </div>
                                 
-                                {/* SEPTE EKLE BUTONU */}
+                                {/* SEPTE EKLE BUTONU (LG ve üzeri) */}
                                 <div className="mt-4 hidden lg:block">
                                     <button
                                         onClick={handleAddToCart}
@@ -559,42 +733,68 @@ const Product = () => {
                                     </button>
                                 </div>
 
-                                {/* Ürün Açıklaması ve Detayları */}
-                                <div className="mt-8 space-y-6 bg-gradient-to-br from-[#FFFFF0] to-[#f0fff0] rounded-xl border border-gray-100 p-6 shadow-sm">
-                                    <div className="border-b pb-4">
-                                        
-                                        <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
-                                            Ürün Açıklaması
-                                        </h2>
-                                        <p className="text-gray-700 leading-relaxed text-base">
-                                            {productData.description ||
-                                            "Bu ürün için bir açıklama mevcut değil."}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
-                                            Ürün Detayları
-                                        </h2>
-                                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
-                                            <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
-                                            <strong>Kategori:</strong>{" "}
-                                            {productData.categories?.name || "Belirtilmemiş"}
-                                            </span>
-                                            <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
-                                            <strong>Stok:</strong> {productData.stock} adet
-                                            </span>
-                                            <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">
-                                            <strong>Kod:</strong>{" "}
-                                            {productData.id.substring(0, 8)}
-                                            </span>
-                                        </div>
-                                    </div>
+                                {/* ⭐ YENİ EKLEME: GÜVEN ROZETLERİ (LG VE ÜZERİ) ⭐ */}
+                                <div className="hidden lg:block">
+                                    <TrustBadges />
                                 </div>
+                                {/* ⭐ BİTİŞ: GÜVEN ROZETLERİ (LG VE ÜZERİ) ⭐ */}
+                                
                             </div>
                         </div>
                     </div>
+                    
+                    {/* 👇 YENİ BÖLÜM: AÇIKLAMA VE YORUMLAR SEKMELERİ */}
+                    <div className="mt-16 bg-[#FFFFF0] rounded-xl shadow-lg border border-gray-100 p-4 sm:p-8">
+                        {/* Sekmeler */}
+                        <div className="flex border-b border-gray-200 mb-6">
+                            <button
+                                onClick={() => setActiveTab('description')}
+                                className={`py-3 px-6 text-lg font-medium transition-colors duration-300 ${
+                                    activeTab === 'description' 
+                                        ? 'border-b-2 border-teal-600 text-teal-600'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                Açıklama & Detaylar
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('reviews')}
+                                className={`py-3 px-6 text-lg font-medium transition-colors duration-300 flex items-center gap-2 ${
+                                    activeTab === 'reviews' 
+                                        ? 'border-b-2 border-teal-600 text-teal-600'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                Yorumlar 
+                                <span className={`text-sm rounded-full px-2 py-0.5 font-bold ${activeTab === 'reviews' ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                                    {approvedReviews.length}
+                                </span>
+                            </button>
+                        </div>
 
+                        {/* İçerik */}
+                        <div className="min-h-[300px]">
+                            {activeTab === 'description' && <DescriptionContent />}
+                            {activeTab === 'reviews' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Yorum Listesi */}
+                                    <div className="lg:order-2">
+                                        <h3 className="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                                            Müşteri Yorumları
+                                        </h3>
+                                        <div className="max-h-[500px] overflow-y-auto pr-2">
+                                            <ReviewsList />
+                                        </div>
+                                    </div>
+                                    {/* Yorum Yazma Formu */}
+                                    <div className="lg:order-1 bg-gray-50 p-6 rounded-xl shadow-inner border border-gray-200">
+                                        <ReviewForm />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
                     {/* 🛍️ İLGİLİ ÜRÜNLER */}
                     {relatedProducts.length > 0 && (
                         <div className="py-16 border-t border-teal-100 mt-16">
@@ -618,10 +818,14 @@ const Product = () => {
                 className="lg:hidden p-4 bg-[#FFFFF0] border-t border-gray-200 z-50 shadow-2xl" 
                 style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} 
             >
+                {/* ⭐ YENİ EKLEME: GÜVEN ROZETLERİ (MOBİL) ⭐ */}
+                <TrustBadges />
+                {/* ⭐ BİTİŞ: GÜVEN ROZETLERİ (MOBİL) ⭐ */}
+
                 <button
                     onClick={handleAddToCart}
                     disabled={productData?.stock < 1}
-                    className={`w-full py-4 text-white rounded-lg font-semibold text-lg transition duration-300 shadow-lg ${
+                    className={`w-full py-4 text-white rounded-lg font-semibold text-lg transition duration-300 shadow-lg mt-4 ${
                         productData?.stock < 1 
                             ? 'bg-gray-400 cursor-not-allowed' 
                             : 'bg-teal-600 hover:bg-teal-700 hover:shadow-xl'
@@ -631,96 +835,9 @@ const Product = () => {
                 </button>
             </div>
 
-            {/* ✨ POPUP — Yorumlar + Yorum Yazma */}
-            {isReviewModalOpen && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                    <div className="bg-[#FFFFF0] rounded-2xl p-8 w-full max-w-lg relative max-h-[90vh] flex flex-col border border-gray-100 shadow-xl"> 
-                        <button
-                            onClick={() => setIsReviewModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
-                        >
-                            <FiX className="w-6 h-6" />
-                        </button>
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
-                            Ürün Yorumları ({approvedReviews.length})
-                        </h2>
-
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-4 mb-4 border-b pb-4">
-                            {approvedReviews.length === 0 ? (
-                                <p className="text-gray-500 text-center">Henüz onaylanmış yorum yok.</p>
-                            ) : (
-                                approvedReviews.map((review) => (
-                                    <div
-                                        key={review.id}
-                                        className="border-b pb-3 last:border-none flex flex-col gap-1"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <StarRating rating={Number(review.rating)} size={20} /> 
-                                            <span className="text-sm font-medium text-gray-600">
-                                                {review.user_id === user?.id ? "Siz" : "Kullanıcı"}
-                                            </span>
-                                        </div>
-                                        <p className="text-gray-800 text-sm">{review.comment}</p>
-                                        <span className="text-xs text-gray-400">
-                                            {new Date(review.created_at).toLocaleString("tr-TR", { dateStyle: 'short', timeStyle: 'short' })}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
-                        {!user ? (
-                            <p className="text-center text-red-500 text-sm py-4 border-t">
-                                Yorum yazmak için lütfen <button onClick={() => router.push("/auth")} className="text-teal-600 underline hover:no-underline">giriş yapın</button>.
-                            </p>
-                        ) : userReview ? (
-                            <p className="text-center text-gray-500 text-sm py-4 border-t">
-                                Bu ürün için zaten bir yorum yaptınız. Yorumunuz onayda olabilir.
-                            </p>
-                        ) : hasPurchased ? (
-                            <div className="pt-4 border-t">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Yorumunuzu Yazın</h3>
-                                <div className="flex justify-center mb-3">
-                                    <div className="flex items-center">
-                                        {[...Array(5)].map((_, i) => (
-                                            <button key={i} type="button" onClick={() => setUserRating(i + 1)} className="focus:outline-none">
-                                                <svg className={`w-7 h-7 transition-colors duration-200 ${i < userRating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.561-.955L10 0l2.95 5.955 6.561.955-4.756 4.635 1.123 6.545z" />
-                                                </svg>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <textarea
-                                    value={userComment}
-                                    onChange={(e) => setUserComment(e.target.value)}
-                                    placeholder="Yorumunuzu yazın..."
-                                    rows={4}
-                                    className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none mb-3 transition"
-                                />
-                                <button
-                                    onClick={handleSubmitReview}
-                                    disabled={userRating === 0 || userComment.trim().length < 10}
-                                    className={`w-full font-semibold py-3 rounded-lg transition duration-300 ${
-                                        userRating === 0 || userComment.trim().length < 10
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-teal-600 hover:bg-teal-700 text-white"
-                                    }`}
-                                >
-                                    Yorumu Gönder
-                                </button>
-                            </div>
-                        ) : (
-                            <p className="text-center text-gray-500 text-sm py-4 border-t">
-                                Yorum yazmak için önce bu ürünü satın almış olmalısınız 🛍️
-                            </p>
-                        )}
-                    </div>
-                </div>
-            )}
-
             {/* Footer'dan önce, sabit mobil CTA div'inin yüksekliği kadar boşluk bırakıldı. */}
-            <div className="mb-[90px] lg:mb-0"> 
+            {/* Not: Mobil CTA alanına TrustBadges eklendiği için yaklaşık 40px daha yükseklik eklenmesi gerekebilir. */}
+            <div className="mb-[150px] lg:mb-0"> 
                 <Footer />
             </div>
         </>
