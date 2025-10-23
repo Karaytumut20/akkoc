@@ -1,5 +1,3 @@
-// app/seller/product-list/page.jsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,6 +31,11 @@ export default function ProductsTable() {
     category_id: '',
     price: '',
     stock: '',
+    // GÜNCELLENDİ: Yeni fiyat alanları
+    price_2_pack: '',
+    price_3_pack: '',
+    price_4_pack: '',
+    // ...
     image_urls: [],
     bigcard: false,
     doublebigcard: false,
@@ -43,6 +46,7 @@ export default function ProductsTable() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    // GÜNCELLENDİ: Yeni fiyat alanlarını sorguya ekle
     const { data, error } = await supabase
       .from('products')
       .select('*, categories ( name )')
@@ -111,7 +115,6 @@ export default function ProductsTable() {
       const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
       if (publicUrlData) newImageUrls.push(publicUrlData.publicUrl);
     }
-    // Başarılı yükleme sonrası yeni dosya önizlemelerini temizle
     filesToUpload.forEach(fileObj => URL.revokeObjectURL(fileObj.preview));
     setFilesToUpload([]);
     return newImageUrls;
@@ -139,13 +142,18 @@ export default function ProductsTable() {
 
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
-    setFilesToUpload([]); // Düzenleme başladığında yeni yükleme listesini temizle
+    setFilesToUpload([]);
     setFormData({
       name: product.name,
       description: product.description,
       category_id: product.category_id,
       price: product.price,
       stock: product.stock,
+      // GÜNCELLENDİ: Yeni fiyat alanlarını ekle. Sayı null ise boş string olarak göster.
+      price_2_pack: product.price_2_pack === null ? '' : String(product.price_2_pack),
+      price_3_pack: product.price_3_pack === null ? '' : String(product.price_3_pack),
+      price_4_pack: product.price_4_pack === null ? '' : String(product.price_4_pack),
+      // ...
       image_urls: product.image_urls || [],
       bigcard: product.bigcard || false,
       doublebigcard: product.doublebigcard || false,
@@ -180,10 +188,11 @@ export default function ProductsTable() {
     setActionLoading(true);
     const toastId = toast.loading('Ürün güncelleniyor...');
     
-    // Yeni dosyaları yükle
     const uploadedUrls = await uploadFiles();
-    // Mevcut (silinmeyen) ve yeni yüklenen dosyaları birleştir
     const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
+    
+    // YENİ ALANLARIN DEĞERLERİNİ HAZIRLA: Boş string ise null yap
+    const numericOrNull = (value) => value.trim() === '' ? null : parseFloat(value);
     
     const { error } = await supabase
       .from('products')
@@ -194,6 +203,12 @@ export default function ProductsTable() {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         image_urls: finalImageUrls,
+        
+        // GÜNCELLENDİ: Yeni fiyat alanları eklendi
+        price_2_pack: numericOrNull(formData.price_2_pack),
+        price_3_pack: numericOrNull(formData.price_3_pack),
+        price_4_pack: numericOrNull(formData.price_4_pack),
+        
         bigcard: formData.bigcard,
         doublebigcard: formData.doublebigcard,
         doublebigcardtext: formData.doublebigcardtext,
@@ -297,13 +312,22 @@ export default function ProductsTable() {
                     {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
 
-                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} />
+                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Temel Fiyat" value={formData.price} onChange={handleFormChange} />
                   <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
+                  
+                  {/* YENİ EKLENEN KAMPANYALI FİYAT ALANI (DÜZENLEME MODALI İÇİN) */}
+                  <div className="border border-orange-200/50 bg-orange-50/50 rounded-xl p-4 shadow-inner">
+                    <h3 className="font-bold text-lg text-orange-700 mb-4">Kampanyalı Ürün Fiyatları (İsteğe Bağlı)</h3>
+                    <p className='text-sm text-gray-600 mb-4'>Buraya gireceğiniz fiyatlar, tekli fiyat yerine 2, 3 veya 4 ürün alımında uygulanacak **toplam** fiyat olacaktır. Boş bırakılabilir.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <FloatingLabelInput id="edit-price_2_pack" name="price_2_pack" type="number" label="2'li Alım Fiyatı (Toplam)" value={formData.price_2_pack} onChange={handleFormChange} />
+                        <FloatingLabelInput id="edit-price_3_pack" name="price_3_pack" type="number" label="3'lü Alım Fiyatı (Toplam)" value={formData.price_3_pack} onChange={handleFormChange} />
+                        <FloatingLabelInput id="edit-price_4_pack" name="price_4_pack" type="number" label="4'lü Alım Fiyatı (Toplam)" value={formData.price_4_pack} onChange={handleFormChange} />
+                    </div>
+                  </div>
                   
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi</h3>
-                    
-                    {/* MEVCUT GÖRSELLERİ YÖNETME ALANI */}
                     <div className="mb-6 pb-4 border-b border-indigo-100">
                       <h4 className="text-sm font-semibold mb-3 text-gray-600">Mevcut Görseller ({formData.image_urls.length} adet)</h4>
                       <div className="flex flex-wrap gap-3">
@@ -318,15 +342,12 @@ export default function ProductsTable() {
                         {formData.image_urls.length === 0 && ( <p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p> )}
                       </div>
                     </div>
-                    
-                    {/* YENİ GÖRSEL EKLEME ALANI EKLENDİ */}
+
                     <div>
                       <label htmlFor="file-upload-modal" className="block text-sm font-semibold text-indigo-700 mb-2 cursor-pointer">
                         <span className="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-lg">Yeni Görsel Yükle</span>
                       </label>
                       <input id="file-upload-modal" type="file" name="files" onChange={handleFileChange} multiple accept="image/*" className="hidden" />
-                      
-                      {/* YÜKLENECEK YENİ GÖRSEL ÖNİZLEMELERİ */}
                       {filesToUpload.length > 0 && (
                         <div className="mt-4">
                             <h4 className="text-sm font-semibold mb-3 text-gray-600">Yüklenecekler ({filesToUpload.length} adet)</h4>
@@ -334,7 +355,7 @@ export default function ProductsTable() {
                                 {filesToUpload.map((fileObj, index) => (
                                     <div key={`new-${index}`} className="relative w-20 h-20 border-2 border-green-500 rounded-lg overflow-hidden shadow-md group">
                                         <Image src={fileObj.preview} alt={fileObj.file.name} fill style={{objectFit: 'cover'}} />
-                                        <button type="button" onClick={() => handleRemoveNewImage(fileObj.preview)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleRemoveNewImage(fileObj.preview)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <FiX className="text-white w-5 h-5" />
                                         </button>
                                     </div>
@@ -343,7 +364,6 @@ export default function ProductsTable() {
                         </div>
                       )}
                     </div>
-                    {/* YENİ GÖRSEL EKLEME ALANI BİTTİ */}
                   </div>
 
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">

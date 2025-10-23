@@ -121,7 +121,7 @@ export default function MainNavbar() {
   ];
 
   const headerClasses = isSticky
-    ? "fixed top-0 left-0 right-0 z-50 bg-[#FFFFF0] text-gray-800 shadow-md animate-fadeInDown"
+    ? "fixed top-0 left-0 right-0 z-50 bg-[#ECE4DC] text-gray-800 shadow-md animate-fadeInDown"
     : "absolute top-0 left-0 right-0 z-20 text-white";
 
   const logoSrc = assets.logo;
@@ -175,7 +175,7 @@ export default function MainNavbar() {
             </button>
 
             {languageMenuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-[#FFFFF0] rounded-md shadow-lg z-50 text-gray-800">
+              <div className="absolute right-0 mt-2 w-32 bg-[#ECE4DC] rounded-md shadow-lg z-50 text-gray-800">
                 {["English", "Türkçe", "Spanish"].map((lang) => (
                   <button
                     key={lang}
@@ -212,7 +212,7 @@ export default function MainNavbar() {
                 </span>
               </button>
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#FFFFF0] rounded-md shadow-lg py-1 z-20 text-gray-800">
+                <div className="absolute right-0 mt-2 w-48 bg-[#ECE4DC] rounded-md shadow-lg py-1 z-20 text-gray-800">
                   <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">
                     Hesabım
                   </Link>
@@ -272,7 +272,7 @@ export default function MainNavbar() {
             />
           </form>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-[#FFFFF0] text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+            <div className="absolute top-full left-0 w-full bg-[#ECE4DC] text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
               <ul>
                 {searchResults.map((product) => (
                   <li key={product.id}>

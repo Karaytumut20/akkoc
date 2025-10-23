@@ -17,8 +17,13 @@ export default function AddProductPage() {
   const [products, setProducts] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState([]);
+  
+  // GÜNCELLENDİ: Yeni fiyat alanları eklendi.
   const [formData, setFormData] = useState({
     name: '', description: '', category_id: '', price: '', stock: '',
+    price_2_pack: '', // Yeni: 2'li alım fiyatı
+    price_3_pack: '', // Yeni: 3'lü alım fiyatı
+    price_4_pack: '', // Yeni: 4'lü alım fiyatı
     bigcard: false, doublebigcard: false, doublebigcardtext: false, icons: false, brandicon: false,
   });
 
@@ -91,14 +96,32 @@ export default function AddProductPage() {
     setActionLoading(true);
     const toastId = toast.loading('Ürün ekleniyor...');
     const uploadedUrls = await uploadFiles();
+    
+    // YENİ ALANLARIN DEĞERLERİNİ HAZIRLA: Boş string ise null yap
+    const numericOrNull = (value) => value.trim() === '' ? null : parseFloat(value);
+    
     const { error } = await supabase
       .from('products')
       .insert([{
-        name: formData.name, description: formData.description, category_id: formData.category_id,
-        price: parseFloat(formData.price), stock: parseInt(formData.stock), image_urls: uploadedUrls,
-        bigcard: formData.bigcard, doublebigcard: formData.doublebigcard, doublebigcardtext: formData.doublebigcardtext,
-        icons: formData.icons, brandicon: formData.brandicon,
+        name: formData.name, 
+        description: formData.description, 
+        category_id: formData.category_id,
+        price: parseFloat(formData.price), 
+        stock: parseInt(formData.stock), 
+        image_urls: uploadedUrls,
+        
+        // GÜNCELLENDİ: Yeni fiyat alanları eklendi
+        price_2_pack: numericOrNull(formData.price_2_pack),
+        price_3_pack: numericOrNull(formData.price_3_pack),
+        price_4_pack: numericOrNull(formData.price_4_pack),
+        
+        bigcard: formData.bigcard, 
+        doublebigcard: formData.doublebigcard, 
+        doublebigcardtext: formData.doublebigcardtext,
+        icons: formData.icons, 
+        brandicon: formData.brandicon,
       }]);
+      
     if (!error) {
       toast.success('Ürün başarıyla eklendi!', { id: toastId });
       router.push('/seller/product-list');
@@ -112,14 +135,29 @@ export default function AddProductPage() {
     <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">Yeni Ürün Ekle</h1>
       <form onSubmit={handleAddProduct} className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg space-y-8">
+        
         <FloatingLabelInput id="name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} required />
         <FloatingLabelInput as="textarea" id="description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
+        
         <select name="category_id" value={formData.category_id} onChange={handleFormChange} required className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
           <option value="" disabled>Kategori Seç</option>
           {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
         </select>
-        <FloatingLabelInput id="price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required />
+        
+        <FloatingLabelInput id="price" name="price" type="number" label="Temel Fiyat" value={formData.price} onChange={handleFormChange} required />
         <FloatingLabelInput id="stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+        
+        {/* YENİ EKLENEN KAMPANYALI FİYAT ALANI */}
+        <div className="border border-orange-200/50 bg-orange-50/50 rounded-xl p-4 shadow-inner">
+            <h3 className="font-bold text-lg text-orange-700 mb-4">Kampanyalı Ürün Fiyatları (İsteğe Bağlı)</h3>
+            <p className='text-sm text-gray-600 mb-4'>Buraya gireceğiniz fiyatlar, tekli fiyat yerine 2, 3 veya 4 ürün alımında uygulanacak **toplam** fiyat olacaktır. Boş bırakılabilir.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Alım Fiyatı (Toplam)" value={formData.price_2_pack} onChange={handleFormChange} />
+                <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Alım Fiyatı (Toplam)" value={formData.price_3_pack} onChange={handleFormChange} />
+                <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Alım Fiyatı (Toplam)" value={formData.price_4_pack} onChange={handleFormChange} />
+            </div>
+        </div>
+        
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
           <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yükle</h3>
           <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-100/50 transition">
