@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FiX, FiUploadCloud } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
 const BUCKET_NAME = 'product-images';
-// LIMITS güncellendi: homepage_carousel: 8 eklendi
 const LIMITS = { bigcard: 1, doublebigcardtext: 4, icons: 6, brandicon: 4, homepage_carousel: 8 };
 
 export default function AddProductPage() {
@@ -18,9 +17,13 @@ export default function AddProductPage() {
   const [products, setProducts] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState([]);
+
+  // Drag için refler
+  const dragItem = useRef();
+  const dragOverItem = useRef();
+
   const [formData, setFormData] = useState({
     name: '', description: '', category_id: '', price: '', stock: '',
-    // homepage_carousel eklendi
     bigcard: false, doublebigcardtext: false, icons: false, brandicon: false, homepage_carousel: false,
   });
 
@@ -30,8 +33,9 @@ export default function AddProductPage() {
       if (categoriesError) toast.error('Kategoriler alınamadı.');
       else setCategories(categoriesData);
 
-      // homepage_carousel seçimi eklendi
-      const { data: productsData, error: productsError } = await supabase.from('products').select('id, bigcard, doublebigcardtext, icons, brandicon, homepage_carousel');
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('id, bigcard, doublebigcardtext, icons, brandicon, homepage_carousel');
       if (productsError) toast.error('Mevcut ürünler kontrol edilemedi.');
       else setProducts(productsData);
     };
@@ -40,7 +44,10 @@ export default function AddProductPage() {
 
   const handleFileChange = (e) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
+      const newFiles = Array.from(e.target.files).map(file => ({
+        file,
+        preview: URL.createObjectURL(file)
+      }));
       setFilesToUpload(prev => [...prev, ...newFiles]);
     }
   };
@@ -54,7 +61,6 @@ export default function AddProductPage() {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       const limit = LIMITS[name];
-      // Limit kontrolü güncellendi
       if (limit !== undefined && checked) {
         const count = products.filter(p => p[name]).length;
         if (count >= limit) {
@@ -87,6 +93,27 @@ export default function AddProductPage() {
     return newImageUrls;
   };
 
+  // 📌 Drag & Drop Eventleri
+  const handleDragStart = (index) => {
+    dragItem.current = index;
+  };
+
+  const handleDragEnter = (index) => {
+    dragOverItem.current = index;
+  };
+
+  const handleDrop = () => {
+    const copiedFiles = [...filesToUpload];
+    const dragItemContent = copiedFiles[dragItem.current];
+    copiedFiles.splice(dragItem.current, 1);
+    copiedFiles.splice(dragOverItem.current, 0, dragItemContent);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    setFilesToUpload(copiedFiles);
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.category_id || !formData.price || formData.stock === '') {
@@ -98,11 +125,17 @@ export default function AddProductPage() {
     const { error } = await supabase
       .from('products')
       .insert([{
-        name: formData.name, description: formData.description, category_id: formData.category_id,
-        price: parseFloat(formData.price), stock: parseInt(formData.stock), image_urls: uploadedUrls,
-        // homepage_carousel eklendi
-        bigcard: formData.bigcard, doublebigcardtext: formData.doublebigcardtext,
-        icons: formData.icons, brandicon: formData.brandicon, homepage_carousel: formData.homepage_carousel
+        name: formData.name,
+        description: formData.description,
+        category_id: formData.category_id,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        image_urls: uploadedUrls,
+        bigcard: formData.bigcard,
+        doublebigcardtext: formData.doublebigcardtext,
+        icons: formData.icons,
+        brandicon: formData.brandicon,
+        homepage_carousel: formData.homepage_carousel
       }]);
     if (!error) {
       toast.success('Ürün başarıyla eklendi!', { id: toastId });
@@ -125,21 +158,35 @@ export default function AddProductPage() {
         </select>
         <FloatingLabelInput id="price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required />
         <FloatingLabelInput id="stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
-          <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yükle</h3>
+          <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yükle (Sürükle-Bırak)</h3>
           <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-100/50 transition">
             <FiUploadCloud className="w-8 h-8 text-indigo-500" />
             <p className="text-sm text-indigo-600">Sürükle bırak veya tıkla</p>
           </label>
           <input id="file-upload" type="file" name="files" onChange={handleFileChange} multiple accept="image/*" className="hidden" />
+
           {filesToUpload.length > 0 && (
             <div className="mt-4">
               <h4 className="text-sm font-semibold mb-3 text-gray-600">Yüklenecekler ({filesToUpload.length} adet)</h4>
               <div className="flex flex-wrap gap-3">
                 {filesToUpload.map((fileObj, index) => (
-                  <div key={`new-${index}`} className="relative w-20 h-20 border-2 border-green-500 rounded-lg overflow-hidden shadow-md group">
+                  <div
+                    key={`new-${index}`}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnter={() => handleDragEnter(index)}
+                    onDragEnd={handleDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    className="relative w-20 h-20 border-2 border-green-500 rounded-lg overflow-hidden shadow-md group cursor-move"
+                  >
                     <Image src={fileObj.preview} alt={fileObj.file.name} fill style={{ objectFit: "cover" }} />
-                    <button type="button" onClick={() => handleRemoveNewImage(fileObj.preview)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveNewImage(fileObj.preview)}
+                      className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
                       <FiX className="text-white w-5 h-5" />
                     </button>
                   </div>
@@ -148,10 +195,10 @@ export default function AddProductPage() {
             </div>
           )}
         </div>
+
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
           <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            {/* Object.entries(LIMITS) güncellendi, homepage_carousel eklendi */}
             {Object.entries(LIMITS).map(([key, value]) => (
               <label key={key} className="flex items-center gap-2">
                 <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" />
@@ -160,6 +207,7 @@ export default function AddProductPage() {
             ))}
           </div>
         </div>
+
         <div className="mt-6 flex justify-end gap-3">
           <button type="submit" disabled={actionLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50">
             {actionLoading ? 'Ekleniyor...' : 'Ürünü Ekle'}
