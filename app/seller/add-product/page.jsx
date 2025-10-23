@@ -1,5 +1,3 @@
-// app/seller/add-product/page.jsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,27 +9,19 @@ import { useRouter } from 'next/navigation';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
 const BUCKET_NAME = 'product-images';
-// GÜNCELLENDİ: doublebigcard limiti 4, doublebigcardtext kaldırıldı, homepage_carousel eklendi
-const LIMITS = { 
-  bigcard: 1, 
-  doublebigcard: 4, // YENİ LİMİT
-  icons: 6, 
-  brandicon: 4,
-  homepage_carousel: 8, // YENİ ALAN
-};
+// LIMITS güncellendi: homepage_carousel: 8 eklendi
+const LIMITS = { bigcard: 1, doublebigcardtext: 4, icons: 6, brandicon: 4, homepage_carousel: 8 };
 
 export default function AddProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]); // Limit kontrolü için mevcut ürünler
+  const [products, setProducts] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState([]);
-  
-  // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
   const [formData, setFormData] = useState({
     name: '', description: '', category_id: '', price: '', stock: '',
-    bigcard: false, doublebigcard: false, icons: false, brandicon: false,
-    homepage_carousel: false, // YENİ ALAN
+    // homepage_carousel eklendi
+    bigcard: false, doublebigcardtext: false, icons: false, brandicon: false, homepage_carousel: false,
   });
 
   useEffect(() => {
@@ -40,8 +30,8 @@ export default function AddProductPage() {
       if (categoriesError) toast.error('Kategoriler alınamadı.');
       else setCategories(categoriesData);
 
-      // Sadece limit kontrolü için gerekli alanları çekelim
-      const { data: productsData, error: productsError } = await supabase.from('products').select('id, bigcard, doublebigcard, icons, brandicon, homepage_carousel');
+      // homepage_carousel seçimi eklendi
+      const { data: productsData, error: productsError } = await supabase.from('products').select('id, bigcard, doublebigcardtext, icons, brandicon, homepage_carousel');
       if (productsError) toast.error('Mevcut ürünler kontrol edilemedi.');
       else setProducts(productsData);
     };
@@ -64,8 +54,8 @@ export default function AddProductPage() {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       const limit = LIMITS[name];
+      // Limit kontrolü güncellendi
       if (limit !== undefined && checked) {
-        // Mevcut ürünler listesiyle limit kontrolü
         const count = products.filter(p => p[name]).length;
         if (count >= limit) {
           toast.error(`Maksimum ${limit} adet "${name}" ürünü seçebilirsiniz!`);
@@ -105,18 +95,15 @@ export default function AddProductPage() {
     setActionLoading(true);
     const toastId = toast.loading('Ürün ekleniyor...');
     const uploadedUrls = await uploadFiles();
-    
-    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     const { error } = await supabase
       .from('products')
       .insert([{
         name: formData.name, description: formData.description, category_id: formData.category_id,
         price: parseFloat(formData.price), stock: parseInt(formData.stock), image_urls: uploadedUrls,
-        bigcard: formData.bigcard, doublebigcard: formData.doublebigcard,
-        icons: formData.icons, brandicon: formData.brandicon,
-        homepage_carousel: formData.homepage_carousel, // YENİ ALAN
+        // homepage_carousel eklendi
+        bigcard: formData.bigcard, doublebigcardtext: formData.doublebigcardtext,
+        icons: formData.icons, brandicon: formData.brandicon, homepage_carousel: formData.homepage_carousel
       }]);
-      
     if (!error) {
       toast.success('Ürün başarıyla eklendi!', { id: toastId });
       router.push('/seller/product-list');
@@ -161,14 +148,14 @@ export default function AddProductPage() {
             </div>
           )}
         </div>
-        {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
           <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
+            {/* Object.entries(LIMITS) güncellendi, homepage_carousel eklendi */}
             {Object.entries(LIMITS).map(([key, value]) => (
               <label key={key} className="flex items-center gap-2">
-                <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500" />
-                {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Max: {value})
+                <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" />
+                {key} (Max: {value})
               </label>
             ))}
           </div>

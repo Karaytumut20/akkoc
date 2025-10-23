@@ -1,5 +1,3 @@
-// app/seller/product-list/page.jsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,13 +9,14 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
 const BUCKET_NAME = 'product-images';
 
-// GÜNCELLENDİ: doublebigcard limiti 4, doublebigcardtext kaldırıldı, homepage_carousel eklendi
+// GÜNCELLENEN LIMITS
 const LIMITS = {
   bigcard: 1,
-  doublebigcard: 4, // YENİ LİMİT
+  doublebigcard: 2, // Tekrar eklendi
+  doublebigcardtext: 2,
   icons: 6,
   brandicon: 4,
-  homepage_carousel: 8, // YENİ ALAN
+  homepage_carousel: 8, // Yeni eklendi
 };
 
 export default function ProductsTable() {
@@ -28,7 +27,6 @@ export default function ProductsTable() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [filesToUpload, setFilesToUpload] = useState([]);
 
-  // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -36,16 +34,17 @@ export default function ProductsTable() {
     price: '',
     stock: '',
     image_urls: [],
+    // Yeni eklenen/Güncellenen alanlar
     bigcard: false,
-    doublebigcard: false,
+    doublebigcard: false, // Tekrar eklendi
+    doublebigcardtext: false,
     icons: false,
     brandicon: false,
-    homepage_carousel: false, // YENİ ALAN
+    homepage_carousel: false, // Yeni eklendi
   });
 
   const fetchProducts = async () => {
     setLoading(true);
-    // Sorguya yeni alanı ekleyelim
     const { data, error } = await supabase
       .from('products')
       .select('*, categories ( name )')
@@ -142,7 +141,6 @@ export default function ProductsTable() {
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
     setFilesToUpload([]);
-    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     setFormData({
       name: product.name,
       description: product.description,
@@ -150,11 +148,13 @@ export default function ProductsTable() {
       price: product.price,
       stock: product.stock,
       image_urls: product.image_urls || [],
+      // Yeni eklenen/Güncellenen alanlar
       bigcard: product.bigcard || false,
-      doublebigcard: product.doublebigcard || false,
+      doublebigcard: product.doublebigcard || false, // Tekrar eklendi
+      doublebigcardtext: product.doublebigcardtext || false,
       icons: product.icons || false,
       brandicon: product.brandicon || false,
-      homepage_carousel: product.homepage_carousel || false, // YENİ ALAN
+      homepage_carousel: product.homepage_carousel || false, // Yeni eklendi
     });
   };
 
@@ -162,10 +162,10 @@ export default function ProductsTable() {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       const limit = LIMITS[name];
-      if (limit !== undefined && checked) {
+      if (checked) {
         const count = products.filter(p => p.id !== editingProduct && p[name]).length;
         if (count >= limit) {
-          toast.error(`Maksimum ${limit} adet "${name}" ürünü seçebilirsiniz!`);
+          toast.error(`Maksimum ${limit} adet ${name} ürünü seçebilirsiniz!`);
           return;
         }
       }
@@ -186,7 +186,6 @@ export default function ProductsTable() {
     const uploadedUrls = await uploadFiles();
     const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
     
-    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     const { error } = await supabase
       .from('products')
       .update({
@@ -196,11 +195,13 @@ export default function ProductsTable() {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         image_urls: finalImageUrls,
+        // Yeni eklenen/Güncellenen alanlar
         bigcard: formData.bigcard,
-        doublebigcard: formData.doublebigcard,
+        doublebigcard: formData.doublebigcard, // Tekrar eklendi
+        doublebigcardtext: formData.doublebigcardtext,
         icons: formData.icons,
         brandicon: formData.brandicon,
-        homepage_carousel: formData.homepage_carousel, // YENİ ALAN
+        homepage_carousel: formData.homepage_carousel, // Yeni eklendi
       })
       .eq('id', editingProduct);
 
@@ -257,12 +258,12 @@ export default function ProductsTable() {
                     </td>
                     <td className="px-4 py-3 sm:px-6 text-right text-lg font-bold text-indigo-600">{product.price} ₺</td>
                     <td className="px-4 py-3 sm:px-6 text-center font-medium">{product.stock}</td>
-                    {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
-                    <td className="px-4 py-3 sm:px-6 text-center space-x-1 flex flex-wrap justify-center gap-1">
-                      {product.bigcard && <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">Big</span>}
-                      {product.doublebigcard && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Double</span>}
-                      {product.icons && <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full">Icons</span>}
-                      {product.brandicon && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Brand</span>}
+                    <td className="px-4 py-3 sm:px-6 text-center space-x-1">
+                      {product.bigcard && <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full mr-1">Big</span>}
+                      {product.doublebigcard && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mr-1">Double</span>}
+                      {product.doublebigcardtext && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full mr-1">Text</span>}
+                      {product.icons && <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full mr-1">Icons</span>}
+                      {product.brandicon && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full mr-1">Brand</span>}
                       {product.homepage_carousel && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Carousel</span>}
                     </td>
                     <td className="px-4 py-3 sm:px-6 text-center space-y-1 sm:space-x-2 sm:space-y-0 flex flex-col sm:flex-row justify-center items-center">
@@ -343,20 +344,13 @@ export default function ProductsTable() {
                     </div>
                   </div>
 
-                  {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {Object.entries(LIMITS).map(([key, value]) => (
-                         <label key={key} className="flex items-center gap-2" key={key}>
-                            <input
-                                type="checkbox"
-                                name={key}
-                                checked={!!formData[key]}
-                                onChange={handleFormChange}
-                                className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500"
-                            />
-                            {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Max: {value})
+                         <label key={key} className="flex items-center gap-2">
+                            <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" /> 
+                            {key} (Max: {value})
                          </label>
                       ))}
                     </div>
