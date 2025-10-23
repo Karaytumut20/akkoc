@@ -1,3 +1,5 @@
+// app/seller/add-product/page.jsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,22 +11,27 @@ import { useRouter } from 'next/navigation';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
 const BUCKET_NAME = 'product-images';
-const LIMITS = { bigcard: 1, doublebigcard: 2, doublebigcardtext: 2, icons: 6, brandicon: 4 };
+// GÜNCELLENDİ: doublebigcard limiti 4, doublebigcardtext kaldırıldı, homepage_carousel eklendi
+const LIMITS = { 
+  bigcard: 1, 
+  doublebigcard: 4, // YENİ LİMİT
+  icons: 6, 
+  brandicon: 4,
+  homepage_carousel: 8, // YENİ ALAN
+};
 
 export default function AddProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]); // Limit kontrolü için mevcut ürünler
   const [actionLoading, setActionLoading] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState([]);
   
-  // GÜNCELLENDİ: Yeni fiyat alanları eklendi.
+  // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
   const [formData, setFormData] = useState({
     name: '', description: '', category_id: '', price: '', stock: '',
-    price_2_pack: '', // Yeni: 2'li alım fiyatı
-    price_3_pack: '', // Yeni: 3'lü alım fiyatı
-    price_4_pack: '', // Yeni: 4'lü alım fiyatı
-    bigcard: false, doublebigcard: false, doublebigcardtext: false, icons: false, brandicon: false,
+    bigcard: false, doublebigcard: false, icons: false, brandicon: false,
+    homepage_carousel: false, // YENİ ALAN
   });
 
   useEffect(() => {
@@ -33,7 +40,8 @@ export default function AddProductPage() {
       if (categoriesError) toast.error('Kategoriler alınamadı.');
       else setCategories(categoriesData);
 
-      const { data: productsData, error: productsError } = await supabase.from('products').select('id, bigcard, doublebigcard, doublebigcardtext, icons, brandicon');
+      // Sadece limit kontrolü için gerekli alanları çekelim
+      const { data: productsData, error: productsError } = await supabase.from('products').select('id, bigcard, doublebigcard, icons, brandicon, homepage_carousel');
       if (productsError) toast.error('Mevcut ürünler kontrol edilemedi.');
       else setProducts(productsData);
     };
@@ -57,6 +65,7 @@ export default function AddProductPage() {
     if (type === 'checkbox') {
       const limit = LIMITS[name];
       if (limit !== undefined && checked) {
+        // Mevcut ürünler listesiyle limit kontrolü
         const count = products.filter(p => p[name]).length;
         if (count >= limit) {
           toast.error(`Maksimum ${limit} adet "${name}" ürünü seçebilirsiniz!`);
@@ -97,29 +106,15 @@ export default function AddProductPage() {
     const toastId = toast.loading('Ürün ekleniyor...');
     const uploadedUrls = await uploadFiles();
     
-    // YENİ ALANLARIN DEĞERLERİNİ HAZIRLA: Boş string ise null yap
-    const numericOrNull = (value) => value.trim() === '' ? null : parseFloat(value);
-    
+    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     const { error } = await supabase
       .from('products')
       .insert([{
-        name: formData.name, 
-        description: formData.description, 
-        category_id: formData.category_id,
-        price: parseFloat(formData.price), 
-        stock: parseInt(formData.stock), 
-        image_urls: uploadedUrls,
-        
-        // GÜNCELLENDİ: Yeni fiyat alanları eklendi
-        price_2_pack: numericOrNull(formData.price_2_pack),
-        price_3_pack: numericOrNull(formData.price_3_pack),
-        price_4_pack: numericOrNull(formData.price_4_pack),
-        
-        bigcard: formData.bigcard, 
-        doublebigcard: formData.doublebigcard, 
-        doublebigcardtext: formData.doublebigcardtext,
-        icons: formData.icons, 
-        brandicon: formData.brandicon,
+        name: formData.name, description: formData.description, category_id: formData.category_id,
+        price: parseFloat(formData.price), stock: parseInt(formData.stock), image_urls: uploadedUrls,
+        bigcard: formData.bigcard, doublebigcard: formData.doublebigcard,
+        icons: formData.icons, brandicon: formData.brandicon,
+        homepage_carousel: formData.homepage_carousel, // YENİ ALAN
       }]);
       
     if (!error) {
@@ -135,29 +130,14 @@ export default function AddProductPage() {
     <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">Yeni Ürün Ekle</h1>
       <form onSubmit={handleAddProduct} className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg space-y-8">
-        
         <FloatingLabelInput id="name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} required />
         <FloatingLabelInput as="textarea" id="description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
-        
         <select name="category_id" value={formData.category_id} onChange={handleFormChange} required className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
           <option value="" disabled>Kategori Seç</option>
           {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
         </select>
-        
-        <FloatingLabelInput id="price" name="price" type="number" label="Temel Fiyat" value={formData.price} onChange={handleFormChange} required />
+        <FloatingLabelInput id="price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required />
         <FloatingLabelInput id="stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
-        
-        {/* YENİ EKLENEN KAMPANYALI FİYAT ALANI */}
-        <div className="border border-orange-200/50 bg-orange-50/50 rounded-xl p-4 shadow-inner">
-            <h3 className="font-bold text-lg text-orange-700 mb-4">Kampanyalı Ürün Fiyatları (İsteğe Bağlı)</h3>
-            <p className='text-sm text-gray-600 mb-4'>Buraya gireceğiniz fiyatlar, tekli fiyat yerine 2, 3 veya 4 ürün alımında uygulanacak **toplam** fiyat olacaktır. Boş bırakılabilir.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Alım Fiyatı (Toplam)" value={formData.price_2_pack} onChange={handleFormChange} />
-                <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Alım Fiyatı (Toplam)" value={formData.price_3_pack} onChange={handleFormChange} />
-                <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Alım Fiyatı (Toplam)" value={formData.price_4_pack} onChange={handleFormChange} />
-            </div>
-        </div>
-        
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
           <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yükle</h3>
           <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-100/50 transition">
@@ -181,13 +161,14 @@ export default function AddProductPage() {
             </div>
           )}
         </div>
+        {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
           <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {Object.entries(LIMITS).map(([key, value]) => (
               <label key={key} className="flex items-center gap-2">
-                <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" />
-                {key} (Max: {value})
+                <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500" />
+                {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Max: {value})
               </label>
             ))}
           </div>

@@ -11,14 +11,13 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 
 const BUCKET_NAME = 'product-images';
 
-// Yeni alanı ve limitini ekleyelim
+// GÜNCELLENDİ: doublebigcard limiti 4, doublebigcardtext kaldırıldı, homepage_carousel eklendi
 const LIMITS = {
   bigcard: 1,
-  doublebigcard: 2,
-  doublebigcardtext: 2,
+  doublebigcard: 4, // YENİ LİMİT
   icons: 6,
   brandicon: 4,
-  homepage_carousel: 8, // Örnek limit: 8 ürün
+  homepage_carousel: 8, // YENİ ALAN
 };
 
 export default function ProductsTable() {
@@ -29,7 +28,7 @@ export default function ProductsTable() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [filesToUpload, setFilesToUpload] = useState([]);
 
-  // formData state'ine yeni alanı ekleyelim
+  // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -39,15 +38,14 @@ export default function ProductsTable() {
     image_urls: [],
     bigcard: false,
     doublebigcard: false,
-    doublebigcardtext: false,
     icons: false,
     brandicon: false,
-    homepage_carousel: false, // Yeni alan
+    homepage_carousel: false, // YENİ ALAN
   });
 
   const fetchProducts = async () => {
     setLoading(true);
-    // Yeni alanı da seçelim
+    // Sorguya yeni alanı ekleyelim
     const { data, error } = await supabase
       .from('products')
       .select('*, categories ( name )')
@@ -66,8 +64,7 @@ export default function ProductsTable() {
   };
 
   const fetchCategories = async () => {
-    // ... (kategori çekme kodu aynı kalır) ...
-     const { data, error } = await supabase.from('categories').select('id, name');
+    const { data, error } = await supabase.from('categories').select('id, name');
     if (!error && data) {
       setCategories(data);
     } else {
@@ -81,14 +78,12 @@ export default function ProductsTable() {
   }, []);
 
   const getValidImage = (imageArray) => {
-    // ... (görsel doğrulama kodu aynı kalır) ...
-     if (!imageArray || imageArray.length === 0) return null;
+    if (!imageArray || imageArray.length === 0) return null;
     const url = imageArray[0]?.trim();
     return url && (url.startsWith('http') || url.startsWith('/')) ? url : null;
   };
 
   const handleFileChange = (e) => {
-    // ... (dosya seçme kodu aynı kalır) ...
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(file => ({
         file,
@@ -99,13 +94,11 @@ export default function ProductsTable() {
   };
 
   const handleRemoveNewImage = (filePreviewUrl) => {
-    // ... (yeni görsel kaldırma kodu aynı kalır) ...
     setFilesToUpload(prev => prev.filter(f => f.preview !== filePreviewUrl));
     URL.revokeObjectURL(filePreviewUrl);
   };
 
   const uploadFiles = async () => {
-    // ... (dosya yükleme kodu aynı kalır) ...
     if (filesToUpload.length === 0) return [];
     const newImageUrls = [];
     for (const fileObj of filesToUpload) {
@@ -127,16 +120,14 @@ export default function ProductsTable() {
   };
 
   const handleRemoveImage = (urlToRemove) => {
-    // ... (mevcut görsel kaldırma kodu aynı kalır) ...
-     setFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       image_urls: prev.image_urls.filter(url => url !== urlToRemove),
     }));
   };
 
   const handleDelete = async (id) => {
-    // ... (silme kodu aynı kalır) ...
-     if (!confirm('Bu ürünü silmek istediğine emin misin?')) return;
+    if (!confirm('Bu ürünü silmek istediğine emin misin?')) return;
     setActionLoading(true);
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (!error) {
@@ -151,7 +142,7 @@ export default function ProductsTable() {
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
     setFilesToUpload([]);
-    // Yeni alanı da state'e ekleyelim
+    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     setFormData({
       name: product.name,
       description: product.description,
@@ -161,23 +152,21 @@ export default function ProductsTable() {
       image_urls: product.image_urls || [],
       bigcard: product.bigcard || false,
       doublebigcard: product.doublebigcard || false,
-      doublebigcardtext: product.doublebigcardtext || false,
       icons: product.icons || false,
       brandicon: product.brandicon || false,
-      homepage_carousel: product.homepage_carousel || false, // Yeni alan
+      homepage_carousel: product.homepage_carousel || false, // YENİ ALAN
     });
   };
 
   const handleFormChange = (e) => {
-    // ... (form değişiklik kodu aynı, limit kontrolü zaten dinamik) ...
-     const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       const limit = LIMITS[name];
-      if (limit !== undefined && checked) { // Limit kontrolünü sadece tanımlıysa yap
+      if (limit !== undefined && checked) {
         const count = products.filter(p => p.id !== editingProduct && p[name]).length;
         if (count >= limit) {
           toast.error(`Maksimum ${limit} adet "${name}" ürünü seçebilirsiniz!`);
-          return; // Değişikliği uygulama
+          return;
         }
       }
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -193,11 +182,11 @@ export default function ProductsTable() {
 
     setActionLoading(true);
     const toastId = toast.loading('Ürün güncelleniyor...');
-
+    
     const uploadedUrls = await uploadFiles();
     const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
-
-    // Güncelleme verisine yeni alanı ekleyelim
+    
+    // GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi
     const { error } = await supabase
       .from('products')
       .update({
@@ -209,23 +198,22 @@ export default function ProductsTable() {
         image_urls: finalImageUrls,
         bigcard: formData.bigcard,
         doublebigcard: formData.doublebigcard,
-        doublebigcardtext: formData.doublebigcardtext,
         icons: formData.icons,
         brandicon: formData.brandicon,
-        homepage_carousel: formData.homepage_carousel, // Yeni alan
+        homepage_carousel: formData.homepage_carousel, // YENİ ALAN
       })
       .eq('id', editingProduct);
 
     if (!error) {
       setEditingProduct(null);
-      await fetchProducts(); // Listeyi yenile
+      await fetchProducts();
       toast.success('Ürün başarıyla güncellendi!', { id: toastId });
     } else {
       toast.error('Güncelleme hatası: ' + error.message, { id: toastId });
     }
     setActionLoading(false);
   };
-
+  
   if (loading) return <div className="flex justify-center items-center h-screen text-lg text-gray-700">Ürünler yükleniyor...</div>;
 
   return (
@@ -236,14 +224,12 @@ export default function ProductsTable() {
         </h1>
 
         {products.length === 0 ? (
-          // ... (ürün yok mesajı aynı kalır) ...
-           <p className="text-center text-xl text-gray-500 py-10">Henüz ürün bulunmuyor.</p>
+          <p className="text-center text-xl text-gray-500 py-10">Henüz ürün bulunmuyor.</p>
         ) : (
           <div className="overflow-x-auto shadow-2xl rounded-xl border border-gray-100/70 bg-white">
             <table className="min-w-full divide-y divide-gray-200/60">
               <thead className="bg-gray-50/50">
-                {/* ... (tablo başlıkları aynı kalır, belki Vitrin sütununa yeni etiket eklenir) ... */}
-                 <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   <th className="px-4 py-3 sm:px-6">Resim</th>
                   <th className="px-4 py-3 sm:px-6 w-1/4">İsim</th>
                   <th className="px-4 py-3 sm:px-6 hidden md:table-cell">Açıklama</th>
@@ -257,8 +243,7 @@ export default function ProductsTable() {
               <tbody className="divide-y divide-gray-100">
                 {products.map(product => (
                   <tr key={product.id} className="hover:bg-indigo-50/20 transition duration-150">
-                    {/* ... (diğer tablo hücreleri aynı kalır) ... */}
-                     <td className="px-4 py-3 sm:px-6">
+                    <td className="px-4 py-3 sm:px-6">
                       {getValidImage(product.image_urls) ? (
                         <Image src={getValidImage(product.image_urls)} alt={product.name} width={56} height={56} className="rounded-lg object-cover w-14 h-14 border border-gray-200" />
                       ) : (
@@ -272,16 +257,15 @@ export default function ProductsTable() {
                     </td>
                     <td className="px-4 py-3 sm:px-6 text-right text-lg font-bold text-indigo-600">{product.price} ₺</td>
                     <td className="px-4 py-3 sm:px-6 text-center font-medium">{product.stock}</td>
-                    {/* Vitrin sütununa yeni etiketi ekleyelim */}
+                    {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
                     <td className="px-4 py-3 sm:px-6 text-center space-x-1 flex flex-wrap justify-center gap-1">
                       {product.bigcard && <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">Big</span>}
                       {product.doublebigcard && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Double</span>}
-                      {product.doublebigcardtext && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Text</span>}
                       {product.icons && <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full">Icons</span>}
                       {product.brandicon && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Brand</span>}
-                      {product.homepage_carousel && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Carousel</span>} {/* Yeni Etiket */}
+                      {product.homepage_carousel && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Carousel</span>}
                     </td>
-                     <td className="px-4 py-3 sm:px-6 text-center space-y-1 sm:space-x-2 sm:space-y-0 flex flex-col sm:flex-row justify-center items-center">
+                    <td className="px-4 py-3 sm:px-6 text-center space-y-1 sm:space-x-2 sm:space-y-0 flex flex-col sm:flex-row justify-center items-center">
                       <button onClick={() => handleEditClick(product)} className="w-full sm:w-auto px-3 py-1 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition shadow-md flex items-center justify-center gap-1">
                         <FiEdit3 className="w-4 h-4" /> Düzenle
                       </button>
@@ -296,7 +280,6 @@ export default function ProductsTable() {
           </div>
         )}
 
-        {/* Modal Kısmı */}
         {editingProduct && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center p-0 sm:p-4">
             <div className="bg-white rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-2xl overflow-y-auto transform transition-all duration-300 shadow-3xl">
@@ -307,21 +290,20 @@ export default function ProductsTable() {
                         <FiX className="w-6 h-6" />
                     </button>
                 </div>
-
+                
                 <div className="space-y-8">
-                  {/* ... (diğer form alanları aynı kalır) ... */}
                   <FloatingLabelInput id="edit-name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} />
                   <FloatingLabelInput as="textarea" id="edit-description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
-                   <select name="category_id" value={formData.category_id} onChange={handleFormChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
+                  
+                  <select name="category_id" value={formData.category_id} onChange={handleFormChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
                     <option value="" disabled>Kategori Seç</option>
                     {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
-                   <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} />
-                  <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
 
-                  {/* Görsel Yönetimi */}
-                  {/* ... (görsel yönetimi kodu aynı kalır) ... */}
-                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
+                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} />
+                  <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
+                  
+                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi</h3>
                     <div className="mb-6 pb-4 border-b border-indigo-100">
                       <h4 className="text-sm font-semibold mb-3 text-gray-600">Mevcut Görseller ({formData.image_urls.length} adet)</h4>
@@ -361,27 +343,26 @@ export default function ProductsTable() {
                     </div>
                   </div>
 
-                  {/* Vitrin Ayarları - Yeni checkbox ekleyelim */}
+                  {/* GÜNCELLENDİ: doublebigcardtext kaldırıldı, homepage_carousel eklendi */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {Object.entries(LIMITS).map(([key, value]) => (
-                         <label key={key} className="flex items-center gap-2">
+                         <label key={key} className="flex items-center gap-2" key={key}>
                             <input
                                 type="checkbox"
                                 name={key}
-                                checked={!!formData[key]} // !! ile undefined/null durumunu false yapalım
+                                checked={!!formData[key]}
                                 onChange={handleFormChange}
                                 className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500"
                             />
-                            {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Max: {value}) {/* Etiketi güzelleştirelim */}
+                            {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Max: {value})
                          </label>
                       ))}
                     </div>
                   </div>
 
-                  {/* ... (kaydet/iptal butonları aynı kalır) ... */}
-                   <div className="mt-6 flex justify-end gap-3">
+                  <div className="mt-6 flex justify-end gap-3">
                     <button onClick={handleUpdate} disabled={actionLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50">
                       {actionLoading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
                     </button>

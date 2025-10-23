@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
@@ -7,40 +5,42 @@ import Image from "next/image";
 import Link from "next/link";
 import { assets } from "@/assets/assets";
 
+// === SVG ICONS ===
 const icons = {
   Menu: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round">
       <line x1="4" x2="20" y1="12" y2="12" />
       <line x1="4" x2="20" y1="6" y2="6" />
       <line x1="4" x2="20" y1="18" y2="18" />
     </svg>
   ),
   Close: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Search: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
   ),
   ShoppingBag: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
       <path d="M3 6h18" />
       <path d="M16 10a4 4 0 0 1-8 0" />
     </svg>
   ),
-  Globe: (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  )
 };
 
 export default function MainNavbar() {
@@ -55,25 +55,30 @@ export default function MainNavbar() {
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
-  const languageMenuRef = useRef(null);
 
   const cartCount = getCartCount();
   const isHomePage = pathname === "/";
 
+  // DÜZELTME: Kullanıcı adını güvenli bir şekilde göster.
+  const displayUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Hesabım';
+
+
   useEffect(() => {
     function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) setIsSearchVisible(false);
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
-      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) setLanguageMenuOpen(false);
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchVisible(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -81,7 +86,10 @@ export default function MainNavbar() {
       setIsSticky(true);
       return;
     }
-    const handleScroll = () => setIsSticky(window.scrollY > 50);
+
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 50);
+    };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
@@ -114,40 +122,53 @@ export default function MainNavbar() {
 
   const navLinks = [
     { name: "HOME", href: "/" },
-    { name: "PRODUCTS", href: "/all-products" },
-    { name: "COLLECTIONS", href: "/all-products" },
+    { name: "ALL PRODUCT", href: "/all-products" },
+    { name: "COLLECTION", href: "/collection" },
     { name: "CONTACT", href: "/contact" },
   ];
 
   const headerClasses = isSticky
-    ? "fixed top-0 left-0 right-0 z-50 bg-[#ECE4DC] text-gray-800 shadow-md animate-fadeInDown"
+    ? "fixed top-0 left-0 right-0 z-50 bg-white text-gray-800 shadow-md animate-fadeInDown"
     : "absolute top-0 left-0 right-0 z-20 text-white";
 
   const logoSrc = assets.logo;
 
   return (
-    <header className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}>
-      <div className="flex items-center justify-between relative w-full">
-
-        {/* SOL TARAF */}
+    <header
+      className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}
+    >
+      <div className="flex items-center justify-between relative">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button aria-label="Menu" className="p-2 rounded-full hover:bg-black/10 transition lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
+          <button
+            aria-label="Menu"
+            className="p-2 rounded-full hover:bg-black/10 transition lg:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? (
+              <icons.Close className="w-6 h-6" />
+            ) : (
+              <icons.Menu className="w-6 h-6" />
+            )}
           </button>
 
-          <button aria-label="Search" className="p-2 rounded-full hover:bg-black/10 transition" onClick={(e) => {
-            e.stopPropagation();
-            setIsSearchVisible(!isSearchVisible);
-          }}>
+          <button
+            aria-label="Search"
+            className="p-2 rounded-full hover:bg-black/10 transition"
+            onClick={(e) => {
+                e.stopPropagation();
+                setIsSearchVisible(!isSearchVisible);
+            }}
+          >
             <icons.Search className="w-5 h-5" />
           </button>
         </div>
 
-        {/* ORTA - LOGO */}
-        <div className="flex justify-center items-center flex-grow absolute left-0 right-0 pointer-events-none">
+        <div
+          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+          onClick={() => router.push("/")}
+        >
           <Image
-            onClick={() => router.push("/")}
-            className="w-24 sm:w-28 md:w-32 cursor-pointer pointer-events-auto"
+            className="w-28 md:w-32"
             src={logoSrc}
             alt="logo"
             style={{
@@ -156,42 +177,7 @@ export default function MainNavbar() {
           />
         </div>
 
-        {/* SAĞ TARAF */}
-        <div className="flex items-center space-x-2 sm:space-x-4 relative z-10">
-
-          {/* 🌐 DİL SEÇİCİ */}
-          <div className="relative" ref={languageMenuRef}>
-            <button
-              onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
-              className={`flex items-center gap-1 p-2 rounded-full hover:bg-black/10 transition text-xs sm:text-sm uppercase ${
-                isSticky ? "text-gray-800" : "text-white"
-              }`}
-            >
-              <span className="hidden sm:inline">{selectedLanguage}</span>
-              <span className="sm:hidden">
-                <icons.Globe className="w-5 h-5" />
-              </span>
-            </button>
-
-            {languageMenuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-[#ECE4DC] rounded-md shadow-lg z-50 text-gray-800">
-                {["English", "Türkçe", "Spanish"].map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => {
-                      setSelectedLanguage(lang);
-                      setLanguageMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 👤 USER */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -206,13 +192,18 @@ export default function MainNavbar() {
                     filter: isSticky ? "none" : "brightness(0) invert(1)",
                   }}
                 />
-                <span className="hidden md:block">
-                  {user.email.split("@")[0]}
+                {/* Düzeltilmiş Kullanıcı Adı Gösterimi */}
+                <span className="hidden md:block truncate max-w-[100px]">
+                  {displayUserName}
                 </span>
               </button>
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#ECE4DC] rounded-md shadow-lg py-1 z-20 text-gray-800">
-                  <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-gray-800">
+                  <Link
+                    href="/account"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="block px-4 py-2 text-sm hover:bg-gray-100"
+                  >
                     Hesabım
                   </Link>
                   <button
@@ -228,7 +219,10 @@ export default function MainNavbar() {
               )}
             </div>
           ) : (
-            <button onClick={() => router.push("/auth")} className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition">
+            <button
+              onClick={() => router.push("/auth")}
+              className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition"
+            >
               <Image
                 className="w-5 h-5"
                 src={assets.user_icon}
@@ -241,11 +235,14 @@ export default function MainNavbar() {
             </button>
           )}
 
-          {/* 🛍️ CART */}
-          <button aria-label="Shopping Bag" className="p-2 rounded-full hover:bg-black/10 transition relative" onClick={() => router.push("/cart")}>
+          <button
+            aria-label="Shopping Bag"
+            className="p-2 rounded-full hover:bg-black/10 transition relative"
+            onClick={() => router.push("/cart")}
+          >
             <icons.ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#be531c] text-white text-xs">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-white text-xs">
                 {cartCount}
               </span>
             )}
@@ -253,7 +250,6 @@ export default function MainNavbar() {
         </div>
       </div>
 
-      {/* 🔍 ARAMA */}
       {isSearchVisible && (
         <div ref={searchRef} className="relative mt-4 max-w-md mx-auto">
           <form onSubmit={handleSearchSubmit} className="flex">
@@ -265,13 +261,13 @@ export default function MainNavbar() {
               autoFocus
               className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
                 isSticky
-                  ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-[#be531c]"
+                  ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-orange-500"
                   : "bg-white/20 text-white placeholder-white/70 focus:ring-white/50"
               }`}
             />
           </form>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-[#ECE4DC] text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+            <div className="absolute top-full left-0 w-full bg-white text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
               <ul>
                 {searchResults.map((product) => (
                   <li key={product.id}>
@@ -287,7 +283,9 @@ export default function MainNavbar() {
                           className="object-cover rounded-md"
                         />
                       </div>
-                      <span className="font-medium text-gray-800">{product.name}</span>
+                      <span className="font-medium text-gray-800">
+                        {product.name}
+                      </span>
                     </div>
                   </li>
                 ))}
@@ -297,7 +295,6 @@ export default function MainNavbar() {
         </div>
       )}
 
-      {/* ALT MENU */}
       <nav
         className={`mt-6 hidden lg:flex justify-center space-x-10 text-sm font-light tracking-[0.25em] uppercase ${
           isSticky ? "text-gray-700" : "text-gray-200"
@@ -307,15 +304,14 @@ export default function MainNavbar() {
           <Link
             key={item.name}
             href={item.href}
-            className="relative group hover:text-[#be531c] transition"
+            className="relative group hover:text-current transition"
           >
             {item.name}
-            <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-[#be531c] group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
+            <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
           </Link>
         ))}
       </nav>
 
-      {/* MOBILE MENU */}
       {menuOpen && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-50 flex flex-col items-center justify-center text-center space-y-8 text-white text-lg font-light uppercase tracking-widest animate-fadeIn">
           <button
@@ -331,7 +327,7 @@ export default function MainNavbar() {
               key={item.name}
               href={item.href}
               onClick={() => setMenuOpen(false)}
-              className="hover:text-[#be531c] transition"
+              className="hover:text-orange-300 transition"
             >
               {item.name}
             </Link>
