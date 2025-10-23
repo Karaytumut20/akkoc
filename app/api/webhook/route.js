@@ -1,7 +1,11 @@
+// app/api/webhook/route.js
+
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Secret anahtarlar ile Stripe ve Supabase'i sunucuda başlatma
+//
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -12,6 +16,8 @@ export async function POST(req) {
 
   let event;
 
+  // 1. Webhook İmza Doğrulama
+  //
   try {
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err) {
@@ -19,15 +25,20 @@ export async function POST(req) {
     return new NextResponse(`Webhook Hatası: ${err.message}`, { status: 400 });
   }
 
+  // 2. Başarılı Ödeme Olayını Yakalama
+  //
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     
+    // Metadata'dan verileri çekme
+    //
     const { userId, addressId, cartItems } = session.metadata;
-    const simplifiedCart = JSON.parse(cartItems); // Artık bu [{productId, quantity}] şeklinde
+    const simplifiedCart = JSON.parse(cartItems); // [{productId, quantity}]
     const totalAmount = session.amount_total / 100;
 
     try {
-      // 1. Adres bilgisini al
+      // 3. Adres bilgisini al (orders tablosuna JSON olarak kaydedilecek)
+      //
       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
         .select('*')
@@ -36,7 +47,8 @@ export async function POST(req) {
       
       if (addressError) throw new Error(`Adres bulunamadı: ${addressError.message}`);
 
-      // 2. 'orders' tablosuna yeni siparişi oluştur
+      // 4. 'orders' tablosuna yeni siparişi oluştur
+      //
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([{ 
@@ -50,7 +62,8 @@ export async function POST(req) {
       
       if (orderError) throw new Error(`Sipariş oluşturulamadı: ${orderError.message}`);
       
-      // 3. Ürün detaylarını (fiyat gibi) veritabanından çek ve 'order_items' oluştur
+      // 5. Ürün detaylarını (fiyat, stok) çek
+      //
       const productIds = simplifiedCart.map(item => item.productId);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
@@ -59,20 +72,25 @@ export async function POST(req) {
 
       if (productsError) throw new Error(`Ürün detayları alınamadı: ${productsError.message}`);
 
+      // 6. order_items listesini oluştur ve fiyati veritabanından al
+      //
       const orderItems = simplifiedCart.map(item => {
         const product = productsData.find(p => p.id === item.productId);
         return {
             order_id: orderData.id,
             product_id: item.productId,
             quantity: item.quantity,
-            price: product.price, // Fiyatı doğrudan veritabanından alıyoruz
+            price: product.price, // Güvenlik için fiyatı tekrar sunucuda teyit et.
         };
       });
 
+      // 7. order_items tablosuna ekle
+      //
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) throw new Error(`Sipariş ürünleri eklenemedi: ${itemsError.message}`);
 
-      // 4. Stokları güncelle
+      // 8. Stokları güncelle
+      //
       for (const item of orderItems) {
         const product = productsData.find(p => p.id === item.product_id);
         const newStock = product.stock - item.quantity;
@@ -90,5 +108,7 @@ export async function POST(req) {
     }
   }
 
+  // Stripe'a başarılı yanıt dönme
+  //
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
 }
