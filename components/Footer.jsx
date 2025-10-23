@@ -27,7 +27,7 @@ const Footer = () => {
               </li>
               
               <li>
-                <a className="hover:underline transition" href="#">
+                <a className="hover:underline transition" href="contact">
                   Contact us
                 </a>
               </li>
