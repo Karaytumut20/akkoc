@@ -48,7 +48,7 @@ export default function TiffanyIconsGrid() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
           {icons.map((item, index) => (
             <div key={item.id} className="text-center group">
-              <div className="relative w-full aspect-square overflow-hidden bg-teal-600">
+              <div className="relative w-full aspect-square overflow-hidden bg-[#be531c]">
                 <Image
                   src={item.image}
                   alt={item.alt}
@@ -63,9 +63,9 @@ export default function TiffanyIconsGrid() {
                 <h3 className="text-xl font-serif text-gray-900 mb-4">{item.title}</h3>
                 <a
                   href={`/shop/${item.title.toLowerCase().replace(/\s/g, '-')}`}
-                  className="text-xs font-semibold tracking-widest uppercase text-gray-900 border-b border-gray-900 pb-1 hover:text-teal-600 hover:border-teal-600 transition duration-150"
+                  className="text-xs font-semibold tracking-widest uppercase text-gray-900 border-b border-gray-900 pb-1 hover:text-[#be531c] hover:border-[#be531c] transition duration-150"
                 >
-                  SHOP NOW       
+                  SHOP NOW
                 </a>
               </div>
             </div>

@@ -32,7 +32,7 @@ export default function HighJewelryBanner() {
       setBigCardProducts(productsWithImages);
     }
   };
-  
+
   // GÜVENLİ FONKSİYON
   const getValidImage = (imageArray) => {
     if (Array.isArray(imageArray) && imageArray.length > 0 && typeof imageArray[0] === 'string' && imageArray[0].trim() !== '') {
@@ -71,7 +71,7 @@ export default function HighJewelryBanner() {
               </p>
               <a
                 href="/collection"
-                className="text-sm font-semibold tracking-widest uppercase text-gray-900 border-b-2 border-gray-900 pb-1 hover:text-teal-600 hover:border-teal-600 transition duration-200"
+                className="text-sm font-semibold tracking-widest uppercase text-gray-900 border-b-2 border-gray-900 pb-1 hover:text-[#be531c] hover:border-[#be531c] transition duration-200"
               >
                 EXPLORE THE COLLECTION
               </a>

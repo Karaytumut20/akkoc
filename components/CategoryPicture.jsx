@@ -75,11 +75,11 @@ export default function Categories() {
                 />
               </div>
 
-              <h3 className="mt-4 text-base font-semibold tracking-wide text-gray-900 group-hover:text-teal-600">
+              <h3 className="mt-4 text-base font-semibold tracking-wide text-gray-900 group-hover:text-[#be531c]">
                 {product.name}
               </h3>
 
-              <div className="h-[3px] w-14 mx-auto mt-2 bg-gradient-to-r from-teal-400 via-teal-600 to-teal-400 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+              <div className="h-[3px] w-14 mx-auto mt-2 bg-gradient-to-r from-[#be531c] via-[#be531c] to-[#be531c] opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
             </div>
           ))}
         </div>

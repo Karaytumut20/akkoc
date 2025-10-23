@@ -56,7 +56,7 @@ const ProductCard = ({ product }) => {
         >
           <FiHeart
             className={`w-4 h-4 ${
-              isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+              isFavorited ? 'fill-[#be531c] text-[#be531c]' : 'text-gray-600'
             }`}
           />
         </button>
@@ -64,7 +64,7 @@ const ProductCard = ({ product }) => {
 
       {/* Ürün ismi */}
       <div className="mt-3 w-full text-center">
-        <h3 className="text-base font-medium text-gray-800 truncate hover:text-teal-600 transition-colors">
+        <h3 className="text-base font-medium text-gray-800 truncate hover:text-[#be531c] transition-colors">
           {product.name}
         </h3>
       </div>

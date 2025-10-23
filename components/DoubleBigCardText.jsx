@@ -15,7 +15,6 @@ export default function FeaturedCollections() {
   const fetchCollections = async () => {
     setLoading(true);
 
-    // DÜZELTME: Sorgudan artık var olmayan 'category' sütunu kaldırıldı.
     const { data, error } = await supabase
       .from('products')
       .select('id, name, description, image_urls, doublebigcardtext')
@@ -74,7 +73,7 @@ export default function FeaturedCollections() {
                 <p className="text-sm text-gray-700 max-w-sm mx-auto mb-6 leading-relaxed">{item.description}</p>
                 <a
                   href={item.linkHref}
-                  className="text-xs font-semibold tracking-widest uppercase text-gray-900 border-b border-gray-900 pb-1 hover:text-teal-600 hover:border-teal-600 transition duration-150"
+                  className="text-xs font-semibold tracking-widest uppercase text-gray-900 border-b border-gray-900 pb-1 hover:text-[#be531c] hover:border-[#be531c] transition duration-150"
                 >
                   {item.linkText}
                 </a>
