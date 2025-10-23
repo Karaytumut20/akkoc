@@ -12,15 +12,15 @@ import ShopNow from "@/components/ShopNow";
 import VideoBar from "@/components/VideoBar";
 import Footer from "@/components/Footer";
 import HomepageCarousel from "@/components/HomepageCarousel";
+import HomeCarousel from "@/components/HomeCarousel";
 
 const Home = () => {
   return (
     // Navbar ve Footer buradan tamamen kaldırıldı!
     <>
       <div className="px-6 md:px-16 lg:px-32">
-
+<HomeCarousel />
         <CategoryPicture/>
-          <HomepageCarousel />
         <HomeProducts />
         {/* <DoubleBigCard/> Kullanımı kaldırıldı */}
         <Services/>
