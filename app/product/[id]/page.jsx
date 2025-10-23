@@ -196,18 +196,13 @@ const Product = () => {
             </div>
 
             <div className="w-full flex flex-col justify-start mt-4 lg:mt-0 lg:col-span-1 lg:sticky lg:top-20 lg:self-start z-10">
-              {/* Ürün Bilgileri */}
               <ProductInfoBox {...sharedProps} />
 
-              {/* 🛍️ Kampanya alanı */}
               <BulkBuyOptions
-                currency={currency}
                 availablePacks={availablePacks}
                 handleBulkAddToCart={handleBulkAddToCart}
                 basePrice={productData.price}
               />
-
-
             </div>
           </div>
 
@@ -236,7 +231,7 @@ const Product = () => {
   );
 };
 
-const BulkBuyOptions = ({ currency, availablePacks, handleBulkAddToCart, basePrice }) => {
+const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
   if (availablePacks.length === 0) return null;
   const bestValuePack = availablePacks.reduce((best, current) => {
     const currentOriginalPrice = basePrice * current.quantity;
@@ -250,28 +245,29 @@ const BulkBuyOptions = ({ currency, availablePacks, handleBulkAddToCart, basePri
   }, availablePacks[0]);
 
   return (
-    <div className="mt-4 p-4 bg-[#ECE4DC] rounded-xl border-2 border-[#ECE4DC] shadow-md">
-      <h3 className="text-xl font-bold text-[#0d9488] mb-4 text-center">
+    <div className="mt-4 p-4 bg-[#ECE4DC] rounded-xl border-2 border-[#ECE4DC]">
+      <h3 className="text-xl font-bold text-[#be531c] mb-4 text-center">
         🛍️ Daha Çok Al, Daha Çok Kazan!
       </h3>
       <div className="grid grid-cols-1 gap-4">
         {availablePacks.map(pack => {
           const originalTotalPrice = basePrice * pack.quantity;
           const savingsAmount = originalTotalPrice - pack.price;
-          const isBestValue = pack.price === bestValuePack.price && pack.quantity === bestValuePack.quantity;
+          const isBestValue =
+            pack.price === bestValuePack.price && pack.quantity === bestValuePack.quantity;
           const savingsPercentage = ((savingsAmount / originalTotalPrice) * 100).toFixed(0);
 
           return (
             <div
               key={pack.quantity}
-              className={`relative p-4 rounded-xl transition duration-300 transform ${
+              className={`relative p-4 rounded-xl transition duration-300 ${
                 isBestValue
-                  ? 'bg-white border-2 border-[#0d9488] shadow-lg scale-[1.02]'
-                  : 'bg-white border border-[#ECE4DC] hover:shadow-md'
+                  ? 'bg-white border-2 border-[#be531c]'
+                  : 'bg-white border border-[#ECE4DC]'
               }`}
             >
               {isBestValue && (
-                <span className="absolute top-0 right-0 bg-[#0d9488] text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">
+                <span className="absolute top-0 right-0 bg-[#be531c] text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">
                   EN AVANTAJLI
                 </span>
               )}
@@ -281,14 +277,14 @@ const BulkBuyOptions = ({ currency, availablePacks, handleBulkAddToCart, basePri
                     {pack.quantity} Adet Paket
                   </p>
                   <p className="text-sm text-gray-500 line-through mt-1">
-                    {currency}{originalTotalPrice.toFixed(2)}
+                    ${originalTotalPrice.toFixed(2)}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <p className="text-3xl font-extrabold text-[#0d9488] leading-none">
-                    {currency}{Number(pack.price).toFixed(2)}
+                  <p className="text-3xl font-extrabold text-black leading-none">
+                    ${Number(pack.price).toFixed(2)}
                   </p>
-                  <p className="text-sm font-semibold text-[#0d9488] mt-1">
+                  <p className="text-sm font-semibold text-[#be531c] mt-1">
                     %{savingsPercentage} İNDİRİM!
                   </p>
                 </div>
@@ -297,8 +293,8 @@ const BulkBuyOptions = ({ currency, availablePacks, handleBulkAddToCart, basePri
                 onClick={() => handleBulkAddToCart(pack.quantity, pack.price, pack.name)}
                 className={`w-full mt-4 py-2 text-white font-semibold rounded-lg transition duration-300 ${
                   isBestValue
-                    ? 'bg-[#0d9488] hover:bg-[#0b8075]'
-                    : 'bg-[#0d9488]/80 hover:bg-[#0d9488]'
+                    ? 'bg-[#be531c] hover:bg-[#a64919]'
+                    : 'bg-[#be531c]/90 hover:bg-[#a64919]'
                 }`}
               >
                 {pack.quantity} Adet Sepete Ekle
@@ -323,7 +319,7 @@ const MobileCta = ({ product, handleAddToCart }) => (
       className={`w-full py-4 text-white rounded-lg font-semibold text-lg transition duration-300 mt-4 ${
         product?.stock < 1
           ? 'bg-gray-400 cursor-not-allowed'
-          : 'bg-[#0d9488] hover:bg-[#0b8075] hover:shadow-xl'
+          : 'bg-[#be531c] hover:bg-[#a64919]'
       }`}
     >
       {product?.stock < 1 ? 'Stokta Yok' : `Sepete Ekle`}

@@ -6,6 +6,7 @@ import React from 'react';
 import StarRating from '@/components/StarRating';
 import TrustBadges from './TrustBadges';
 import { useAppContext } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FiHeart } from 'react-icons/fi';
 
@@ -20,6 +21,7 @@ const ProductInfoBox = ({
   handleFavoriteClick,
 }) => {
   const { currency } = useAppContext();
+  const router = useRouter();
 
   const increaseQuantity = () => {
     if (quantity < product.stock) {
@@ -34,31 +36,50 @@ const ProductInfoBox = ({
   };
 
   const getStockStatus = (stock) => {
-    if (stock > 10) return { text: 'Stokta Var', color: 'text-teal-600', pulse: true };
+    if (stock > 10) return { text: 'Stokta Var', color: 'text-green-600', pulse: true };
     if (stock > 0) return { text: `${stock} Adet Kaldı`, color: 'text-orange-600', pulse: false };
     return { text: 'Tükendi', color: 'text-red-600', pulse: false };
   };
 
   const { text, color, pulse } = getStockStatus(product.stock);
 
+  // 📌 Kategoriye tıklanınca yönlendirme
+  const handleCategoryClick = () => {
+    if (product.category_id) {
+      router.push(`/all-products?category_id=${product.category_id}`);
+    } else {
+      router.push(`/all-products`);
+    }
+  };
+
   return (
-    <div className="bg-[#ECE4DC] p-4 sm:p-6 rounded-xl shadow-lg border border-[#ECE4DC]">
+    <div className="bg-[#ECE4DC] p-4 sm:p-6 rounded-xl border border-[#ECE4DC]">
+      {/* Başlık + Favori */}
       <div className="flex justify-between items-start">
-        {/* Başlık ve Fiyat */}
         <div className="flex-1 pr-4">
           <h1 className="text-3xl font-serif tracking-wide text-gray-900 leading-tight">
             {product.name}
           </h1>
-          <p className="text-3xl font-bold text-teal-600 mt-2">
+          <p className="text-3xl font-bold text-[#be531c] mt-2">
             {currency}
             {product.price.toFixed(2)}
           </p>
+
+          {/* 🧡 Kategori butonu */}
+          {product.categories?.name && (
+            <button
+              onClick={handleCategoryClick}
+              className="mt-3 text-sm font-semibold text-[#be531c] hover:underline hover:text-[#a64919] transition"
+            >
+              {product.categories.name}
+            </button>
+          )}
         </div>
 
         {/* Favori ikonu */}
         <button
           onClick={handleFavoriteClick}
-          className="flex-shrink-0 p-3 bg-[#ECE4DC] rounded-full border border-[#ECE4DC] hover:scale-110 transition shadow-md"
+          className="flex-shrink-0 p-3 bg-[#ECE4DC] rounded-full border border-[#ECE4DC] hover:scale-110 transition"
           aria-label={isFavorited ? 'Favorilerden kaldır' : 'Favorilere ekle'}
         >
           <FiHeart
@@ -69,7 +90,7 @@ const ProductInfoBox = ({
         </button>
       </div>
 
-      {/* Yorum puanı ve sayısı */}
+      {/* Yorum puanı */}
       <div className="inline-flex items-center gap-3 mt-4 group pb-4 border-b border-[#ECE4DC]">
         {reviews.length > 0 && (
           <span className="font-bold text-xl text-gray-800">{averageRating.toFixed(1)}</span>
@@ -138,8 +159,10 @@ const ProductInfoBox = ({
         <button
           onClick={handleAddToCart}
           disabled={product.stock < 1}
-          className={`w-full py-4 text-white rounded-lg font-semibold text-lg transition duration-300 shadow-lg ${
-            product.stock < 1 ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700 hover:shadow-xl'
+          className={`w-full py-4 text-white rounded-lg font-semibold text-lg transition duration-300 ${
+            product.stock < 1
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-[#be531c] hover:bg-[#a64919]'
           }`}
         >
           {product.stock < 1 ? 'Stokta Yok' : 'Sepete Ekle'}
@@ -158,8 +181,8 @@ const ProductInfoBox = ({
           <span className={`font-semibold flex items-center gap-2 ${color}`}>
             {pulse && (
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
               </span>
             )}
             {text}

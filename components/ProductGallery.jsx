@@ -3,7 +3,6 @@
 'use client';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 const ProductGallery = ({
   product,
@@ -100,7 +99,7 @@ const ProductGallery = ({
   return (
     <>
       {/* 📱 MOBİL / TABLET */}
-      <div className="lg:hidden w-full relative min-h-[60vh] rounded-xl overflow-hidden mb-4 border border-[#ECE4DC] bg-[#ECE4DC]">
+      <div className="lg:hidden w-full relative min-h-[60vh] rounded-xl overflow-hidden mb-4 bg-[#ECE4DC]">
         <div
           ref={mobileCarouselRef}
           className="absolute inset-0 flex overflow-x-scroll snap-x snap-mandatory scroll-smooth"
@@ -123,33 +122,19 @@ const ProductGallery = ({
           ))}
         </div>
 
+        {/* Altındaki indicator noktaları */}
         {product.image_urls.length > 1 && (
-          <>
-            <button
-              onClick={handlePrevImage}
-              className="absolute top-1/2 left-3 -translate-y-1/2 bg-[#ECE4DC]/80 p-2 rounded-full border border-[#ECE4DC] z-10 hover:bg-[#ECE4DC] transition"
-            >
-              <FiChevronLeft className="w-5 h-5 text-gray-700" />
-            </button>
-            <button
-              onClick={handleNextImage}
-              className="absolute top-1/2 right-3 -translate-y-1/2 bg-[#ECE4DC]/80 p-2 rounded-full border border-[#ECE4DC] z-10 hover:bg-[#ECE4DC] transition"
-            >
-              <FiChevronRight className="w-5 h-5 text-gray-700" />
-            </button>
-
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
-              {product.image_urls.map((_, index) => (
-                <div
-                  key={`indicator-${index}`}
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 cursor-pointer ${
-                    index === currentImageIndex ? 'bg-teal-600' : 'bg-gray-300'
-                  }`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </div>
-          </>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
+            {product.image_urls.map((_, index) => (
+              <div
+                key={`indicator-${index}`}
+                className={`w-2 h-2 rounded-full transition-colors duration-300 cursor-pointer ${
+                  index === currentImageIndex ? 'bg-[#be531c]' : 'bg-gray-300'
+                }`}
+                onClick={() => setCurrentImageIndex(index)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -164,8 +149,8 @@ const ProductGallery = ({
               key={`thumb-${index}`}
               className={`w-full aspect-square rounded-xl cursor-pointer overflow-hidden transition-all duration-200 bg-[#ECE4DC] p-1 ${
                 index === currentImageIndex
-                  ? 'border-4 border-teal-500'
-                  : 'border-4 border-[#ECE4DC] hover:border-teal-300 hover:opacity-80'
+                  ? 'border-4 border-[#be531c]'
+                  : 'border-4 border-[#ECE4DC] hover:border-[#be531c] hover:opacity-80'
               }`}
               onClick={() => handleThumbnailClick(index)}
             >
@@ -190,7 +175,7 @@ const ProductGallery = ({
         {product.image_urls.map((url, index) => (
           <div
             key={`full-${index}`}
-            className="relative rounded-xl overflow-hidden bg-[#ECE4DC] flex justify-center items-center border border-[#ECE4DC]"
+            className="relative rounded-xl overflow-hidden bg-[#ECE4DC] flex justify-center items-center"
             style={{ height: '90vh' }}
           >
             <Image

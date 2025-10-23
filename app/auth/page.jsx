@@ -18,12 +18,12 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
       onChange={onChange}
       required={required}
       autoComplete={autoComplete}
-      className="w-full px-3 pt-4 pb-2 text-gray-900 border border-teal-500 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 peer bg-[#FFFFFF]"
+      className="w-full px-3 pt-4 pb-2 text-gray-900 border border-[#be531c] rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] peer bg-[#FFFFFF]"
       placeholder=" "
     />
     <label
       htmlFor={id}
-      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-[#FFFFF0] px-2 peer-focus:px-2 peer-focus:text-teal-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-[#ECE4DC] px-2 peer-focus:px-2 peer-focus:text-[#be531c] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
     >
       {label}
     </label>
@@ -134,19 +134,19 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-teal-600 hover:text-teal-800 text-2xl font-bold"
+          className="absolute top-3 right-3 text-[#be531c] hover:text-[#a64919] text-2xl font-bold"
         >
           ×
         </button>
         <div className="flex items-center gap-3 mb-4">
           <Image src={logo} alt="Logo" width={40} height={40} />
-          <h3 className="text-2xl font-semibold text-teal-700">{title}</h3>
+          <h3 className="text-2xl font-semibold text-[#be531c]">{title}</h3>
         </div>
         <div className="max-h-[70vh] overflow-y-auto text-sm pr-2">{content}</div>
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+            className="px-5 py-2 bg-[#be531c] text-white rounded-lg hover:bg-[#a64919] transition"
           >
             I Understand
           </button>
@@ -249,13 +249,13 @@ export default function AuthPage() {
         <PolicyModal isOpen={isModalOpen} onClose={closeModal} type={modalContentType} />
       )}
 
-      <div className="flex items-center justify-center min-h-screen bg-[#FFFFF0] p-4">
+      <div className="flex items-center justify-center min-h-screen bg-[#ECE4DC] p-4">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl relative">
           <div className="flex justify-center mb-4">
             <Image src={logo} alt="Logo" width={80} height={80} />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-center text-teal-700">
+          <h2 className="text-3xl font-extrabold text-center text-[#be531c]">
             {isLogin ? 'Sign In' : 'Register Now'}
           </h2>
 
@@ -314,7 +314,7 @@ export default function AuthPage() {
                     checked={termsAccepted}
                     onChange={(e) => setTermsAccepted(e.target.checked)}
                     required
-                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-600"
+                    className="w-4 h-4 text-[#be531c] border-gray-300 rounded focus:ring-[#be531c]"
                   />
                 </div>
                 <div className="ml-3 text-sm text-gray-700 leading-snug">
@@ -322,7 +322,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => openModal('privacy')}
-                    className="text-teal-600 font-semibold hover:underline"
+                    className="text-[#be531c] font-semibold hover:underline"
                   >
                     Privacy Policy
                   </button>{' '}
@@ -330,7 +330,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => openModal('terms')}
-                    className="text-teal-600 font-semibold hover:underline"
+                    className="text-[#be531c] font-semibold hover:underline"
                   >
                     Terms of Service
                   </button>.
@@ -341,7 +341,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 text-white bg-teal-600 rounded-lg font-semibold shadow-md hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 disabled:bg-teal-400 transition"
+              className="w-full py-3 px-4 text-white bg-[#be531c] rounded-lg font-semibold shadow-md hover:bg-[#a64919] focus:outline-none focus:ring-4 focus:ring-[#be531c] focus:ring-opacity-50 disabled:bg-[#be531c]/50 transition"
             >
               {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
             </button>
@@ -358,7 +358,7 @@ export default function AuthPage() {
                 setPassword('');
                 setTermsAccepted(false);
               }}
-              className="ml-1 font-bold text-teal-600 hover:text-teal-500 transition"
+              className="ml-1 font-bold text-[#be531c] hover:text-[#a64919] transition"
             >
               {isLogin ? 'Sign Up' : 'Sign In'}
             </button>

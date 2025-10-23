@@ -71,7 +71,7 @@ const NewsLetter = () => {
             <div className="flex items-center justify-between mb-2">
               <input
                 style={{ backgroundColor: "#FFFFFF" }}
-                className="border border-gray-300 rounded-md h-12 w-full px-4 text-gray-700 !bg-[#FFFFFF] placeholder:text-gray-400 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200"
+                className="border border-gray-300 rounded-md h-12 w-full px-4 text-gray-700 placeholder:text-gray-400 appearance-none focus:outline-none focus:ring-2 focus:ring-[#be531c] transition-all duration-200"
                 type="text"
                 placeholder="Enter your email"
                 value={email}
@@ -79,7 +79,7 @@ const NewsLetter = () => {
               />
               <button
                 onClick={handleSubscribe}
-                className="px-6 py-3 text-white bg-teal-500 rounded-md ml-3 hover:bg-teal-600 hover:scale-105 transition-all duration-300"
+                className="px-6 py-3 text-white bg-[#be531c] rounded-md ml-3 hover:bg-[#a64919] hover:scale-105 transition-all duration-300"
               >
                 Subscribe
               </button>
@@ -96,7 +96,7 @@ const NewsLetter = () => {
         <div className="flex items-center justify-between max-w-2xl w-full md:h-14 h-12">
           <input
             style={{ backgroundColor: "#FFFFFF" }}
-            className="border border-gray-500/30 rounded-md h-full border-r-0 outline-none w-full rounded-r-none px-3 text-gray-700 !bg-[#FFFFFF] placeholder:text-gray-400 appearance-none"
+            className="border border-gray-500/30 rounded-md h-full border-r-0 outline-none w-full rounded-r-none px-3 text-gray-700 placeholder:text-gray-400 appearance-none focus:ring-2 focus:ring-[#be531c]"
             type="text"
             placeholder="Enter your email id"
             value={email}
@@ -104,7 +104,7 @@ const NewsLetter = () => {
           />
           <button
             onClick={handleSubscribe}
-            className="md:px-12 px-8 h-full text-white bg-teal-500 hover:bg-teal-600 rounded-md rounded-l-none hover:scale-105 transition-all duration-300"
+            className="md:px-12 px-8 h-full text-white bg-[#be531c] hover:bg-[#a64919] rounded-md rounded-l-none hover:scale-105 transition-all duration-300"
           >
             Subscribe
           </button>
