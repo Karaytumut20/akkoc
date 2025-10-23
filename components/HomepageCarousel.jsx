@@ -161,7 +161,7 @@ export default function HomepageCarousel() {
   return (
     <section className="w-full py-12 md:py-16 bg-[#ECE4DC] relative group">
       <h2 className="text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-8 md:mb-12">
-        Öne Çıkanlar (Sürükle & Sonsuz Döngü)
+        Öne Çıkanlar
       </h2>
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Sol Kaydırma Butonu */}
