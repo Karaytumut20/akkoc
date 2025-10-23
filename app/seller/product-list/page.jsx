@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import { FiTrash2, FiX, FiEdit3, FiUploadCloud } from 'react-icons/fi';
@@ -12,11 +12,11 @@ const BUCKET_NAME = 'product-images';
 // GÜNCELLENEN LIMITS
 const LIMITS = {
   bigcard: 1,
-  doublebigcard: 2, // Tekrar eklendi
+  doublebigcard: 2, 
   doublebigcardtext: 2,
   icons: 6,
   brandicon: 4,
-  homepage_carousel: 8, // Yeni eklendi
+  homepage_carousel: 8, 
 };
 
 export default function ProductsTable() {
@@ -27,6 +27,10 @@ export default function ProductsTable() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [filesToUpload, setFilesToUpload] = useState([]);
 
+  // Drag işlemleri için ref
+  const dragItem = useRef();
+  const dragOverItem = useRef();
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -34,13 +38,12 @@ export default function ProductsTable() {
     price: '',
     stock: '',
     image_urls: [],
-    // Yeni eklenen/Güncellenen alanlar
     bigcard: false,
-    doublebigcard: false, // Tekrar eklendi
+    doublebigcard: false,
     doublebigcardtext: false,
     icons: false,
     brandicon: false,
-    homepage_carousel: false, // Yeni eklendi
+    homepage_carousel: false,
   });
 
   const fetchProducts = async () => {
@@ -102,7 +105,9 @@ export default function ProductsTable() {
     const newImageUrls = [];
     for (const fileObj of filesToUpload) {
       const file = fileObj.file;
-      const safeName = formData.name ? formData.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') : 'unnamed_product';
+      const safeName = formData.name
+        ? formData.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_')
+        : 'unnamed_product';
       const filePath = `${safeName}/${Date.now()}_${Math.random().toString(36).substring(2)}_${file.name.replace(/\s/g, '_')}`;
       const { data, error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file);
       if (error) {
@@ -130,10 +135,10 @@ export default function ProductsTable() {
     setActionLoading(true);
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (!error) {
-        setProducts(products.filter(p => p.id !== id));
-        toast.success('Ürün başarıyla silindi!');
+      setProducts(products.filter(p => p.id !== id));
+      toast.success('Ürün başarıyla silindi!');
     } else {
-        toast.error('Silme işlemi başarısız: ' + error.message);
+      toast.error('Silme işlemi başarısız: ' + error.message);
     }
     setActionLoading(false);
   };
@@ -148,13 +153,12 @@ export default function ProductsTable() {
       price: product.price,
       stock: product.stock,
       image_urls: product.image_urls || [],
-      // Yeni eklenen/Güncellenen alanlar
       bigcard: product.bigcard || false,
-      doublebigcard: product.doublebigcard || false, // Tekrar eklendi
+      doublebigcard: product.doublebigcard || false,
       doublebigcardtext: product.doublebigcardtext || false,
       icons: product.icons || false,
       brandicon: product.brandicon || false,
-      homepage_carousel: product.homepage_carousel || false, // Yeni eklendi
+      homepage_carousel: product.homepage_carousel || false,
     });
   };
 
@@ -173,6 +177,30 @@ export default function ProductsTable() {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  // 📌 Drag & Drop Eventleri
+  const handleDragStart = (index) => {
+    dragItem.current = index;
+  };
+
+  const handleDragEnter = (index) => {
+    dragOverItem.current = index;
+  };
+
+  const handleDrop = () => {
+    const copiedImages = [...formData.image_urls];
+    const dragItemContent = copiedImages[dragItem.current];
+    copiedImages.splice(dragItem.current, 1);
+    copiedImages.splice(dragOverItem.current, 0, dragItemContent);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    setFormData(prev => ({
+      ...prev,
+      image_urls: copiedImages,
+    }));
   };
 
   const handleUpdate = async () => {
@@ -195,13 +223,12 @@ export default function ProductsTable() {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         image_urls: finalImageUrls,
-        // Yeni eklenen/Güncellenen alanlar
         bigcard: formData.bigcard,
-        doublebigcard: formData.doublebigcard, // Tekrar eklendi
+        doublebigcard: formData.doublebigcard,
         doublebigcardtext: formData.doublebigcardtext,
         icons: formData.icons,
         brandicon: formData.brandicon,
-        homepage_carousel: formData.homepage_carousel, // Yeni eklendi
+        homepage_carousel: formData.homepage_carousel,
       })
       .eq('id', editingProduct);
 
@@ -224,6 +251,7 @@ export default function ProductsTable() {
             Ürünler Yönetim Paneli
         </h1>
 
+        {/* === Ürün tablosu === */}
         {products.length === 0 ? (
           <p className="text-center text-xl text-gray-500 py-10">Henüz ürün bulunmuyor.</p>
         ) : (
@@ -281,6 +309,7 @@ export default function ProductsTable() {
           </div>
         )}
 
+        {/* === MODAL === */}
         {editingProduct && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center p-0 sm:p-4">
             <div className="bg-white rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-2xl overflow-y-auto transform transition-all duration-300 shadow-3xl">
@@ -305,25 +334,30 @@ export default function ProductsTable() {
                   <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
                   
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
-                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi</h3>
-                    <div className="mb-6 pb-4 border-b border-indigo-100">
-                      <h4 className="text-sm font-semibold mb-3 text-gray-600">Mevcut Görseller ({formData.image_urls.length} adet)</h4>
-                      <div className="flex flex-wrap gap-3">
-                        {formData.image_urls.map((url, index) => (
-                          <div key={`existing-${index}`} className="relative w-20 h-20 border-2 border-white rounded-lg overflow-hidden shadow-md group">
-                            <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover'}} />
-                            <button onClick={() => handleRemoveImage(url)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <FiTrash2 className="text-white w-5 h-5" />
-                            </button>
-                          </div>
-                        ))}
-                        {formData.image_urls.length === 0 && ( <p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p> )}
-                      </div>
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi (Sürükle-Bırak)</h3>
+                    <div className="mb-6 pb-4 border-b border-indigo-100 flex flex-wrap gap-3">
+                      {formData.image_urls.map((url, index) => (
+                        <div
+                          key={`existing-${index}`}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragEnter={() => handleDragEnter(index)}
+                          onDragEnd={handleDrop}
+                          onDragOver={(e) => e.preventDefault()}
+                          className="relative w-20 h-20 border-2 border-white rounded-lg overflow-hidden shadow-md group cursor-move"
+                        >
+                          <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover'}} />
+                          <button onClick={() => handleRemoveImage(url)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <FiTrash2 className="text-white w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                      {formData.image_urls.length === 0 && ( <p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p> )}
                     </div>
 
                     <div>
                       <label htmlFor="file-upload-modal" className="block text-sm font-semibold text-indigo-700 mb-2 cursor-pointer">
-                        <span className="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-lg">Yeni Görsel Yükle</span>
+                        <span className="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-lg"><FiUploadCloud className="mr-2"/>Yeni Görsel Yükle</span>
                       </label>
                       <input id="file-upload-modal" type="file" name="files" onChange={handleFileChange} multiple accept="image/*" className="hidden" />
                       {filesToUpload.length > 0 && (
@@ -369,6 +403,7 @@ export default function ProductsTable() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
