@@ -22,7 +22,6 @@ export default function HomeCarousel() {
         .order('display_order', { ascending: true });
 
       if (!error && data) {
-        // x4 çoğalt
         const repeated = Array.from({ length: MULTIPLIER }, () => data).flat();
         setImages(repeated);
       } else {
@@ -38,18 +37,14 @@ export default function HomeCarousel() {
     const container = scrollRef.current;
     if (!container || images.length === 0) return;
 
-    const itemWidth = 180 + 16; // 180px kart + 16px gap
+    const itemWidth = 180 + 16;
     const totalWidth = itemWidth * images.length;
-
-    // Ortadan başla ki geri sarma fark edilmesin
     container.scrollLeft = totalWidth / MULTIPLIER;
 
     const handleScroll = () => {
-      // sona gelince başa al
       if (container.scrollLeft >= totalWidth - container.clientWidth - itemWidth) {
         container.scrollLeft = totalWidth / MULTIPLIER;
       }
-      // başa gelince sona al
       if (container.scrollLeft <= 0) {
         container.scrollLeft = totalWidth - (totalWidth / MULTIPLIER);
       }
@@ -59,7 +54,6 @@ export default function HomeCarousel() {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [images]);
 
-  // ⬅️ Sol buton
   const scrollLeft = () => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollBy({
@@ -68,7 +62,6 @@ export default function HomeCarousel() {
     });
   };
 
-  // ➡️ Sağ buton
   const scrollRight = () => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollBy({
@@ -77,7 +70,6 @@ export default function HomeCarousel() {
     });
   };
 
-  // 🕓 Loading
   if (loading) {
     return <div className="h-[250px] w-full bg-gray-200 animate-pulse"></div>;
   }
@@ -86,6 +78,11 @@ export default function HomeCarousel() {
 
   return (
     <div className="relative w-full">
+      {/* Başlık */}
+      <h2 className="text-2xl sm:text-3xl font-normal text-gray-800 text-center mt-10 mb-6">
+        Albums Of Collections
+      </h2>
+
       {/* Scroll Container */}
       <div
         ref={scrollRef}
