@@ -50,7 +50,7 @@ const Footer = () => {
                   href="https://www.instagram.com/nestcome.kitchen"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline transition text-[#0D9488]"
+                  className="hover:underline transition text-[#be531c]"
                 >
                   @nestcome.kitchen
                 </a>
@@ -58,7 +58,7 @@ const Footer = () => {
               <p>
                 <a
                   href="mailto:nestcomecontact@gmail.com"
-                  className="hover:underline transition text-[#0D9488]"
+                  className="hover:underline transition text-[#be531c]"
                 >
                   nestcomecontact@gmail.com
                 </a>

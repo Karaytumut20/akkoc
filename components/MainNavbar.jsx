@@ -81,7 +81,6 @@ export default function MainNavbar() {
       setIsSticky(true);
       return;
     }
-
     const handleScroll = () => setIsSticky(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -246,7 +245,7 @@ export default function MainNavbar() {
           <button aria-label="Shopping Bag" className="p-2 rounded-full hover:bg-black/10 transition relative" onClick={() => router.push("/cart")}>
             <icons.ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-white text-xs">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#be531c] text-white text-xs">
                 {cartCount}
               </span>
             )}
@@ -266,7 +265,7 @@ export default function MainNavbar() {
               autoFocus
               className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
                 isSticky
-                  ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-orange-500"
+                  ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-[#be531c]"
                   : "bg-white/20 text-white placeholder-white/70 focus:ring-white/50"
               }`}
             />
@@ -305,9 +304,13 @@ export default function MainNavbar() {
         }`}
       >
         {navLinks.map((item) => (
-          <Link key={item.name} href={item.href} className="relative group hover:text-current transition">
+          <Link
+            key={item.name}
+            href={item.href}
+            className="relative group hover:text-[#be531c] transition"
+          >
             {item.name}
-            <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
+            <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-[#be531c] group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
           </Link>
         ))}
       </nav>
@@ -328,7 +331,7 @@ export default function MainNavbar() {
               key={item.name}
               href={item.href}
               onClick={() => setMenuOpen(false)}
-              className="hover:text-orange-300 transition"
+              className="hover:text-[#be531c] transition"
             >
               {item.name}
             </Link>

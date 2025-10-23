@@ -53,7 +53,7 @@ const AddressesPage = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {addresses.map((address) => (
-                        <div key={address.id} className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div key={address.id} className="bg-[#ffffff] p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between">
                             <div>
                                 <p className="font-bold text-lg text-gray-800">{address.full_name}</p>
                                 <p className="text-gray-600 mt-2">{address.area}</p>

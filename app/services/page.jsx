@@ -27,7 +27,7 @@ export default function ShippingReturnsPage() {
         <div className="mt-6 flex justify-center">
           <Link
             href="/"
-            className="px-8 py-3 rounded-full bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-all duration-300"
+            className="px-8 py-3 rounded-full bg-[#be531c] text-white text-sm font-semibold hover:bg-[#be531c] transition-all duration-300"
           >
             Back to Home
           </Link>

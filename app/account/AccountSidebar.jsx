@@ -32,7 +32,7 @@ export default function AccountSidebar() {
     return (
         <div className="bg-[#F9F9F6] p-4 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#0D9488] text-xl font-bold">
+                <div className="w-12 h-12 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#be531c] text-xl font-bold">
                     {user.user_metadata?.full_name 
                         ? user.user_metadata.full_name.charAt(0).toUpperCase() 
                         : user.email.charAt(0).toUpperCase()}
@@ -54,7 +54,7 @@ export default function AccountSidebar() {
                         <Link href={item.href} key={item.name}>
                             <div className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
                                 isActive 
-                                    ? 'bg-[#E5E7EB] text-[#0D9488]'
+                                    ? 'bg-[#E5E7EB] text-[#be531c]' // BURADA DEĞİŞTİ
                                     : 'hover:bg-[#F3F4F6] text-gray-700'
                             }`}>
                                 {item.icon}

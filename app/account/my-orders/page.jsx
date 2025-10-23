@@ -29,7 +29,7 @@ const MyOrdersPage = () => {
     if (authLoading) return <Loading />;
     
     return (
-        <div>
+        <div  >
             <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">Siparişlerim</h1>
             {myOrders.length === 0 ? (
                 <div className="text-center py-16 text-gray-500">
@@ -38,7 +38,7 @@ const MyOrdersPage = () => {
             ) : (
                 <div className="space-y-6">
                     {myOrders.map(order => (
-                        <div key={order.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
+                        <div key={order.id} className="bg-[#ffffff] border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
                             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                                 <div>
                                     <p className="font-bold text-gray-800">Sipariş ID: #{order.id.slice(0, 8)}</p>

@@ -1,4 +1,5 @@
 // app/order-placed/page.jsx
+
 'use client'
 import { assets } from '@/assets/assets'
 import { useAppContext } from '@/context/AppContext'
@@ -6,19 +7,27 @@ import Image from 'next/image'
 import { useEffect } from 'react'
 
 const OrderPlaced = () => {
-
-  const { router, clearCart } = useAppContext()
+  // router ve setCartItems'ı context'ten al
+  const { router, setCartItems } = useAppContext();
 
   useEffect(() => {
-    // Sepeti temizle
-    clearCart(); 
+    // Bileşen yüklendiğinde sepeti temizle
+    setCartItems({}); // Sepeti boş bir obje yaparak temizle
+    localStorage.removeItem("cartItems"); // LocalStorage'dan da sil (isteğe bağlı ama önerilir)
 
-    setTimeout(() => {
-      router.push('/account/my-orders') 
-    }, 5000)
-  }, [router, clearCart]) 
+    // 5 saniye sonra siparişlerim sayfasına yönlendir
+    const timer = setTimeout(() => {
+      router.push('/account/my-orders');
+    }, 5000);
+
+    // Bileşen kaldırıldığında zamanlayıcıyı temizle (önemli!)
+    return () => clearTimeout(timer);
+
+    // Bağımlılık dizisine setCartItems ve router ekle
+  }, [setCartItems, router]); // useEffect'in doğru çalışması için bağımlılıkları ekle
 
   return (
+    // ... (Geri kalan JSX kodu aynı) ...
     <div className='h-screen flex flex-col justify-center items-center gap-5'>
       <div className="flex justify-center items-center relative">
         <Image className="absolute p-5" src={assets.checkmark} alt='' />
@@ -29,4 +38,4 @@ const OrderPlaced = () => {
   )
 }
 
-export default OrderPlaced
+export default OrderPlaced;
