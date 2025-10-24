@@ -14,12 +14,11 @@ const BUCKET_NAME = 'product-images';
 
 // GÜNCELLENEN LIMITS
 const LIMITS = {
-  bigcard: 1,
-  doublebigcard: 2,
-  doublebigcardtext: 2,
-  icons: 6,
-  brandicon: 4,
-  homepage_carousel: 8,
+  bigcard: 100,
+  doublebigcardtext: 100,
+  icons: 100,
+  brandicon: 100,
+  homepage_carousel: 100,
 };
 
 export default function ProductsTable() {
