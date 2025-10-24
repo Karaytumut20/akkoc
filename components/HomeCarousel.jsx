@@ -11,7 +11,7 @@ export default function HomeCarousel() {
   const scrollRef = useRef(null);
 
   const MULTIPLIER = 4;
-  const [selectedImage, setSelectedImage] = useState(null); // ✅ Popup için seçili görsel
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // 📸 Görselleri çek
   useEffect(() => {
@@ -57,23 +57,15 @@ export default function HomeCarousel() {
 
   const scrollLeft = () => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({
-      left: -200,
-      behavior: 'smooth',
-    });
+    scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
   };
 
   const scrollRight = () => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({
-      left: 200,
-      behavior: 'smooth',
-    });
+    scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
   };
 
-  const closeModal = () => {
-    setSelectedImage(null);
-  };
+  const closeModal = () => setSelectedImage(null);
 
   if (loading) {
     return <div className="h-[250px] w-full bg-gray-200 animate-pulse"></div>;
@@ -97,8 +89,8 @@ export default function HomeCarousel() {
           {images.map((img, index) => (
             <div
               key={`${img.id}-${index}`}
-              className="relative w-[180px] h-[180px] flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 hover:scale-105 transition-transform cursor-pointer"
-              onClick={() => setSelectedImage(img)} // ✅ Tıklanınca popup aç
+              className="relative w-[180px] h-[180px] flex-shrink-0 rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer"
+              onClick={() => setSelectedImage(img)}
             >
               <Image
                 src={img.image_url}
@@ -130,22 +122,22 @@ export default function HomeCarousel() {
       {/* 📸 POPUP MODAL */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm"
           onClick={closeModal}
         >
           <div
-            className="relative max-w-3xl w-full mx-4 rounded-lg overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()} // modal dışına tıklanınca kapat
+            className="relative max-w-2xl w-full mx-4 rounded-lg overflow-hidden shadow-none bg-transparent"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* ❌ X BUTONU */}
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 z-50 bg-white/90 text-black p-2 rounded-full hover:bg-white transition"
             >
-              <FiX size={28} />
+              <FiX size={24} />
             </button>
 
-            <div className="relative w-full h-[70vh] bg-black">
+            <div className="relative w-full h-[55vh]">
               <Image
                 src={selectedImage.image_url}
                 alt={selectedImage.alt_text || 'Selected Image'}

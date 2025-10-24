@@ -27,7 +27,7 @@ const ProductInfoBox = ({
     if (quantity < product.stock) {
       setQuantity((prev) => prev + 1);
     } else {
-      toast.error('Stokta bu kadar ürün yok.');
+toast.error('There is not enough stock for this product.');
     }
   };
 
@@ -80,7 +80,7 @@ const ProductInfoBox = ({
         <button
           onClick={handleFavoriteClick}
           className="flex-shrink-0 p-3 bg-[#ECE4DC] rounded-full border border-[#ECE4DC] hover:scale-110 transition"
-          aria-label={isFavorited ? 'Favorilerden kaldır' : 'Favorilere ekle'}
+aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         >
           <FiHeart
             className={`w-6 h-6 transition-all duration-300 ${

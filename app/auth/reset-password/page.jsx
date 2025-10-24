@@ -1,5 +1,3 @@
-// app/auth/reset-password/page.jsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,11 +12,11 @@ export default function ResetPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Bu sayfa sadece şifre sıfırlama linkinden gelindiğinde çalışır.
-    // Supabase, linkteki token'ı otomatik olarak session'a kaydeder.
+    // This page only runs when coming from the password reset link.
+    // Supabase automatically saves the token from the link into the session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // Artık yeni şifreyi ayarlayabiliriz.
+        // We can now set the new password.
       }
     });
 
@@ -32,9 +30,9 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (error) {
-      toast.error('Şifre güncellenirken bir hata oluştu: ' + error.message);
+      toast.error('An error occurred while updating the password: ' + error.message);
     } else {
-      toast.success('Şifreniz başarıyla güncellendi! Lütfen tekrar giriş yapın.');
+      toast.success('Your password has been successfully updated! Please log in again.');
       router.push('/auth');
     }
   };
@@ -43,14 +41,14 @@ export default function ResetPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">
-          Yeni Şifre Belirle
+          Set New Password
         </h2>
         <form className="space-y-8" onSubmit={handleResetPassword}>
           <FloatingLabelInput
             id="password"
             name="password"
             type="password"
-            label="Yeni Şifre"
+            label="New Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -61,7 +59,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full py-2.5 px-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300"
           >
-            {loading ? 'Kaydediliyor...' : 'Şifreyi Güncelle'}
+            {loading ? 'Saving...' : 'Update Password'}
           </button>
         </form>
       </div>
