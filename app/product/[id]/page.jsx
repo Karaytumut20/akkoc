@@ -81,7 +81,7 @@ const Product = () => {
       setAverageRating(approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0);
     } catch (err) {
       console.error(err);
-      toast.error("Ürün detayları yüklenirken bir sorun oluştu.");
+toast.error("An error occurred while loading product details.");
     }
     setLoading(false);
   }, [id]);
@@ -136,7 +136,7 @@ const Product = () => {
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
     if (!user) {
-      toast.error("Favorilere eklemek için giriş yapın.");
+toast.error("Log in to add to favorites.");
       router.push("/auth");
       return;
     }
@@ -160,9 +160,9 @@ const Product = () => {
   if (loading || !productData) return <Loading />;
 
   const availablePacks = [
-    { quantity: 2, price: productData.price_2_pack, name: "2 Adet Paket" },
-    { quantity: 3, price: productData.price_3_pack, name: "3 Adet Paket" },
-    { quantity: 4, price: productData.price_4_pack, name: "4 Adet Paket" },
+    { quantity: 2, price: productData.price_2_pack, name: "2 Piece Package" },
+    { quantity: 3, price: productData.price_3_pack, name: "3 Piece Package" },
+    { quantity: 4, price: productData.price_4_pack, name: "4 Piece Package" },
   ].filter(pack => pack.price > 0 && pack.quantity <= productData.stock);
 
   const sharedProps = {
@@ -247,7 +247,7 @@ const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
   return (
     <div className="mt-4 p-4 bg-[#ECE4DC] rounded-xl border-2 border-[#ECE4DC]">
       <h3 className="text-xl font-bold text-[#be531c] mb-4 text-center">
-        🛍️ Daha Çok Al, Daha Çok Kazan!
+🛍️ Buy More, Save More!
       </h3>
       <div className="grid grid-cols-1 gap-4">
         {availablePacks.map(pack => {
@@ -268,13 +268,14 @@ const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
             >
               {isBestValue && (
                 <span className="absolute top-0 right-0 bg-[#be531c] text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">
-                  EN AVANTAJLI
+MOST ADVANTAGEOUS
                 </span>
               )}
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
                   <p className="text-xl font-extrabold text-gray-900">
-                    {pack.quantity} Adet Paket
+                    {pack.quantity} Piece Package
+
                   </p>
                   <p className="text-sm text-gray-500 line-through mt-1">
                     ${originalTotalPrice.toFixed(2)}
@@ -285,7 +286,8 @@ const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
                     ${Number(pack.price).toFixed(2)}
                   </p>
                   <p className="text-sm font-semibold text-[#be531c] mt-1">
-                    %{savingsPercentage} İNDİRİM!
+                    %{savingsPercentage} DISCOUNT!
+
                   </p>
                 </div>
               </div>
@@ -297,7 +299,8 @@ const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
                     : 'bg-[#be531c]/90 hover:bg-[#a64919]'
                 }`}
               >
-                {pack.quantity} Adet Sepete Ekle
+                {pack.quantity} Add to Cart
+
               </button>
             </div>
           );
@@ -322,7 +325,7 @@ const MobileCta = ({ product, handleAddToCart }) => (
           : 'bg-[#be531c] hover:bg-[#a64919]'
       }`}
     >
-      {product?.stock < 1 ? 'Stokta Yok' : `Sepete Ekle`}
+{product?.stock < 1 ? 'Out of Stock' : 'Add to Cart'}
     </button>
   </div>
 );
