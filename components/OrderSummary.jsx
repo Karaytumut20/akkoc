@@ -1,7 +1,8 @@
 // components/OrderSummary.jsx
 
 'use client';
-import { useAppContext } from "@/context/AppContext";
+// CALIFORNIA_TAX_RATE import edildi (Vergi hesaplaması için gerekli)
+import { useAppContext, CALIFORNIA_TAX_RATE } from "@/context/AppContext";
 import Image from "next/image";
 import React, { useState } from "react";
 import toast from 'react-hot-toast';
@@ -12,11 +13,15 @@ const OrderSummary = () => {
   const [coupon, setCoupon] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🆕 Silme onay popup kontrolü
+  // Vergi hesaplamasını al (Context'ten geliyor)
+  const { subtotal, taxAmount, totalAmount } = getCartAmount(); // totalAmount burada
+
+  // Silme onay popup kontrolü
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const handleQuantityChange = (productId, newQuantity) => {
+    // Miktar 0'a düşerse onay popup'ını göster
     if (newQuantity <= 0) {
       setPendingDelete(productId);
       setShowConfirmModal(true);
@@ -26,6 +31,7 @@ const OrderSummary = () => {
   };
 
   const handleDeleteConfirm = () => {
+    // Onay sonrası silme işlemi
     const updatedCart = { ...cartItems };
     delete updatedCart[pendingDelete];
     setCartItems(updatedCart);
@@ -35,10 +41,12 @@ const OrderSummary = () => {
   };
 
   const handleDeleteCancel = () => {
+    // İptal işlemi
     setPendingDelete(null);
     setShowConfirmModal(false);
   };
 
+  // ✅ handlePlaceOrder güncellendi
   const handlePlaceOrder = async () => {
     if (!user) {
       toast.error("Ödeme yapmak için lütfen giriş yapın.");
@@ -56,9 +64,10 @@ const OrderSummary = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: Object.values(cartItems),
+          items: Object.values(cartItems), // Webhook'un ürünleri işlemesi için hala gönderiyoruz
           userId: user.id,
           addressId: selectedAddress,
+          totalAmount: totalAmount // ✅ Vergi dahil toplam tutarı API'ye gönderiyoruz
         }),
       });
 
@@ -80,7 +89,7 @@ const OrderSummary = () => {
 
   return (
     <>
-      {/* 🆕 Onay Popup */}
+      {/* Onay Popup */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative">
@@ -104,9 +113,11 @@ const OrderSummary = () => {
         </div>
       )}
 
+      {/* Ana Bileşen */}
       <div className="w-full md:w-[500px] lg:w-[600px] bg-white shadow-2xl rounded-3xl p-6 md:p-8 mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b pb-3">Checkout</h2>
 
+        {/* Sepet Ürünleri Listesi */}
         <div className="space-y-5 mb-6 max-h-[60vh] md:max-h-[500px] overflow-y-auto">
           {Object.keys(cartItems).length === 0 ? (
             <p className="text-gray-500 text-center py-10">Sepetiniz boş.</p>
@@ -147,6 +158,7 @@ const OrderSummary = () => {
           )}
         </div>
 
+        {/* Adres Seçimi */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <label className="block text-gray-700 font-medium">Select Address</label>
@@ -168,6 +180,7 @@ const OrderSummary = () => {
           </select>
         </div>
 
+        {/* Kupon Kodu */}
         <div className="mb-6">
           <label className="block text-gray-700 font-medium mb-2">Coupon Code</label>
           <div className="flex gap-2">
@@ -184,17 +197,26 @@ const OrderSummary = () => {
           </div>
         </div>
 
-        <div className="mt-6 border-t pt-4 space-y-3">
-          <div className="flex justify-between text-gray-700 font-medium">
+        {/* Özet Kısmı */}
+        <div className="mt-8 border-t pt-5 space-y-3">
+            <div className="flex justify-between text-sm text-gray-500">
             <span>Items ({getCartCount()})</span>
-            <span>{currency}{getCartAmount().toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-gray-900 font-bold text-xl">
+            </div>
+            <div className="flex justify-between text-gray-700">
+            <span>Subtotal</span>
+            <span>{currency}{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-700">
+            <span>Tax ({(CALIFORNIA_TAX_RATE * 100).toFixed(2)}%)</span>
+            <span>{currency}{taxAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-900 font-bold text-xl border-t pt-3 mt-3">
             <span>Total</span>
-            <span>{currency}{getCartAmount().toFixed(2)}</span>
-          </div>
+            <span>{currency}{totalAmount.toFixed(2)}</span>
+            </div>
         </div>
 
+        {/* Ödeme Butonu */}
         <button
           onClick={handlePlaceOrder}
           disabled={getCartCount() === 0 || !selectedAddress || loading}

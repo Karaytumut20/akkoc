@@ -1,9 +1,9 @@
-// context/AppContext.jsx (DÜZELTİLMİŞ KOD)
+// context/AppContext.jsx
 
 'use client'
 
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import toast from "react-hot-toast";
 import { getSafeImageUrl } from "@/lib/utils";
@@ -18,6 +18,10 @@ export const useAppContext = () => {
     return context;
 };
 
+// Kaliforniya eyalet satış vergisi oranı (%7.25)
+// ✅ Export eklendi
+export const CALIFORNIA_TAX_RATE = 0.0725;
+
 export const AppContextProvider = (props) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
     const router = useRouter();
@@ -26,10 +30,10 @@ export const AppContextProvider = (props) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState({});
-    
+
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
-    
+
     const [addresses, setAddresses] = useState([]);
     const [myOrders, setMyOrders] = useState([]);
     const [wishlist, setWishlist] = useState([]);
@@ -45,8 +49,7 @@ export const AppContextProvider = (props) => {
 
     const resetInactivityTimer = useCallback(() => {
         clearTimeout(inactivityTimer.current);
-        // 10 dakika (600000 ms)
-        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000); 
+        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000); // 10 dakika
     }, [signOutAfterInactivity]);
 
     useEffect(() => {
@@ -82,9 +85,8 @@ export const AppContextProvider = (props) => {
             authListener.subscription.unsubscribe();
         };
     }, []);
-    
-    // --- AUTH Fonskiyonları useCallback ile sarmalandı ---
-    const signUp = useCallback(async (email, password) => {
+
+    const signUp = async (email, password) => {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
             toast.error(error.message);
@@ -92,16 +94,16 @@ export const AppContextProvider = (props) => {
         }
         toast.success('Kayıt başarılı! Lütfen e-postanızı doğrulayın.');
         return true;
-    }, []);
+    };
 
-    const signIn = useCallback(async (email, password, source) => {
+    const signIn = async (email, password, source) => {
         const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-        
+
         if (authError) {
             toast.error('Kullanıcı adı veya parola hatalı.');
             return;
         }
-        
+
         if (signInData.user) {
             toast.success('Giriş başarılı!');
             if (source === 'seller') {
@@ -110,7 +112,7 @@ export const AppContextProvider = (props) => {
                 router.push('/');
             }
         }
-    }, [router]);
+    };
 
     const signOut = useCallback(async () => {
         await supabase.auth.signOut();
@@ -118,8 +120,8 @@ export const AppContextProvider = (props) => {
         router.push('/');
         toast.success('Başarıyla çıkış yapıldı.');
     }, [router]);
-    
-    const changeUserPassword = useCallback(async (currentPassword, newPassword) => {
+
+    const changeUserPassword = async (currentPassword, newPassword) => {
         if (!user) {
             toast.error("Bu işlem için giriş yapmış olmalısınız.");
             return false;
@@ -145,9 +147,9 @@ export const AppContextProvider = (props) => {
             toast.error(error.message, { id: toastId });
             return false;
         }
-    }, [user]);
+    };
 
-    const updateUserData = useCallback(async (data) => {
+    const updateUserData = async (data) => {
         const toastId = toast.loading("Bilgileriniz güncelleniyor...");
         const { error } = await supabase.auth.updateUser({ data });
         if (error) {
@@ -156,11 +158,9 @@ export const AppContextProvider = (props) => {
         }
         toast.success("Bilgileriniz başarıyla güncellendi!", { id: toastId });
         return true;
-    }, []);
-    // --- AUTH Fonskiyonları sonu ---
+    };
 
-    // --- FETCH Fonskiyonları useCallback ile sarmalandı ---
-    const fetchProducts = useCallback(async () => {
+    const fetchProducts = async () => {
         setLoading(true); setError(null);
         const { data, error } = await supabase.from('products').select('*, categories(name)');
         if (error) {
@@ -173,21 +173,21 @@ export const AppContextProvider = (props) => {
             setProducts(formattedProducts);
         }
         setLoading(false);
-    }, []);
+    };
 
-    const fetchAddresses = useCallback(async (userId) => {
+    const fetchAddresses = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase.from('addresses').select('*').eq('user_id', userId).order('created_at', { ascending: false });
         if (!error) setAddresses(data || []);
-    }, []);
+    };
 
-    const fetchMyOrders = useCallback(async (userId) => {
+    const fetchMyOrders = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase.from('orders').select(`*, order_items(*, products(*, categories(name)))`).eq('user_id', userId).order('created_at', { ascending: false });
         if (!error) setMyOrders(data || []);
-    }, []);
+    };
 
-    const fetchWishlist = useCallback(async (userId) => {
+    const fetchWishlist = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('wishlist')
@@ -197,22 +197,22 @@ export const AppContextProvider = (props) => {
         if (!error) {
             setWishlist(data || []);
         }
-    }, []);
+    };
 
-    const fetchMyReviews = useCallback(async (userId) => {
+    const fetchMyReviews = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('reviews')
             .select(`*, products (id, name, image_urls)`)
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
-    
+
         if (!error) {
             setMyReviews(data || []);
         }
-    }, []);
+    };
 
-    const fetchSavedCards = useCallback(async (userId) => {
+    const fetchSavedCards = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('saved_cards')
@@ -223,64 +223,14 @@ export const AppContextProvider = (props) => {
         if (!error) {
             setSavedCards(data || []);
         }
-    }, []);
-    // --- FETCH Fonskiyonları sonu ---
+    };
 
-
-    // --- ADDRESS Fonskiyonları useCallback ile sarmalandı ---
-    const addAddress = useCallback(async (addressData) => {
-        if (!user) return toast.error("Adres eklemek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz ekleniyor...");
-        try {
-            const { error } = await supabase.from('addresses').insert({ ...addressData, user_id: user.id });
-            if (error) throw error;
-            await fetchAddresses(user.id);
-            toast.success("Adres başarıyla eklendi!", { id: toastId });
-            return true;
-        } catch (error) {
-            toast.error("Adres eklenirken hata: " + error.message, { id: toastId });
-            return false;
-        }
-    }, [user, fetchAddresses]);
-    
-    const updateAddress = useCallback(async (addressId, addressData) => {
-        if (!user) return toast.error("Adres güncellemek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz güncelleniyor...");
-        try {
-            const { id, user_id, created_at, ...updateData } = addressData;
-            const { error } = await supabase.from('addresses').update(updateData).eq('id', addressId);
-            if (error) throw error;
-            await fetchAddresses(user.id);
-            toast.success("Adres başarıyla güncellendi!", { id: toastId });
-            return true;
-        } catch (error) {
-            toast.error("Adres güncellenirken hata: " + error.message, { id: toastId });
-            return false;
-        }
-    }, [user, fetchAddresses]);
-
-    const deleteAddress = useCallback(async (addressId) => {
-        if (!user) return toast.error("Adres silmek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz siliniyor...");
-        try {
-            const { error } = await supabase.from('addresses').delete().eq('id', addressId);
-            if (error) throw error;
-            setAddresses(prev => prev.filter(addr => addr.id !== addressId));
-            toast.success("Adres başarıyla silindi!", { id: toastId });
-        } catch (error) {
-            toast.error("Adres silinirken hata: " + error.message, { id: toastId });
-        }
-    }, [user]);
-    // --- ADDRESS Fonskiyonları sonu ---
-
-
-    // --- KART ve FAVORİ Fonskiyonları useCallback ile sarmalandı ---
-    const addSavedCard = useCallback(async (cardData) => {
+    const addSavedCard = async (cardData) => {
         if (!user) return toast.error("Kart eklemek için giriş yapmalısınız.");
-        
+
         const fakeToken = `tok_${Math.random().toString(36).substr(2, 14)}`;
         const last4 = cardData.cardNumber.slice(-4);
-        const cardBrand = "visa"; 
+        const cardBrand = "visa";
 
         const { error } = await supabase.from('saved_cards').insert({
             user_id: user.id,
@@ -299,9 +249,9 @@ export const AppContextProvider = (props) => {
             fetchSavedCards(user.id);
             return true;
         }
-    }, [user, fetchSavedCards]);
+    };
 
-    const deleteSavedCard = useCallback(async (cardId) => {
+    const deleteSavedCard = async (cardId) => {
         if (!user) return toast.error("Bu işlem için giriş yapmalısınız.");
 
         const { error } = await supabase.from('saved_cards').delete().eq('id', cardId);
@@ -312,9 +262,9 @@ export const AppContextProvider = (props) => {
             toast.success("Kart başarıyla silindi.");
             setSavedCards(prev => prev.filter(card => card.id !== cardId));
         }
-    }, [user]);
+    };
 
-    const addToWishlist = useCallback(async (productId) => {
+    const addToWishlist = async (productId) => {
         if (!user) return toast.error("Favorilere eklemek için giriş yapmalısınız.");
         const { error } = await supabase.from('wishlist').insert({ user_id: user.id, product_id: productId });
         if (error) {
@@ -323,9 +273,9 @@ export const AppContextProvider = (props) => {
             toast.success("Ürün favorilere eklendi!");
             fetchWishlist(user.id);
         }
-    }, [user, fetchWishlist]);
+    };
 
-    const removeFromWishlist = useCallback(async (productId) => {
+    const removeFromWishlist = async (productId) => {
         if (!user) return;
         const { error } = await supabase.from('wishlist').delete().match({ user_id: user.id, product_id: productId });
         if (error) {
@@ -334,14 +284,76 @@ export const AppContextProvider = (props) => {
             toast.success("Ürün favorilerden kaldırıldı!");
             fetchWishlist(user.id);
         }
-    }, [user, fetchWishlist]);
-    // --- KART ve FAVORİ Fonskiyonları sonu ---
+    };
 
-    // --- SEPET Fonskiyonları useCallback ile sarmalandı ---
-    const getCartCount = useCallback(() => Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
-    const getCartAmount = useCallback(() => Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0), [cartItems]);
-    
-    const addToCart = useCallback((product) => {
+    useEffect(() => {
+        if (user) {
+            fetchAddresses(user.id);
+            fetchMyOrders(user.id);
+            fetchWishlist(user.id);
+            fetchMyReviews(user.id);
+            fetchSavedCards(user.id);
+        }
+    }, [user]);
+
+    const addAddress = async (addressData) => {
+        if (!user) return toast.error("Adres eklemek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adresiniz ekleniyor...");
+        try {
+            const { error } = await supabase.from('addresses').insert({ ...addressData, user_id: user.id });
+            if (error) throw error;
+            await fetchAddresses(user.id);
+            toast.success("Adres başarıyla eklendi!", { id: toastId });
+            return true;
+        } catch (error) {
+            toast.error("Adres eklenirken hata: " + error.message, { id: toastId });
+            return false;
+        }
+    };
+
+    const updateAddress = async (addressId, addressData) => {
+        if (!user) return toast.error("Adres güncellemek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adresiniz güncelleniyor...");
+        try {
+            const { id, user_id, created_at, ...updateData } = addressData;
+            const { error } = await supabase.from('addresses').update(updateData).eq('id', addressId);
+            if (error) throw error;
+            await fetchAddresses(user.id);
+            toast.success("Adres başarıyla güncellendi!", { id: toastId });
+            return true;
+        } catch (error) {
+            toast.error("Adres güncellenirken hata: " + error.message, { id: toastId });
+            return false;
+        }
+    };
+
+    const deleteAddress = async (addressId) => {
+        if (!user) return toast.error("Adres silmek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adresiniz siliniyor...");
+        try {
+            const { error } = await supabase.from('addresses').delete().eq('id', addressId);
+            if (error) throw error;
+            setAddresses(prev => prev.filter(addr => addr.id !== addressId));
+            toast.success("Adres başarıyla silindi!", { id: toastId });
+        } catch (error) {
+            toast.error("Adres silinirken hata: " + error.message, { id: toastId });
+        }
+    };
+
+
+    useEffect(() => {
+        try { const storedCart = localStorage.getItem("cartItems"); if (storedCart) setCartItems(JSON.parse(storedCart)); } catch (e) { console.error(e); }
+    }, []);
+
+    useEffect(() => {
+        if (Object.keys(cartItems).length > 0) {
+            localStorage.setItem("cartItems", JSON.stringify(cartItems));
+        } else {
+            localStorage.removeItem("cartItems");
+        }
+    }, [cartItems]);
+
+    const addToCart = (product) => {
         const currentQuantityInCart = cartItems[product.id]?.quantity || 0;
         if (product.stock <= currentQuantityInCart) {
             return toast.error("Üzgünüz, bu ürünün stoğu tükendi.");
@@ -349,9 +361,9 @@ export const AppContextProvider = (props) => {
 
         setCartItems(prev => ({ ...prev, [product.id]: { product, quantity: (prev[product.id]?.quantity || 0) + 1 } }));
         toast.success(`${product.name} sepete eklendi!`);
-    }, [cartItems]); // cartItems bağımlılığı eklendi
+    };
 
-    const updateCartQuantity = useCallback((productId, quantity) => {
+    const updateCartQuantity = (productId, quantity) => {
         setCartItems(prev => {
             const newItems = { ...prev };
             const product = newItems[productId]?.product;
@@ -366,97 +378,36 @@ export const AppContextProvider = (props) => {
             else if (newItems[productId]) newItems[productId].quantity = quantity;
             return newItems;
         });
-    }, []);
-    // --- SEPET Fonskiyonları sonu ---
+    };
 
+    const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0);
 
-    // --- Ana useEffect Blokları (Bağımlılıklar güncellendi) ---
+    const getCartAmount = () => {
+        const subtotal = Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const taxAmount = subtotal * CALIFORNIA_TAX_RATE;
+        const totalAmount = subtotal + taxAmount;
+        return {
+            subtotal,
+            taxAmount,
+            totalAmount
+        };
+    };
 
-    // Sepet verilerini yerel depolamadan çek
-    useEffect(() => {
-        try { 
-            const storedCart = localStorage.getItem("cartItems"); 
-            if (storedCart) setCartItems(JSON.parse(storedCart)); 
-        } catch (e) { 
-            console.error(e); 
-        }
-    }, []);
+    useEffect(() => { fetchProducts(); }, []);
 
-    // Sepet verilerini yerel depolamaya kaydet
-    useEffect(() => {
-        if (Object.keys(cartItems).length > 0) {
-            localStorage.setItem("cartItems", JSON.stringify(cartItems));
-        } else {
-            localStorage.removeItem("cartItems");
-        }
-    }, [cartItems]);
-    
-    // Ürünleri başlangıçta bir kez çek
-    useEffect(() => { 
-        fetchProducts(); 
-    }, [fetchProducts]);
-
-    // Kullanıcıya bağlı verileri çek (user değiştiğinde ve fetch fonksiyonları sabit kaldığında çalışır)
-    useEffect(() => {
-        if (user) {
-            fetchAddresses(user.id);
-            fetchMyOrders(user.id);
-            fetchWishlist(user.id);
-            fetchMyReviews(user.id);
-            fetchSavedCards(user.id);
-        }
-    }, [user, fetchAddresses, fetchMyOrders, fetchWishlist, fetchMyReviews, fetchSavedCards]);
-
-    // --- Context Value Memoization (useMemo ile sarmalandı) ---
-    // Bu, yalnızca bağımlılıkları değiştiğinde yeni bir 'value' nesnesi oluşturur.
-    const value = useMemo(() => ({
-        currency, 
-        router, 
-        products, 
-        loading, 
-        error, 
-        fetchProducts,
-        cartItems, 
-        setCartItems, 
-        addToCart, 
-        updateCartQuantity, 
-        getCartCount, 
-        getCartAmount,
-        user, 
-        authLoading, 
-        signUp, 
-        signIn, 
-        signOut, 
-        changeUserPassword, 
-        updateUserData,
-        addresses, 
-        fetchAddresses, 
-        addAddress, 
-        updateAddress, 
-        deleteAddress,
-        myOrders, 
-        fetchMyOrders,
-        myReviews,
-        getSafeImageUrl,
-        wishlist, 
-        addToWishlist, 
-        removeFromWishlist,
-        savedCards, 
-        addSavedCard, 
-        deleteSavedCard
-    }), [
+    const value = {
         currency, router, products, loading, error, fetchProducts,
         cartItems, setCartItems, addToCart, updateCartQuantity, getCartCount, getCartAmount,
-        user, authLoading, signUp, signIn, signOut, 
-        changeUserPassword, 
+        user, authLoading, signUp, signIn, signOut,
+        changeUserPassword,
         updateUserData,
         addresses, fetchAddresses, addAddress, updateAddress, deleteAddress,
         myOrders, fetchMyOrders,
         myReviews,
-        getSafeImageUrl, // Statik fonksiyon olduğu için değişmez, ancak bağımlılık olarak bırakılabilir
+        getSafeImageUrl,
         wishlist, addToWishlist, removeFromWishlist,
         savedCards, addSavedCard, deleteSavedCard
-    ]);
+    };
 
     return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
 };

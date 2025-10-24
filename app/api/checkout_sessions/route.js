@@ -3,32 +3,32 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// YENİ DÜZENLEME: API çağrısı için STRIPE_CURRENCY_CODE veya 'usd' varsayılanı kullanılıyor.
-// NEXT_PUBLIC_CURRENCY (yani $) kullanılmayacak.
-const STRIPE_ISO_CODE = process.env.STRIPE_CURRENCY_CODE || 'usd'; 
-
 export async function POST(req) {
   try {
-    const { items, userId, addressId } = await req.json();
+    const { items, userId, addressId, totalAmount } = await req.json();
 
-    if (!items || !userId || !addressId) {
-      return NextResponse.json({ error: { message: "Eksik parametreler: Sepet, kullanıcı veya adres ID'si gönderilmedi." } }, { status: 400 });
+    if (!items || !userId || !addressId || typeof totalAmount !== 'number' || totalAmount <= 0) {
+      return NextResponse.json({ error: { message: "Eksik veya geçersiz parametreler: Sepet, kullanıcı, adres ID'si veya geçerli toplam tutar gönderilmedi." } }, { status: 400 });
     }
 
-    const line_items = items.map((item) => ({
-      price_data: {
-        // HATA ÇÖZÜMÜ: Geçerli ISO kodu kullanılıyor.
-        currency: STRIPE_ISO_CODE, 
-        product_data: {
-          name: item.product.name,
-          images: item.product.image_urls && item.product.image_urls.length > 0 ? [item.product.image_urls[0]] : [],
+    // Tek bir line_item oluştur
+    const line_items = [
+      {
+        price_data: {
+          // ✅ STRIPE_CURRENCY_CODE kullanıldı, varsayılan olarak 'usd'
+          currency: process.env.STRIPE_CURRENCY_CODE || 'usd',
+          product_data: {
+            name: 'Toplam Sipariş Tutarı (Vergi Dahil)',
+            images: items[0]?.product?.image_urls?.[0] ? [items[0].product.image_urls[0]] : [],
+          },
+          // unit_amount olarak vergi dahil toplam tutarı gönder (cent cinsinden)
+          unit_amount: Math.round(totalAmount * 100),
         },
-        // Stripe cent/kuruş cinsinden bekler, bu yüzden 100 ile çarpılır.
-        unit_amount: Math.round(item.product.price * 100), 
-      },
-      quantity: item.quantity,
-    }));
+        quantity: 1, // Tek bir genel kalem olduğu için miktar 1
+      }
+    ];
 
+    // Webhook'un ürün detaylarını işlemesi için simplifiedCart'ı metadata'da tutmaya devam ediyoruz
     const simplifiedCart = items.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
@@ -45,14 +45,13 @@ export async function POST(req) {
         addressId,
         cartItems: JSON.stringify(simplifiedCart),
       },
-      // HATA ÇÖZÜMÜ: Geçerli ISO kodu kullanılıyor.
-      currency: STRIPE_ISO_CODE, 
     });
 
     return NextResponse.json({ url: session.url });
 
   } catch (err) {
     console.error("Stripe Checkout Session Hatası:", err.message);
-    return NextResponse.json({ error: { message: err.message } }, { status: 500 });
+    const errorMessage = err.message || "Bilinmeyen bir Stripe hatası oluştu.";
+    return NextResponse.json({ error: { message: errorMessage } }, { status: 500 });
   }
 }
