@@ -8,6 +8,9 @@ import logo from '@/assets/logos.png';
 import { supabase } from '@/lib/supabaseClient';
 
 // === INPUT ===
+/**
+ * A reusable input component with a floating label.
+ */
 const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, autoComplete }) => (
   <div className="relative">
     <input
@@ -29,7 +32,11 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
     </label>
   </div>
 );
+
 // === POLICY MODAL ===
+/**
+ * Modal to display Privacy Policy or Terms of Service.
+ */
 const PolicyModal = ({ isOpen, onClose, type }) => {
   if (!isOpen) return null;
   const isPrivacy = type === 'privacy';
@@ -135,7 +142,7 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
           onClick={onClose}
           className="absolute top-3 right-3 text-[#be531c] hover:text-[#a64919] text-2xl font-bold"
         >
-          ×
+          &times;
         </button>
         <div className="flex items-center gap-3 mb-4">
           <Image src={logo} alt="Logo" width={40} height={40} />
@@ -155,6 +162,90 @@ const PolicyModal = ({ isOpen, onClose, type }) => {
   );
 };
 
+// --- NEW COMPONENT ---
+/**
+ * Modal for initiating the Forgot Password process.
+ */
+const ForgotPasswordModal = ({ isOpen, onClose }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  redirectTo: `${window.location.origin}/auth/reset-password`,
+});
+
+      if (error) throw error;
+
+      toast.success('📧 Password reset email sent! Check your inbox.');
+      onClose();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-[#FFFFFF] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-[#be531c] hover:text-[#a64919] text-2xl font-bold"
+        >
+          &times;
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <Image src={logo} alt="Logo" width={40} height={40} />
+          <h3 className="text-2xl font-semibold text-[#be531c]">Forgot Password</h3>
+        </div>
+        
+        <form className="space-y-6" onSubmit={handleResetPassword}>
+          <p className="text-sm text-gray-700">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+          <FloatingLabelInput
+            id="resetEmail"
+            name="email"
+            type="email"
+            label="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 text-white bg-[#be531c] rounded-lg font-semibold shadow-md hover:bg-[#a64919] focus:outline-none focus:ring-4 focus:ring-[#be531c] focus:ring-opacity-50 disabled:bg-[#be531c]/50 transition"
+          >
+            {loading ? 'Sending...' : 'Send Reset Link'}
+          </button>
+        </form>
+
+        <div className="mt-5 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 text-sm text-gray-600 rounded-lg hover:text-gray-900 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+// --- END NEW COMPONENT ---
+
 // === AUTH PAGE ===
 export default function AuthPage() {
   const router = useRouter();
@@ -165,18 +256,32 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Modals state
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [modalContentType, setModalContentType] = useState(null);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false); // New state for Forgot Password modal
 
-  const openModal = useCallback((type) => {
+  // Policy Modal handlers
+  const openPolicyModal = useCallback((type) => {
     setModalContentType(type);
-    setIsModalOpen(true);
+    setIsPolicyModalOpen(true);
   }, []);
 
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
+  const closePolicyModal = useCallback(() => {
+    setIsPolicyModalOpen(false);
     setModalContentType(null);
   }, []);
+  
+  // Forgot Password Modal handlers
+  const openForgotModal = useCallback(() => {
+    setIsForgotModalOpen(true);
+  }, []);
+
+  const closeForgotModal = useCallback(() => {
+    setIsForgotModalOpen(false);
+  }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,6 +299,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (isLogin) {
+        // --- LOGIN LOGIC ---
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -214,7 +320,8 @@ export default function AuthPage() {
         }
 
       } else {
-        const { data, error } = await supabase.auth.signUp({
+        // --- SIGN UP LOGIC ---
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -244,9 +351,21 @@ export default function AuthPage() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
-      {isModalOpen && (
-        <PolicyModal isOpen={isModalOpen} onClose={closeModal} type={modalContentType} />
+      
+      {/* Policy Modal */}
+      {isPolicyModalOpen && (
+        <PolicyModal 
+          isOpen={isPolicyModalOpen} 
+          onClose={closePolicyModal} 
+          type={modalContentType} 
+        />
       )}
+      
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal 
+        isOpen={isForgotModalOpen} 
+        onClose={closeForgotModal} 
+      />
 
       <div className="flex items-center justify-center min-h-screen bg-[#ECE4DC] p-4">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl relative">
@@ -303,7 +422,17 @@ export default function AuthPage() {
               autoComplete={isLogin ? 'current-password' : 'new-password'}
             />
 
-            {!isLogin && (
+            {isLogin ? (
+              <div className="flex justify-end text-sm">
+                <button
+                  type="button"
+                  onClick={openForgotModal}
+                  className="font-semibold text-[#be531c] hover:text-[#a64919] transition"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            ) : (
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -320,7 +449,7 @@ export default function AuthPage() {
                   By signing up, you agree to our{' '}
                   <button
                     type="button"
-                    onClick={() => openModal('privacy')}
+                    onClick={() => openPolicyModal('privacy')}
                     className="text-[#be531c] font-semibold hover:underline"
                   >
                     Privacy Policy
@@ -328,7 +457,7 @@ export default function AuthPage() {
                   and{' '}
                   <button
                     type="button"
-                    onClick={() => openModal('terms')}
+                    onClick={() => openPolicyModal('terms')}
                     className="text-[#be531c] font-semibold hover:underline"
                   >
                     Terms of Service
