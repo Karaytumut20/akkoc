@@ -62,7 +62,7 @@ export default function MainNavbar() {
   const isHomePage = pathname === "/";
 
   // DÜZELTME: Kullanıcı adını güvenli bir şekilde göster.
-  const displayUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Hesabım';
+  const displayUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'My Account';
 
 
   useEffect(() => {
@@ -204,7 +204,8 @@ export default function MainNavbar() {
                     onClick={() => setIsUserMenuOpen(false)}
                     className="block px-4 py-2 text-sm hover:bg-gray-100"
                   >
-                    Hesabım
+                    My Account
+
                   </Link>
                   <button
                     onClick={() => {
@@ -213,7 +214,7 @@ export default function MainNavbar() {
                     }}
                     className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100"
                   >
-                    Çıkış Yap
+Log Out
                   </button>
                 </div>
               )}
@@ -231,7 +232,7 @@ export default function MainNavbar() {
                   filter: isSticky ? "none" : "brightness(0) invert(1)",
                 }}
               />
-              <span className="hidden md:block">Giriş Yap</span>
+              <span className="hidden md:block">Log In</span>
             </button>
           )}
 

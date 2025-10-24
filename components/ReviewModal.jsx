@@ -15,10 +15,10 @@ const ReviewModal = ({ isOpen, onClose, reviews }) => {
           ✕
         </button>
 
-        <h2 className="text-2xl font-bold mb-4">Ürün Değerlendirmeleri</h2>
+        <h2 className="text-2xl font-bold mb-4">Product Ratings</h2>
 
         {reviews.length === 0 && (
-          <p className="text-gray-600">Henüz yorum yapılmamış.</p>
+          <p className="text-gray-600">No reviews have been made yet.</p>
         )}
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto">
@@ -30,12 +30,12 @@ const ReviewModal = ({ isOpen, onClose, reviews }) => {
               <div className="flex items-center gap-2">
                 <StarRating rating={review.rating} />
                 <span className="text-sm text-gray-500">
-                  {review.users?.email || "Anonim Kullanıcı"}
+                  {review.users?.email || "Anonymous User"}
                 </span>
               </div>
-              {/* 👇 YORUM METNİ BURADA GÖZÜKECEK */}
+              {/* 👇 YOsRUM METNİ BURADA GÖZÜKECEK */}
               <p className="text-gray-800 text-base mt-1">
-                {review.comment || "Yorum yok"}
+                {review.comment || "No reviews"}
               </p>
               <span className="text-xs text-gray-400">
                 {new Date(review.created_at).toLocaleString("tr-TR")}

@@ -15,14 +15,14 @@ const ReviewsPage = () => {
   const fetchReviewsAndUsers = useCallback(async () => {
     setLoading(true);
 
-    // 1. ADIM: Tüm yorumları çek.
+    // 1. ADIM: Tüm yosrumları çek.
     const { data: reviewsData, error: reviewsError } = await supabase
       .from('reviews')
       .select('*, product:products(id, name)')
       .order('created_at', { ascending: false });
 
     if (reviewsError) {
-      toast.error('Yorumlar alınamadı: ' + reviewsError.message);
+      toast.error('Reviews could not be retrieved: ' + reviewsError.message);
       setLoading(false);
       return;
     }
@@ -33,7 +33,7 @@ const ReviewsPage = () => {
       return;
     }
 
-    // 2. ADIM: Yorumlardaki tüm benzersiz kullanıcı ID'lerini topla.
+    // 2. ADIM: Yosrumlardaki tüm benzersiz kullanıcı ID'lerini topla.
     const userIds = [...new Set(reviewsData.map(review => review.user_id).filter(id => id))];
 
     if (userIds.length === 0) {
@@ -50,13 +50,13 @@ const ReviewsPage = () => {
       .rpc('get_users_by_ids', { user_ids: userIds });
 
     if (usersError) {
-      toast.error("Kullanıcı bilgileri RPC ile çekilemedi: " + usersError.message);
+      toast.error("User information could not be fetched via RPC: " + usersError.message);
       setReviewsWithUsers(reviewsData.map(review => ({ ...review, user_profile: null })));
       setLoading(false);
       return;
     }
 
-    // 4. ADIM: Yorumlar ve kullanıcıları kod içinde birleştir.
+    // 4. ADIM: Yosrumlar ve kullanıcıları kod içinde birleştir.
     const combinedData = reviewsData.map(review => {
       const userProfile = usersData.find(user => user.id === review.user_id) || null;
       return {
@@ -76,20 +76,20 @@ const ReviewsPage = () => {
   const handleApprove = async (e, id) => {
     e.stopPropagation();
     const { error } = await supabase.from('reviews').update({ is_approved: true }).eq('id', id);
-    if (error) toast.error('Yorum onaylanırken bir hata oluştu.');
+    if (error) toast.error('An error occurred while approving the review.');
     else {
-      toast.success('Yorum onaylandı!');
+      toast.success('Review approved!');
       fetchReviewsAndUsers();
     }
   };
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    if (confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
+    if (confirm('Are you sure you want to delete this review?')) {
       const { error } = await supabase.from('reviews').delete().eq('id', id);
-      if (error) toast.error('Yorum silinirken bir hata oluştu.');
+      if (error) toast.error('An error occurred while deleting the review.');
       else {
-        toast.success('Yorum silindi!');
+        toast.success('Review deleted!');
         fetchReviewsAndUsers();
       }
     }
@@ -102,11 +102,12 @@ const ReviewsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">
-        Ürün Yorumları Yönetimi
+Product Reviews Management
       </h1>
 
       {reviewsWithUsers.length === 0 ? (
-        <p className="text-center text-xl text-gray-500 py-10">Henüz yorum bulunmuyor.</p>
+        <p className="text-center text-xl text-gray-500 py-10">No reviews yet.
+</p>
       ) : (
         <div className="space-y-4">
           {reviewsWithUsers.map((review) => (

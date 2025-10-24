@@ -15,7 +15,7 @@ const ReviewsList = ({ reviews }) => {
   if (approvedReviews.length === 0) {
     return (
       <p className="text-gray-500 text-center py-8">
-        Bu ürün için henüz onaylanmış bir yorum yok.
+There are no approved reviews for this product yet.
       </p>
     );
   }
@@ -37,10 +37,11 @@ const ReviewsList = ({ reviews }) => {
               }`}
             >
               {review.user_id === supabase.auth.user()?.id
-                ? "Siz (Yorumunuz)"
+                ?"You (Your Review)"
+
                 : review.users?.email
                 ? `${review.users.email.split('@')[0]}...`
-                : "Kullanıcı"}
+                : "User"}
             </span>
           </div>
           <p className="text-gray-800 text-base leading-relaxed">
@@ -69,12 +70,13 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
     return (
       <p className="text-center text-gray-600 p-4 rounded-lg flex items-center gap-3 justify-center">
         <FiInfo className="w-5 h-5 text-gray-500 flex-shrink-0" />
-        Yorum yazmak için{" "}
+       to write a review{" "}
         <button
           onClick={() => router.push("/auth")}
           className="text-[#be531c] font-semibold underline hover:no-underline"
         >
-          giriş yapın
+        log in
+
         </button>.
       </p>
     );
@@ -85,9 +87,10 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
       <div className="bg-green-50 text-green-700 p-4 rounded-lg flex items-center gap-3">
         <FiCheckCircle className="w-5 h-5 flex-shrink-0" />
         <div>
-          <p className="font-semibold">Yorumunuz Gönderildi!</p>
+          <p className="font-semibold">Your review has been submitted!</p>
           <p className="text-sm">
-            Bu ürün için zaten bir yorum yaptınız. Yorumunuz onay sürecindedir.
+          You have already submitted a review for this product. Your review is under review.
+
           </p>
         </div>
       </div>
@@ -99,9 +102,9 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
       <div className="bg-yellow-50 text-yellow-700 p-4 rounded-lg flex items-center gap-3">
         <FiInfo className="w-5 h-5 flex-shrink-0" />
         <div>
-          <p className="font-semibold">Satın Alma Gerekli</p>
+          <p className="font-semibold">Purchase Required</p>
           <p className="text-sm">
-            Yorum yazabilmek için ürünü <strong>satın almış olmanız</strong> gerekiyor 🛍️
+To write a review, you must have <strong>purchased</strong> the product 🛍️
           </p>
         </div>
       </div>
@@ -110,7 +113,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
 
   const handleSubmitReview = async () => {
     if (userRating === 0 || userComment.trim().length < 10) {
-      toast.error("Lütfen puan verin ve en az 10 karakterlik yorum yazın.");
+      toast.error("Please rate and write a review of at least 10 characters.");
       return;
     }
 
@@ -128,12 +131,12 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
 
       if (error) throw new Error(error.message);
 
-      toast.success("Yorumunuz incelenmek üzere gönderildi! Teşekkür ederiz.");
+      toast.success("Your review has been submitted for review! Thank you.");
       setUserRating(0);
       setUserComment("");
       fetchReviews();
     } catch (e) {
-      toast.error("Yorum gönderilemedi: " + e.message);
+      toast.error("Review could not be submitted: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -141,7 +144,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
 
   return (
     <div className="pt-4 border-t border-gray-100">
-      <h3 className="text-xl font-semibold text-gray-800 mb-3">Sizin Yorumunuz</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-3">Your Review</h3>
       <div className="flex justify-center mb-3">
         <div className="flex items-center">
           {[...Array(5)].map((_, i) => (
@@ -169,7 +172,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
       <textarea
         value={userComment}
         onChange={(e) => setUserComment(e.target.value)}
-        placeholder="Ürünle ilgili düşüncelerinizi yazın (min. 10 karakter)..."
+        placeholder="Please rate and write a review of at least 10 characters."
         rows={4}
         className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] outline-none resize-none mb-3 transition"
         maxLength={500}
@@ -184,7 +187,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
             : "bg-[#be531c] hover:bg-[#a64919] text-white shadow-md"
         }`}
       >
-        {loading ? 'Gönderiliyor...' : 'Yorumu Gönder'}
+{loading ? 'Sending...' : 'Submit Review'}
       </button>
     </div>
   );
@@ -193,7 +196,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
 const ReviewSection = ({ productId, reviews, userReview, hasPurchased, fetchReviews }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4">
-      {/* Yorum Yazma Formu */}
+      {/* Yosrum Yazma Formu */}
       <div className="lg:order-1 bg-gray-50 p-6 rounded-xl shadow-inner border border-gray-200">
         <ReviewForm
           productId={productId}
@@ -203,10 +206,11 @@ const ReviewSection = ({ productId, reviews, userReview, hasPurchased, fetchRevi
         />
       </div>
 
-      {/* Yorum Listesi */}
+      {/* Yosrum Listesi */}
       <div className="lg:order-2">
         <h3 className="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
-          <FiMessageSquare className="w-6 h-6 text-[#be531c]" /> Müşteri Yorumları
+          <FiMessageSquare className="w-6 h-6 text-[#be531c]" /> Customer Reviews
+
         </h3>
         <div className="max-h-[500px] overflow-y-auto pr-2">
           <ReviewsList reviews={reviews} />

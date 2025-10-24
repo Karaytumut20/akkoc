@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Secret anahtarlar ile Stripe ve Supabase'i sunucuda başlatma
+// Initialize Stripe and Supabase on the server with secret keys
 //
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -16,28 +16,28 @@ export async function POST(req) {
 
   let event;
 
-  // 1. Webhook İmza Doğrulama
+  // 1. Webhook Signature Verification
   //
   try {
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err) {
-    console.error(`Webhook imza doğrulama hatası: ${err.message}`);
-    return new NextResponse(`Webhook Hatası: ${err.message}`, { status: 400 });
+    console.error(`Webhook signature verification failed: ${err.message}`);
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // 2. Başarılı Ödeme Olayını Yakalama
+  // 2. Handle Successful Payment Event
   //
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     
-    // Metadata'dan verileri çekme
+    // Extract data from metadata
     //
     const { userId, addressId, cartItems } = session.metadata;
     const simplifiedCart = JSON.parse(cartItems); // [{productId, quantity}]
     const totalAmount = session.amount_total / 100;
 
     try {
-      // 3. Adres bilgisini al (orders tablosuna JSON olarak kaydedilecek)
+      // 3. Fetch address information (to be saved as JSON in the orders table)
       //
       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
@@ -45,24 +45,26 @@ export async function POST(req) {
         .eq('id', addressId)
         .single();
       
-      if (addressError) throw new Error(`Adres bulunamadı: ${addressError.message}`);
+      if (addressError) throw new Error(`Address not found: ${addressError.message}`);
 
-      // 4. 'orders' tablosuna yeni siparişi oluştur
+      // 4. Create a new order in the 'orders' table
       //
+      // NOTE: Status can be set to a standardized English term like 'Processing' 
+      // or kept as is to match existing database logic.
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([{ 
             user_id: userId, 
             total_amount: totalAmount, 
             address: addressData, 
-            status: 'Hazırlanıyor' 
+            status: 'Processing' // Changed status to English equivalent
         }])
         .select()
         .single();
       
-      if (orderError) throw new Error(`Sipariş oluşturulamadı: ${orderError.message}`);
+      if (orderError) throw new Error(`Could not create order: ${orderError.message}`);
       
-      // 5. Ürün detaylarını (fiyat, stok) çek
+      // 5. Fetch product details (price, stock)
       //
       const productIds = simplifiedCart.map(item => item.productId);
       const { data: productsData, error: productsError } = await supabase
@@ -70,26 +72,27 @@ export async function POST(req) {
         .select('id, price, stock')
         .in('id', productIds);
 
-      if (productsError) throw new Error(`Ürün detayları alınamadı: ${productsError.message}`);
+      if (productsError) throw new Error(`Could not retrieve product details: ${productsError.message}`);
 
-      // 6. order_items listesini oluştur ve fiyati veritabanından al
+      // 6. Create the order_items list and strictly use the price fetched from the DB
       //
       const orderItems = simplifiedCart.map(item => {
         const product = productsData.find(p => p.id === item.productId);
+        // Use the price fetched from the database for security/accuracy
         return {
             order_id: orderData.id,
             product_id: item.productId,
             quantity: item.quantity,
-            price: product.price, // Güvenlik için fiyatı tekrar sunucuda teyit et.
+            price: product.price, 
         };
       });
 
-      // 7. order_items tablosuna ekle
+      // 7. Insert into the order_items table
       //
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) throw new Error(`Sipariş ürünleri eklenemedi: ${itemsError.message}`);
+      if (itemsError) throw new Error(`Could not add order items: ${itemsError.message}`);
 
-      // 8. Stokları güncelle
+      // 8. Update stocks
       //
       for (const item of orderItems) {
         const product = productsData.find(p => p.id === item.product_id);
@@ -100,15 +103,15 @@ export async function POST(req) {
           .eq('id', item.product_id);
       }
       
-      console.log(`Sipariş ${orderData.id} başarıyla oluşturuldu.`);
+      console.log(`Order ${orderData.id} created successfully.`);
 
     } catch (error) {
-      console.error('Webhook işlenirken veritabanı hatası:', error.message);
-      return new NextResponse(`Webhook Handler Veritabanı Hatası: ${error.message}`, { status: 500 });
+      console.error('Database error while processing webhook:', error.message);
+      return new NextResponse(`Webhook Handler Database Error: ${error.message}`, { status: 500 });
     }
   }
 
-  // Stripe'a başarılı yanıt dönme
+  // Return successful response to Stripe
   //
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
 }

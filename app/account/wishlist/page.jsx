@@ -13,10 +13,10 @@ const WishlistPage = () => {
 
     return (
         <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">Favorilerim</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">My Favorites</h1>
             {wishlist.length === 0 ? (
                 <div className="text-center py-16 text-gray-500">
-                    <p>Favori ürününüz bulunmuyor.</p>
+                    <p>You have no favorite products.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">

@@ -36,7 +36,7 @@ const ProductInfoBox = ({
   };
 
   const getStockStatus = (stock) => {
-    if (stock > 10) return { text: 'Stokta Var', color: 'text-green-600', pulse: true };
+    if (stock > 10) return { text: 'In Stock', color: 'text-green-600', pulse: true };
     if (stock > 0) return { text: `${stock} Adet Kaldı`, color: 'text-orange-600', pulse: false };
     return { text: 'Tükendi', color: 'text-red-600', pulse: false };
   };
@@ -90,21 +90,23 @@ const ProductInfoBox = ({
         </button>
       </div>
 
-      {/* Yorum puanı */}
+      {/* Yosrum puanı */}
       <div className="inline-flex items-center gap-3 mt-4 group pb-4 border-b border-[#ECE4DC]">
         {reviews.length > 0 && (
           <span className="font-bold text-xl text-gray-800">{averageRating.toFixed(1)}</span>
         )}
         <StarRating rating={averageRating} size={24} />
         <span className="text-gray-500 text-sm">
-          {reviews.filter((r) => r.is_approved).length} Yorum
+          {reviews.filter((r) => r.is_approved).length}Review
+
         </span>
       </div>
 
       {/* Miktar seçici */}
       <div className="mt-6 flex items-center justify-between p-2 bg-[#ECE4DC] rounded-lg border border-[#ECE4DC]">
         <label htmlFor="quantity" className="text-lg font-medium text-gray-700">
-          Miktar
+         Quantity
+
         </label>
         <div className="flex items-center">
           <button
@@ -112,7 +114,7 @@ const ProductInfoBox = ({
             disabled={quantity <= 1}
             className="p-2 text-gray-600 hover:bg-[#E1D7CE] disabled:opacity-50 disabled:cursor-not-allowed transition rounded-l-md"
           >
-            <span className="sr-only">Miktarı azalt</span>
+            <span className="sr-only">Decrease Quantity</span>
             <svg
               className="w-4 h-4"
               fill="none"
@@ -140,7 +142,7 @@ const ProductInfoBox = ({
             disabled={quantity >= product.stock}
             className="p-2 text-gray-600 hover:bg-[#E1D7CE] disabled:opacity-50 disabled:cursor-not-allowed transition rounded-r-md"
           >
-            <span className="sr-only">Miktarı artır</span>
+            <span className="sr-only">Increase Quantity</span>
             <svg
               className="w-4 h-4"
               fill="none"
@@ -177,7 +179,7 @@ const ProductInfoBox = ({
       {/* Stok durumu */}
       <div className="mt-6 pt-4 border-t border-[#ECE4DC]">
         <div className="flex justify-between items-center text-sm text-gray-600">
-          <span className="font-medium">Stok Durumu:</span>
+          <span className="font-medium">Stock Status:</span>
           <span className={`font-semibold flex items-center gap-2 ${color}`}>
             {pulse && (
               <span className="relative flex h-3 w-3">

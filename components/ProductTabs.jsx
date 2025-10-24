@@ -22,10 +22,10 @@ const ProductTabs = ({
     <div className="mt-6 space-y-6 bg-gradient-to-br from-[#FFFFF0] to-[#f0fff0] rounded-xl border border-gray-100 p-6 shadow-sm">
       <div className="border-b pb-4">
         <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
-          Ürün Açıklaması
+Product Description
         </h2>
         <p className="text-gray-700 leading-relaxed text-base">
-          {product.description || "Bu ürün için bir açıklama mevcut değil."}
+          {product.description || "There is no description available for this product."}
         </p>
       </div>
 
@@ -62,7 +62,8 @@ const ProductTabs = ({
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Açıklama
+          Description
+
         </button>
         <button
           onClick={() => setActiveTab('reviews')}
@@ -72,7 +73,7 @@ const ProductTabs = ({
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Yorumlar
+Reviews
           <span
             className={`text-sm rounded-full px-2 py-0.5 font-bold ${
               activeTab === 'reviews'

@@ -14,9 +14,9 @@ const ReviewForm = ({ productId, onReviewAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return toast.error('Yorum yapmak için giriş yapmalısınız.');
+    if (!user) return toast.error('You must log in to leave a review.');
     if (!rating || !comment.trim()) {
-      return toast.error('Lütfen puan verin ve yorumunuzu yazın.');
+      return toast.error('Please rate and write your review.');
     }
     setLoading(true);
     const { error } = await supabase
@@ -31,12 +31,12 @@ const ReviewForm = ({ productId, onReviewAdded }) => {
     setLoading(false);
     if (error) {
       if (error.code === '23505') { 
-          toast.error('Bu ürüne zaten bir yorum yapmışsınız.');
+          toast.error('You have already left a review for this product.');
       } else {
-          toast.error('Yorum eklenirken bir hata oluştu: ' + error.message);
+          toast.error('An error occurred while adding the review: ' + error.message);
       }
     } else {
-      toast.success('Yorumunuz alındı ve incelendikten sonra yayınlanacak.');
+      toast.success('Your review has been received and will be published after it is reviewed.');
       setRating(0);
       setComment('');
       if (onReviewAdded) {
@@ -47,9 +47,9 @@ const ReviewForm = ({ productId, onReviewAdded }) => {
 
   return (
     <form onSubmit={handleSubmit} className="mb-8 p-6 bg-gray-50 rounded-lg border">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">Ürünü Değerlendir</h3>
+      <h3 className="text-xl font-semibold mb-4 text-gray-800">Rate the Product</h3>
       <div className="mb-6">
-        <span className="text-gray-700 font-medium">Puanınız:</span>
+        <span className="text-gray-700 font-medium">Your Rating:</span>
         <div className="flex items-center mt-1">
           {[...Array(5)].map((_, i) => (
             <button key={i} type="button" onClick={() => setRating(i + 1)} className="focus:outline-none">
@@ -65,14 +65,14 @@ const ReviewForm = ({ productId, onReviewAdded }) => {
         as="textarea"
         id="comment"
         name="comment"
-        label="Yorumunuzu buraya yazın..."
+        label="Write your review here..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         required
       />
 
       <button type="submit" disabled={loading} className="mt-6 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-orange-400">
-        {loading ? 'Gönderiliyor...' : 'Yorumu Gönder'}
+        {loading ? 'Sending...' : 'Submit Review'}
       </button>
     </form>
   );

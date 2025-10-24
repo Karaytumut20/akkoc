@@ -71,14 +71,14 @@ export default function MainNavbar() {
                                 <span className="hidden md:block">{user.email.split('@')[0]}</span>
                             </button>
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover:block text-gray-800">
-                                <Link href="/my-orders" className="block px-4 py-2 text-sm hover:bg-gray-100">Siparişlerim</Link>
-                                <button onClick={signOut} className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100">Çıkış Yap</button>
+                                <Link href="/my-orders" className="block px-4 py-2 text-sm hover:bg-gray-100">My Orders</Link>
+                                <button onClick={signOut} className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100">Log Out</button>
                             </div>
                         </div>
                     ) : (
                         <button onClick={() => router.push('/auth')} className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition">
                             <Image src={assets.user_icon} alt="user icon" width={20} height={20} style={{ filter: isSticky ? 'none' : 'brightness(0) invert(1)' }}/>
-                            <span className="hidden md:block">Giriş Yap</span>
+                            <span className="hidden md:block">Log In</span>
                         </button>
                     )}
                     <button aria-label="Shopping Bag" className="p-2 rounded-full hover:bg-black/10 transition relative" onClick={() => router.push("/cart")}>

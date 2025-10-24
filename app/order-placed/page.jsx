@@ -15,7 +15,7 @@ const OrderPlaced = () => {
     setCartItems({}); // Sepeti boş bir obje yaparak temizle
     localStorage.removeItem("cartItems"); // LocalStorage'dan da sil (isteğe bağlı ama önerilir)
 
-    // 5 saniye sonra siparişlerim sayfasına yönlendir
+    // 5 saniye sonra sipasssrişslerim sayfasına yönlendir
     const timer = setTimeout(() => {
       router.push('/account/my-orders');
     }, 5000);

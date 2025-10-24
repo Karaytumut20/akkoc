@@ -41,7 +41,7 @@ export default function FeaturedCollections() {
         ? (Array.isArray(item.image_urls) ? item.image_urls[0] : JSON.parse(item.image_urls)[0])
         : '/assets/default.jpg',
       alt: item.name,
-      linkText: 'DETAYLARI GÖR',
+      linkText: 'VIEW DETAILS',
       linkHref: `/product/${item.id}`,
     }));
 

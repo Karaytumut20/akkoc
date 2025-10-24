@@ -1,3 +1,5 @@
+// components/AccountSidebar.jsx (app/account/AccountSidebar.jsx)
+
 'use client';
 
 import Link from 'next/link';
@@ -14,15 +16,13 @@ export default function AccountSidebar() {
     const searchParams = useSearchParams();
 
     const menuItems = [
-        { name: "Kontrol Paneli", href: "/account?tab=dashboard", activeIdentifier: "dashboard", isTab: true, icon: <FiGrid /> },
-        { name: "Profil Bilgileri", href: "/account?tab=profile", activeIdentifier: "profile", isTab: true, icon: <FiUser /> },
-        { name: "Siparişlerim", href: "/account/my-orders", activeIdentifier: "/account/my-orders", isTab: false, icon: <FiPackage /> },
-        { name: "Favorilerim", href: "/account/wishlist", activeIdentifier: "/account/wishlist", isTab: false, icon: <FiHeart /> },
-        { name: "Değerlendirmelerim", href: "/account?tab=reviews", activeIdentifier: "reviews", isTab: true, icon: <FiStar /> },
-        { name: "Adreslerim", href: "/account/addresses", activeIdentifier: "/account/addresses", isTab: false, icon: <FiMapPin /> },
-        { name: "Parola Güvenliği", href: "/account?tab=password", activeIdentifier: "password", isTab: true, icon: <FiLock /> },
-        { name: "Bildirim Tercihleri", href: "/account?tab=notifications", activeIdentifier: "notifications", isTab: true, icon: <FiBell /> },
-        { name: "Kayıtlı Kartlarım", href: "/account?tab=saved-cards", activeIdentifier: "saved-cards", isTab: true, icon: <FiCreditCard /> }
+        { name: "Profile Information", href: "/account?tab=profile", activeIdentifier: "profile", isTab: true, icon: <FiUser /> },
+        { name: "My Orders", href: "/account/my-orders", activeIdentifier: "/account/my-orders", isTab: false, icon: <FiPackage /> },
+        { name: "Wishlist", href: "/account/wishlist", activeIdentifier: "/account/wishlist", isTab: false, icon: <FiHeart /> },
+        { name: "My Reviews", href: "/account?tab=reviews", activeIdentifier: "reviews", isTab: true, icon: <FiStar /> },
+        { name: "My Addresses", href: "/account/addresses", activeIdentifier: "/account/addresses", isTab: false, icon: <FiMapPin /> },
+        { name: "Password Security", href: "/account?tab=password", activeIdentifier: "password", isTab: true, icon: <FiLock /> },
+        { name: "Notification Preferences", href: "/account?tab=notifications", activeIdentifier: "notifications", isTab: true, icon: <FiBell /> },
     ];
     
     const activeTab = searchParams.get('tab');
@@ -54,7 +54,7 @@ export default function AccountSidebar() {
                         <Link href={item.href} key={item.name}>
                             <div className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
                                 isActive 
-                                    ? 'bg-[#E5E7EB] text-[#be531c]' // BURADA DEĞİŞTİ
+                                    ? 'bg-[#E5E7EB] text-[#be531c]'
                                     : 'hover:bg-[#F3F4F6] text-gray-700'
                             }`}>
                                 {item.icon}
@@ -69,7 +69,7 @@ export default function AccountSidebar() {
                     className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-[#F3F4F6] text-gray-700"
                 >
                     <FiLogOut />
-                    <span className="ml-3 font-medium">Çıkış Yap</span>
+                    <span className="ml-3 font-medium">Logout</span>
                 </div>
             </nav>
         </div>

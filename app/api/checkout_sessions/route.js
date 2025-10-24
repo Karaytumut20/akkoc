@@ -8,7 +8,7 @@ export async function POST(req) {
     const { items, userId, addressId, totalAmount } = await req.json();
 
     if (!items || !userId || !addressId || typeof totalAmount !== 'number' || totalAmount <= 0) {
-      return NextResponse.json({ error: { message: "Eksik veya geçersiz parametreler: Sepet, kullanıcı, adres ID'si veya geçerli toplam tutar gönderilmedi." } }, { status: 400 });
+return NextResponse.json({ error: { message: "Missing or invalid parameters: Cart, user, address ID, or valid total amount not provided." } }, { status: 400 });
     }
 
     // Tek bir line_item oluştur
@@ -18,7 +18,7 @@ export async function POST(req) {
           // ✅ STRIPE_CURRENCY_CODE kullanıldı, varsayılan olarak 'usd'
           currency: process.env.STRIPE_CURRENCY_CODE || 'usd',
           product_data: {
-            name: 'Toplam Sipariş Tutarı (Vergi Dahil)',
+          name: 'Total Order Amount (Tax Included)',
             images: items[0]?.product?.image_urls?.[0] ? [items[0].product.image_urls[0]] : [],
           },
           // unit_amount olarak vergi dahil toplam tutarı gönder (cent cinsinden)
@@ -51,7 +51,7 @@ export async function POST(req) {
 
   } catch (err) {
     console.error("Stripe Checkout Session Hatası:", err.message);
-    const errorMessage = err.message || "Bilinmeyen bir Stripe hatası oluştu.";
+    const errorMessage = err.message || "An unknown Stripe error occurred.";
     return NextResponse.json({ error: { message: errorMessage } }, { status: 500 });
   }
 }

@@ -9,10 +9,10 @@ const ReviewList = ({ reviews }) => {
 
   return (
     <div className="mt-10 border-t pt-6">
-      <h2 className="text-xl font-semibold mb-4">Yorumlar</h2>
+      <h2 className="text-xl font-semibold mb-4">Reviews</h2>
 
       {approvedReviews.length === 0 && (
-        <p className="text-gray-600">Henüz yorum yapılmamış.</p>
+        <p className="text-gray-600">No reviews have been made yet.</p>
       )}
 
       <div className="space-y-5">

@@ -27,7 +27,7 @@ export default function AccountLayout({ children }) {
     return (
         <>
             <div className="min-h-[70vh] px-4 sm:px-6 md:px-16 lg:px-32 py-10">
-                <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800 border-b pb-4">Hesabım</h1>
+                <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800 border-b pb-4">My Account</h1>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Sol Menü */}
                     <div className="md:col-span-1">

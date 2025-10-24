@@ -29,10 +29,10 @@ const MyOrdersPage = () => {
     
     return (
         <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">Siparişlerim</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">My Orders</h1>
             {myOrders.length === 0 ? (
                 <div className="text-center py-16 text-gray-500">
-                    <p>Henüz hiç sipariş vermediniz.</p>
+                    <p>You haven't placed any orders yet.</p>
                 </div>
             ) : (
                 <div className="space-y-6">
@@ -40,7 +40,7 @@ const MyOrdersPage = () => {
                         <div key={order.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
                             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                                 <div>
-                                    <p className="font-bold text-gray-800">Sipariş ID: #{order.id.slice(0, 8)}</p>
+                                    <p className="font-bold text-gray-800">Order ID: #{order.id.slice(0, 8)}</p>
                                     <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex items-center gap-4">

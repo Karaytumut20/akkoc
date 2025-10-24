@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
-import { useAppContext } from '@/context/AppContext'; // Next.js router'ı almak için varsayıyorum
+import { useAppContext } from '@/context/AppContext'; // Next.js router'ı almak için varsayıyorsum
 
 export default function Categories() {
   const { router } = useAppContext(); // Next.js Router hook'u (veya useAppContext içindeki karşılığı)
@@ -21,7 +21,7 @@ export default function Categories() {
       .eq('icons', true);
 
     if (error) {
-      console.error('Icon ürünleri alınamadı:', error.message);
+      console.error('Icon products could not be retrieved:', error.message);
       setIconProducts([]);
     } else {
       const productsWithImages = (data || []).map(item => ({
