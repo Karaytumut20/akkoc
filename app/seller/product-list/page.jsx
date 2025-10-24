@@ -1,22 +1,25 @@
+// app/seller/product-list/page.jsx
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'; // useRef ekledik
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
-import { FiTrash2, FiX, FiEdit3, FiUploadCloud } from 'react-icons/fi';
+import { FiTrash2, FiX, FiEdit3, FiUploadCloud, FiMove } from 'react-icons/fi'; // FiMove ekledik
 import toast from 'react-hot-toast';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
+import Loading from '@/components/Loading'; // Loading component'ını import ettik
 
 const BUCKET_NAME = 'product-images';
 
 // GÜNCELLENEN LIMITS
 const LIMITS = {
   bigcard: 1,
-  doublebigcard: 2, 
+  doublebigcard: 2,
   doublebigcardtext: 2,
   icons: 6,
   brandicon: 4,
-  homepage_carousel: 8, 
+  homepage_carousel: 8,
 };
 
 export default function ProductsTable() {
@@ -27,9 +30,10 @@ export default function ProductsTable() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [filesToUpload, setFilesToUpload] = useState([]);
 
-  // Drag işlemleri için ref
-  const dragItem = useRef();
-  const dragOverItem = useRef();
+  // Drag işlemleri için ref'ler
+  const dragItemNode = useRef(); // Sürüklenen DOM öğesi
+  const draggedIndex = useRef(null); // Başlangıç index'i
+  const dragOverIndex = useRef(null); // Üzerine gelinen index
 
   const [formData, setFormData] = useState({
     name: '',
@@ -92,6 +96,7 @@ export default function ProductsTable() {
         preview: URL.createObjectURL(file),
       }));
       setFilesToUpload(prev => [...prev, ...newFiles]);
+       e.target.value = null; // Input'u sıfırla
     }
   };
 
@@ -133,26 +138,62 @@ export default function ProductsTable() {
   const handleDelete = async (id) => {
     if (!confirm('Bu ürünü silmek istediğine emin misin?')) return;
     setActionLoading(true);
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) {
-      setProducts(products.filter(p => p.id !== id));
-      toast.success('Ürün başarıyla silindi!');
+    // İlgili ürünün görsellerini storage'dan silmek için önce ürün bilgilerini al
+    const productToDelete = products.find(p => p.id === id);
+    let storageErrorOccurred = false;
+    if (productToDelete && productToDelete.image_urls && productToDelete.image_urls.length > 0) {
+        const filePathsToRemove = productToDelete.image_urls.map(url => {
+            try {
+                const urlParts = new URL(url);
+                // Pathname genellikle '/storage/v1/object/public/bucket-name/folder/file.jpg' şeklindedir
+                // İlk 5 kısmı atlayarak ('', 'storage', 'v1', 'object', 'public', 'bucket-name', ...) bucket'tan sonraki yolu alırız
+                return urlParts.pathname.split('/').slice(6).join('/');
+            } catch (e) {
+                console.warn("Could not parse URL to delete from storage:", url);
+                return null;
+            }
+        }).filter(path => path !== null); // Geçersiz URL'leri filtrele
+
+        if (filePathsToRemove.length > 0) {
+            const { error: storageError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .remove(filePathsToRemove);
+
+            if (storageError && !storageError.message.includes('Not Found')) {
+                console.error('Storage silme hatası:', storageError);
+                toast.error('Ürün görselleri depolamadan silinemedi.');
+                storageErrorOccurred = true; // Hata oluştuğunu işaretle
+            }
+        }
+    }
+
+
+    // Storage'da hata olsa bile DB'den silmeyi dene
+    const { error: dbError } = await supabase.from('products').delete().eq('id', id);
+    if (!dbError) {
+        setProducts(products.filter(p => p.id !== id));
+        if (!storageErrorOccurred) {
+           toast.success('Ürün ve görselleri başarıyla silindi!');
+        } else {
+            toast.warn('Ürün veritabanından silindi, ancak bazı görseller depolamadan silinememiş olabilir.');
+        }
     } else {
-      toast.error('Silme işlemi başarısız: ' + error.message);
+        toast.error('Veritabanından silme işlemi başarısız: ' + dbError.message);
     }
     setActionLoading(false);
   };
+
 
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
     setFilesToUpload([]);
     setFormData({
-      name: product.name,
-      description: product.description,
-      category_id: product.category_id,
-      price: product.price,
-      stock: product.stock,
-      image_urls: product.image_urls || [],
+      name: product.name || '', // Null veya undefined ise boş string ata
+      description: product.description || '',
+      category_id: product.category_id || '',
+      price: product.price || '',
+      stock: product.stock !== null ? product.stock : '', // Null ise boş string ata
+      image_urls: Array.isArray(product.image_urls) ? product.image_urls : [], // Her zaman array olmasını sağla
       bigcard: product.bigcard || false,
       doublebigcard: product.doublebigcard || false,
       doublebigcardtext: product.doublebigcardtext || false,
@@ -166,54 +207,126 @@ export default function ProductsTable() {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
       const limit = LIMITS[name];
-      if (checked) {
-        const count = products.filter(p => p.id !== editingProduct && p[name]).length;
-        if (count >= limit) {
-          toast.error(`Maksimum ${limit} adet ${name} ürünü seçebilirsiniz!`);
-          return;
-        }
+      // Limit kontrolü sadece yeni eklerken veya farklı bir ürünü güncellerken yapılmalı
+      if (checked && limit !== undefined) {
+          const count = products.filter(p => p.id !== editingProduct && p[name]).length;
+          if (count >= limit) {
+              toast.error(`Maksimum ${limit} adet ${name} ürünü seçebilirsiniz!`);
+              // Checkbox'ı işaretlenmemiş hale geri getir
+              e.target.checked = false;
+              return; // State'i güncelleme
+          }
       }
+
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // 📌 Drag & Drop Eventleri
-  const handleDragStart = (index) => {
-    dragItem.current = index;
+
+  // === Drag & Drop Event Handlers (Modal İçin) ===
+  const handleModalDragStart = (e, index) => {
+    draggedIndex.current = index;
+    dragItemNode.current = e.target.closest('[draggable="true"]');
   };
 
-  const handleDragEnter = (index) => {
-    dragOverItem.current = index;
+  const handleModalDragEnter = (e, index) => {
+     // Sürüklenen öğe ile üzerine gelinen öğe farklıysa ve modal içindeyse
+     const dropZone = e.target.closest('[draggable="true"]');
+     if (dragItemNode.current !== dropZone && draggedIndex.current !== index) {
+        dragOverIndex.current = index; // Hedef index'i sakla
+
+        // Anlık görsel geri bildirim için state'i güncelle
+        const reorderedImages = [...formData.image_urls];
+        const [movedItem] = reorderedImages.splice(draggedIndex.current, 1);
+        reorderedImages.splice(index, 0, movedItem);
+
+        setFormData(prev => ({ ...prev, image_urls: reorderedImages }));
+
+        // Sürüklenen index'i yeni konumuyla güncelle
+        draggedIndex.current = index;
+     }
   };
 
-  const handleDrop = () => {
-    const copiedImages = [...formData.image_urls];
-    const dragItemContent = copiedImages[dragItem.current];
-    copiedImages.splice(dragItem.current, 1);
-    copiedImages.splice(dragOverItem.current, 0, dragItemContent);
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-
-    setFormData(prev => ({
-      ...prev,
-      image_urls: copiedImages,
-    }));
+  const handleModalDragEnd = () => {
+    // Referansları temizle
+    dragItemNode.current = null;
+    draggedIndex.current = null;
+    dragOverIndex.current = null;
+    // Sıralama zaten handleModalDragEnter içinde state'e yansıdı.
+    // Kaydetme işlemi handleUpdate içinde yapılacak.
+    toast.success('Görsel sırası değiştirildi. Kaydetmeyi unutmayın.', { duration: 2000 });
   };
+
+    // handleModalDragOver: Bırakma işlemine izin vermek için gerekli
+    const handleModalDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    // === Touch Event Handlers (Modal İçin) ===
+    const handleModalTouchStart = (e, index) => {
+        draggedIndex.current = index;
+        dragItemNode.current = e.target.closest('[draggable="true"]');
+        // Dokunma olaylarında scroll'u engellemek için event listener ekleyebiliriz (opsiyonel ama önerilir)
+        // window.addEventListener('touchmove', preventScroll, { passive: false });
+    };
+
+    const handleModalTouchMove = (e) => {
+        if (draggedIndex.current === null || !dragItemNode.current) return;
+
+        // Sayfa kaymasını engelle (eğer eklediysek)
+        e.preventDefault();
+
+        const touchLocation = e.touches[0];
+        const elementOver = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
+        const dropZone = elementOver?.closest('[draggable="true"]');
+
+        if (dropZone && dropZone.closest('.modal-image-container')?.contains(dropZone)) { // Sadece modal içindeki elemanları dikkate al
+            const overIndexAttr = dropZone.getAttribute('data-index');
+             if (overIndexAttr !== null) {
+                const overIndex = parseInt(overIndexAttr, 10);
+                if (overIndex !== draggedIndex.current) {
+                    dragOverIndex.current = overIndex; // Sadece hedef index'i sakla
+
+                    // Anlık görsel geri bildirim için state'i güncelle
+                    const reorderedImages = [...formData.image_urls];
+                    const [movedItem] = reorderedImages.splice(draggedIndex.current, 1);
+                    reorderedImages.splice(overIndex, 0, movedItem);
+
+                    setFormData(prev => ({ ...prev, image_urls: reorderedImages }));
+
+                    // Sürüklenen index'i yeni konumuyla güncelle
+                    draggedIndex.current = overIndex;
+                }
+            }
+        }
+    };
+
+    const handleModalTouchEnd = () => {
+        // Scroll engellemeyi kaldır (opsiyonel)
+        // window.removeEventListener('touchmove', preventScroll);
+        handleModalDragEnd(); // Aynı mantığı kullan
+    };
+
+    // Opsiyonel: Scroll engelleme fonksiyonu
+    // const preventScroll = (e) => {
+    //     e.preventDefault();
+    // };
+
 
   const handleUpdate = async () => {
-    if (!formData.name || !formData.category_id || !formData.price || formData.stock === '') {
+    if (!formData.name || !formData.category_id || formData.price === '' || formData.stock === '') {
       return toast.error('Lütfen isim, kategori, fiyat ve stok alanlarını doldurun.');
     }
 
     setActionLoading(true);
     const toastId = toast.loading('Ürün güncelleniyor...');
-    
+
     const uploadedUrls = await uploadFiles();
+    // Mevcut sıralanmış görseller + yeni yüklenenler
     const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
-    
+
     const { error } = await supabase
       .from('products')
       .update({
@@ -222,7 +335,7 @@ export default function ProductsTable() {
         category_id: formData.category_id,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        image_urls: finalImageUrls,
+        image_urls: finalImageUrls, // Sıralanmış ve yeni eklenen URL'ler
         bigcard: formData.bigcard,
         doublebigcard: formData.doublebigcard,
         doublebigcardtext: formData.doublebigcardtext,
@@ -234,15 +347,15 @@ export default function ProductsTable() {
 
     if (!error) {
       setEditingProduct(null);
-      await fetchProducts();
+      await fetchProducts(); // Listeyi güncelleyerek yeni sıralamayı da gösterir
       toast.success('Ürün başarıyla güncellendi!', { id: toastId });
     } else {
       toast.error('Güncelleme hatası: ' + error.message, { id: toastId });
     }
     setActionLoading(false);
   };
-  
-  if (loading) return <div className="flex justify-center items-center h-screen text-lg text-gray-700">Ürünler yükleniyor...</div>;
+
+  if (loading) return <Loading />; // Loading component'ını kullan
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
@@ -309,7 +422,7 @@ export default function ProductsTable() {
           </div>
         )}
 
-        {/* === MODAL === */}
+        {/* === GÜNCELLEME MODALI === */}
         {editingProduct && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-center items-center p-0 sm:p-4">
             <div className="bg-white rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-2xl overflow-y-auto transform transition-all duration-300 shadow-3xl">
@@ -320,41 +433,56 @@ export default function ProductsTable() {
                         <FiX className="w-6 h-6" />
                     </button>
                 </div>
-                
+
                 <div className="space-y-8">
-                  <FloatingLabelInput id="edit-name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} />
+                  <FloatingLabelInput id="edit-name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} required />
                   <FloatingLabelInput as="textarea" id="edit-description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
-                  
-                  <select name="category_id" value={formData.category_id} onChange={handleFormChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
+
+                  <select name="category_id" value={formData.category_id} onChange={handleFormChange} required className="w-full border border-gray-300 rounded-xl px-4 py-3 appearance-none bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
                     <option value="" disabled>Kategori Seç</option>
                     {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
 
-                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} />
-                  <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} />
-                  
-                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
-                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi (Sürükle-Bırak)</h3>
+                  <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required step="0.01" />
+                  <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+
+                  {/* === Görsel Yönetimi (Sıralanabilir) === */}
+                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner modal-image-container"> {/* Container için class */}
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yönetimi (Sıralamak için sürükleyin)</h3>
                     <div className="mb-6 pb-4 border-b border-indigo-100 flex flex-wrap gap-3">
                       {formData.image_urls.map((url, index) => (
                         <div
-                          key={`existing-${index}`}
+                          key={`existing-${url}-${index}`} // Daha benzersiz bir key
                           draggable
-                          onDragStart={() => handleDragStart(index)}
-                          onDragEnter={() => handleDragEnter(index)}
-                          onDragEnd={handleDrop}
-                          onDragOver={(e) => e.preventDefault()}
-                          className="relative w-20 h-20 border-2 border-white rounded-lg overflow-hidden shadow-md group cursor-move"
+                          onDragStart={(e) => handleModalDragStart(e, index)}
+                          onDragEnter={(e) => handleModalDragEnter(e, index)}
+                          onDragEnd={handleModalDragEnd}
+                          onDragOver={handleModalDragOver}
+                          onTouchStart={(e) => handleModalTouchStart(e, index)}
+                          onTouchMove={handleModalTouchMove}
+                          onTouchEnd={handleModalTouchEnd}
+                          data-index={index} // Touch için index
+                          className="relative w-20 h-20 border-2 border-transparent hover:border-indigo-300 rounded-lg overflow-hidden shadow-md group cursor-move"
+                          style={{ touchAction: 'none' }} // Mobil scroll engelleme
                         >
-                          <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover'}} />
-                          <button onClick={() => handleRemoveImage(url)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <FiTrash2 className="text-white w-5 h-5" />
+                          <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover', pointerEvents: 'none'}} /> {/* pointerEvents none önemli */}
+                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
+                              <FiMove className="text-white w-5 h-5 opacity-0 group-hover:opacity-80 transition-opacity" />
+                           </div>
+                          <button
+                            type="button" // Formu submit etmesini engelle
+                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(url); }}
+                            className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            title="Sil"
+                           >
+                            <FiTrash2 className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
                       {formData.image_urls.length === 0 && ( <p className="text-sm text-gray-500 italic">Mevcut görsel yok.</p> )}
                     </div>
 
+                    {/* Yeni Görsel Yükleme */}
                     <div>
                       <label htmlFor="file-upload-modal" className="block text-sm font-semibold text-indigo-700 mb-2 cursor-pointer">
                         <span className="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-lg"><FiUploadCloud className="mr-2"/>Yeni Görsel Yükle</span>
@@ -367,7 +495,11 @@ export default function ProductsTable() {
                                 {filesToUpload.map((fileObj, index) => (
                                     <div key={`new-${index}`} className="relative w-20 h-20 border-2 border-green-500 rounded-lg overflow-hidden shadow-md group">
                                         <Image src={fileObj.preview} alt={fileObj.file.name} fill style={{objectFit: 'cover'}} />
-                                        <button onClick={() => handleRemoveNewImage(fileObj.preview)} className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                          type="button" // Formu submit etmesini engelle
+                                          onClick={() => handleRemoveNewImage(fileObj.preview)}
+                                          className="absolute inset-0 bg-red-600 bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
                                             <FiX className="text-white w-5 h-5" />
                                         </button>
                                     </div>
@@ -378,23 +510,25 @@ export default function ProductsTable() {
                     </div>
                   </div>
 
+                  {/* Vitrin Ayarları */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
                     <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {Object.entries(LIMITS).map(([key, value]) => (
                          <label key={key} className="flex items-center gap-2">
-                            <input type="checkbox" name={key} checked={formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" /> 
+                            <input type="checkbox" name={key} checked={!!formData[key]} onChange={handleFormChange} className="h-4 w-4 rounded" />
                             {key} (Max: {value})
                          </label>
                       ))}
                     </div>
                   </div>
 
+                  {/* Modal Butonları */}
                   <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={handleUpdate} disabled={actionLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50">
+                    <button type="button" onClick={handleUpdate} disabled={actionLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50">
                       {actionLoading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
                     </button>
-                    <button onClick={() => { setEditingProduct(null); setFilesToUpload([]); }} className="px-6 py-3 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition shadow-md">
+                    <button type="button" onClick={() => { setEditingProduct(null); setFilesToUpload([]); }} className="px-6 py-3 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition shadow-md">
                       İptal
                     </button>
                   </div>

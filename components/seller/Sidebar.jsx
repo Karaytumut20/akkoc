@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiPlusSquare, FiList, FiBox, FiMessageSquare,FiImage } from 'react-icons/fi';
+import { FiPlusSquare, FiList, FiBox, FiMessageSquare,FiImage,FiFilm } from 'react-icons/fi';
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
@@ -15,7 +15,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     { name: 'Category Add', path: '/seller/category-add', icon: <FiList className="w-6 h-6" /> },
     { name: 'Reviews', path: '/seller/reviews', icon: <FiMessageSquare className="w-6 h-6" /> },
     { name: 'Carousel Management', path: '/seller/carousel-management', icon: <FiImage className="w-6 h-6" /> },
-    
+    { name: 'Hero Video', path: '/seller/hero-video', icon: <FiFilm className="w-6 h-6" /> },
   ];
 
   return (
