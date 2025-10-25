@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient'; // Supabase client'ı import ediyoruz
+import { supabase } from '@/lib/supabaseClient';
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Şifre sıfırlama linki e-posta adresinize gönderildi!');
+      toast.success('Password reset link has been sent to your email!');
       router.push('/auth');
     }
   };
@@ -33,17 +33,17 @@ export default function ForgotPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">
-          Şifremi Unuttum
+          Forgot Password
         </h2>
         <p className="text-center text-gray-600">
-          Şifrenizi sıfırlamak için kayıtlı e-posta adresinizi girin.
+          Enter your registered email address to reset your password.
         </p>
         <form className="space-y-8" onSubmit={handlePasswordReset}>
           <FloatingLabelInput
             id="email"
             name="email"
             type="email"
-            label="E-posta Adresi"
+            label="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full py-2.5 px-4 text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300"
           >
-            {loading ? 'Gönderiliyor...' : 'Sıfırlama Linki Gönder'}
+            {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
       </div>

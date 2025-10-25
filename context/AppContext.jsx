@@ -18,8 +18,8 @@ export const useAppContext = () => {
     return context;
 };
 
-// HATA DÜZELTMESİ: Bu sabiti dışa aktararak OrderSummary.jsx dosyasının almasını sağlıyoruz.
-export const CALIFORNIA_TAX_RATE = 0.0725; // Örnek bir vergi oranı (%7.25)
+// FIX: Exporting the constant for use in other components like OrderSummary.jsx
+export const CALIFORNIA_TAX_RATE = 0.0725; // Example tax rate (7.25%)
 
 export const AppContextProvider = (props) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
@@ -42,13 +42,13 @@ export const AppContextProvider = (props) => {
     const inactivityTimer = useRef(null);
 
     const signOutAfterInactivity = useCallback(() => {
-        toast('Oturum süreniz doldu, otomatik olarak çıkış yapıldı.', { icon: '👋' });
+        toast('Session expired, automatically logged out.', { icon: '👋' });
         supabase.auth.signOut();
     }, []);
 
     const resetInactivityTimer = useCallback(() => {
         clearTimeout(inactivityTimer.current);
-        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000); // 10 dakika
+        inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000); // 10 minutes
     }, [signOutAfterInactivity]);
 
     useEffect(() => {
@@ -91,7 +91,7 @@ export const AppContextProvider = (props) => {
             toast.error(error.message);
             return false;
         }
-        toast.success('Kayıt başarılı! Lütfen e-postanızı doğrulayın.');
+        toast.success('Registration successful! Please verify your email.');
         return true;
     };
 
@@ -99,14 +99,14 @@ export const AppContextProvider = (props) => {
         const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
         
         if (authError) {
-            toast.error('Kullanıcı adı veya parola hatalı.');
+            toast.error('Invalid email or password.');
             return;
         }
         
         if (signInData.user) {
-            toast.success('Giriş başarılı!');
+            toast.success('Login successful!');
             
-            // ✅ DÜZELTME: Yönlendirmeyi 50ms geciktirerek toast'ın kapanma işlemini başlatmasına izin veriyoruz.
+            // ✅ CORRECTION: Delaying the redirect by 50ms to allow the toast to start closing.
             setTimeout(() => {
                 if (source === 'seller') {
                     router.push('/seller/product-list');
@@ -121,30 +121,30 @@ export const AppContextProvider = (props) => {
         await supabase.auth.signOut();
         clearTimeout(inactivityTimer.current);
         router.push('/');
-        toast.success('Başarıyla çıkış yapıldı.');
+        toast.success('Successfully logged out.');
     }, [router]);
     
     const changeUserPassword = async (currentPassword, newPassword) => {
         if (!user) {
-            toast.error("Bu işlem için giriş yapmış olmalısınız.");
+            toast.error("You must be logged in to perform this action.");
             return false;
         }
-        const toastId = toast.loading("İşlem yürütülüyor...");
+        const toastId = toast.loading("Processing...");
         try {
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email,
                 password: currentPassword,
             });
             if (signInError) {
-                throw new Error("Mevcut parolanız hatalı.");
+                throw new Error("Your current password is incorrect.");
             }
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword,
             });
             if (updateError) {
-                throw new Error("Parola güncellenirken bir hata oluştu: " + updateError.message);
+                throw new Error("An error occurred while updating the password: " + updateError.message);
             }
-            toast.success("Parolanız başarıyla güncellendi!", { id: toastId });
+            toast.success("Your password has been successfully updated!", { id: toastId });
             return true;
         } catch (error) {
             toast.error(error.message, { id: toastId });
@@ -153,13 +153,13 @@ export const AppContextProvider = (props) => {
     };
 
     const updateUserData = async (data) => {
-        const toastId = toast.loading("Bilgileriniz güncelleniyor...");
+        const toastId = toast.loading("Updating your information...");
         const { error } = await supabase.auth.updateUser({ data });
         if (error) {
-            toast.error("Bilgiler güncellenirken hata: " + error.message, { id: toastId });
+            toast.error("Error updating information: " + error.message, { id: toastId });
             return false;
         }
-        toast.success("Bilgileriniz başarıyla güncellendi!", { id: toastId });
+        toast.success("Your information has been successfully updated!", { id: toastId });
         return true;
     };
 
@@ -229,7 +229,7 @@ export const AppContextProvider = (props) => {
     };
     
     const addSavedCard = async (cardData) => {
-        if (!user) return toast.error("Kart eklemek için giriş yapmalısınız.");
+        if (!user) return toast.error("You must log in to add a card.");
         
         const fakeToken = `tok_${Math.random().toString(36).substr(2, 14)}`;
         const last4 = cardData.cardNumber.slice(-4);
@@ -245,35 +245,35 @@ export const AppContextProvider = (props) => {
         });
 
         if (error) {
-            toast.error("Kart eklenirken bir hata oluştu: " + error.message);
+            toast.error("An error occurred while adding the card: " + error.message);
             return false;
         } else {
-            toast.success("Kart başarıyla eklendi!");
+            toast.success("Card successfully added!");
             fetchSavedCards(user.id);
             return true;
         }
     };
 
     const deleteSavedCard = async (cardId) => {
-        if (!user) return toast.error("Bu işlem için giriş yapmalısınız.");
+        if (!user) return toast.error("You must log in to perform this action.");
 
         const { error } = await supabase.from('saved_cards').delete().eq('id', cardId);
 
         if (error) {
-            toast.error("Kart silinirken bir hata oluştu: " + error.message);
+            toast.error("An error occurred while deleting the card: " + error.message);
         } else {
-            toast.success("Kart başarıyla silindi.");
+            toast.success("Card successfully deleted.");
             setSavedCards(prev => prev.filter(card => card.id !== cardId));
         }
     };
 
     const addToWishlist = async (productId) => {
-        if (!user) return toast.error("Favorilere eklemek için giriş yapmalısınız.");
+        if (!user) return toast.error("You must log in to add to favorites.");
         const { error } = await supabase.from('wishlist').insert({ user_id: user.id, product_id: productId });
         if (error) {
-            toast.error("Bu ürün zaten favorilerinizde.");
+            toast.error("This product is already in your favorites.");
         } else {
-            toast.success("Ürün favorilere eklendi!");
+            toast.success("Product added to favorites!");
             fetchWishlist(user.id);
         }
     };
@@ -282,9 +282,9 @@ export const AppContextProvider = (props) => {
         if (!user) return;
         const { error } = await supabase.from('wishlist').delete().match({ user_id: user.id, product_id: productId });
         if (error) {
-            toast.error("Favorilerden kaldırırken hata oluştu.");
+            toast.error("An error occurred while removing from favorites.");
         } else {
-            toast.success("Ürün favorilerden kaldırıldı!");
+            toast.success("Product removed from favorites!");
             fetchWishlist(user.id);
         }
     };
@@ -300,46 +300,46 @@ export const AppContextProvider = (props) => {
     }, [user]);
 
     const addAddress = async (addressData) => {
-        if (!user) return toast.error("Adres eklemek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz ekleniyor...");
+        if (!user) return toast.error("You must log in to add an address.");
+        const toastId = toast.loading("Adding your address...");
         try {
             const { error } = await supabase.from('addresses').insert({ ...addressData, user_id: user.id });
             if (error) throw error;
             await fetchAddresses(user.id);
-            toast.success("Adres başarıyla eklendi!", { id: toastId });
+            toast.success("Address successfully added!", { id: toastId });
             return true;
         } catch (error) {
-            toast.error("Adres eklenirken hata: " + error.message, { id: toastId });
+            toast.error("Error adding address: " + error.message, { id: toastId });
             return false;
         }
     };
     
     const updateAddress = async (addressId, addressData) => {
-        if (!user) return toast.error("Adres güncellemek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz güncelleniyor...");
+        if (!user) return toast.error("You must log in to update an address.");
+        const toastId = toast.loading("Updating your address...");
         try {
             const { id, user_id, created_at, ...updateData } = addressData;
             const { error } = await supabase.from('addresses').update(updateData).eq('id', addressId);
             if (error) throw error;
             await fetchAddresses(user.id);
-            toast.success("Adres başarıyla güncellendi!", { id: toastId });
+            toast.success("Address successfully updated!", { id: toastId });
             return true;
         } catch (error) {
-            toast.error("Adres güncellenirken hata: " + error.message, { id: toastId });
+            toast.error("Error updating address: " + error.message, { id: toastId });
             return false;
         }
     };
 
     const deleteAddress = async (addressId) => {
-        if (!user) return toast.error("Adres silmek için giriş yapmalısınız.");
-        const toastId = toast.loading("Adresiniz siliniyor...");
+        if (!user) return toast.error("You must log in to delete an address.");
+        const toastId = toast.loading("Deleting your address...");
         try {
             const { error } = await supabase.from('addresses').delete().eq('id', addressId);
             if (error) throw error;
             setAddresses(prev => prev.filter(addr => addr.id !== addressId));
-            toast.success("Adres başarıyla silindi!", { id: toastId });
+            toast.success("Address successfully deleted!", { id: toastId });
         } catch (error) {
-            toast.error("Adres silinirken hata: " + error.message, { id: toastId });
+            toast.error("Error deleting address: " + error.message, { id: toastId });
         }
     };
 
@@ -359,11 +359,11 @@ export const AppContextProvider = (props) => {
     const addToCart = (product) => {
         const currentQuantityInCart = cartItems[product.id]?.quantity || 0;
         if (product.stock <= currentQuantityInCart) {
-            return toast.error("Üzgünüz, bu ürünün stoğu tükendi.");
+            return toast.error("Sorry, this product is out of stock.");
         }
 
         setCartItems(prev => ({ ...prev, [product.id]: { product, quantity: (prev[product.id]?.quantity || 0) + 1 } }));
-        toast.success(`${product.name} sepete eklendi!`);
+        toast.success(`${product.name} added to cart!`);
     };
 
     const updateCartQuantity = (productId, quantity) => {
@@ -372,7 +372,7 @@ export const AppContextProvider = (props) => {
             const product = newItems[productId]?.product;
 
             if (product && quantity > product.stock) {
-                toast.error(`Maksimum ${product.stock} adet ekleyebilirsiniz.`);
+                toast.error(`You can add a maximum of ${product.stock} units.`);
                 newItems[productId].quantity = product.stock;
                 return newItems;
             }
@@ -384,7 +384,7 @@ export const AppContextProvider = (props) => {
     };
 
     const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0);
-    // HATA DÜZELTMESİ: getCartAmount işlevini, OrderSummary.jsx dosyasının beklediği gibi subtotal, taxAmount ve totalAmount değerlerini döndürecek şekilde güncelliyoruz.
+    // FIX: getCartAmount function updated to return subtotal, taxAmount, and totalAmount.
     const getCartAmount = () => {
         const subtotal = Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0);
         const taxAmount = subtotal * CALIFORNIA_TAX_RATE;

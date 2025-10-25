@@ -1,10 +1,10 @@
 // components/OrderSummary.jsx
 
 'use client';
-// CALIFORNIA_TAX_RATE import edildi (Vergi hesaplaması için gerekli)
+import React, { useState } from "react";
+// FIX: Correctly import CALIFORNIA_TAX_RATE and useAppContext
 import { useAppContext, CALIFORNIA_TAX_RATE } from "@/context/AppContext";
 import Image from "next/image";
-import React, { useState } from "react";
 import toast from 'react-hot-toast';
 
 const OrderSummary = () => {
@@ -13,15 +13,15 @@ const OrderSummary = () => {
   const [coupon, setCoupon] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Vergi hesaplamasını al (Context'ten geliyor)
-  const { subtotal, taxAmount, totalAmount } = getCartAmount(); // totalAmount burada
+  // Get calculated values from context
+  const { subtotal, taxAmount, totalAmount } = getCartAmount(); 
 
-  // Silme onay popup kontrolü
+  // Deletion confirmation popup control
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const handleQuantityChange = (productId, newQuantity) => {
-    // Miktar 0'a düşerse onay popup'ını göster
+    // Show confirmation popup if quantity drops to 0
     if (newQuantity <= 0) {
       setPendingDelete(productId);
       setShowConfirmModal(true);
@@ -31,30 +31,30 @@ const OrderSummary = () => {
   };
 
   const handleDeleteConfirm = () => {
-    // Onay sonrası silme işlemi
+    // Deletion after confirmation
     const updatedCart = { ...cartItems };
     delete updatedCart[pendingDelete];
     setCartItems(updatedCart);
     setPendingDelete(null);
     setShowConfirmModal(false);
-    toast.success("Ürün sepetten kaldırıldı 🛒");
+    toast.success("Product removed from cart 🛒");
   };
 
   const handleDeleteCancel = () => {
-    // İptal işlemi
+    // Cancel operation
     setPendingDelete(null);
     setShowConfirmModal(false);
   };
 
-  // ✅ handlePlaceOrder güncellendi
+  // ✅ handlePlaceOrder updated
   const handlePlaceOrder = async () => {
     if (!user) {
-      toast.error("Ödeme yapmak için lütfen giriş yapın.");
+      toast.error("Please log in to proceed to checkout.");
       router.push('/auth');
       return;
     }
     if (!selectedAddress) {
-      toast.error("Lütfen bir teslimat adresi seçin!");
+      toast.error("Please select a shipping address!");
       return;
     }
     setLoading(true);
@@ -64,10 +64,10 @@ const OrderSummary = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: Object.values(cartItems), // Webhook'un ürünleri işlemesi için hala gönderiyoruz
+          items: Object.values(cartItems), 
           userId: user.id,
           addressId: selectedAddress,
-          totalAmount: totalAmount // ✅ Vergi dahil toplam tutarı API'ye gönderiyoruz
+          totalAmount: totalAmount 
         }),
       });
 
@@ -77,10 +77,10 @@ const OrderSummary = () => {
       if (url) {
         window.location.href = url;
       } else {
-        toast.error('Ödeme sayfasına yönlendirilemedi.');
+        toast.error('Could not redirect to payment page.');
       }
     } catch (error) {
-      toast.error(`Bir hata oluştu: ${error.message}`);
+      toast.error(`An error occurred: ${error.message}`);
       console.error(error);
     } finally {
       setLoading(false);
@@ -89,38 +89,38 @@ const OrderSummary = () => {
 
   return (
     <>
-      {/* Onay Popup */}
+      {/* Confirmation Popup */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Emin misiniz?</h2>
-            <p className="text-gray-600 mb-6">Bu ürünü sepetten kaldırmak istediğinize emin misiniz?</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Are you sure?</h2>
+            <p className="text-gray-600 mb-6">Are you sure you want to remove this product from the cart?</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={handleDeleteConfirm}
                 className="px-4 py-2 bg-[#be531c] text-white rounded-lg hover:bg-[#a64919] transition font-semibold"
               >
-                Evet
+                Yes
               </button>
               <button
                 onClick={handleDeleteCancel}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
               >
-                İptal
+                Cancel
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Ana Bileşen */}
+      {/* Main Component */}
       <div className="w-full md:w-[500px] lg:w-[600px] bg-white shadow-2xl rounded-3xl p-6 md:p-8 mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b pb-3">Checkout</h2>
 
-        {/* Sepet Ürünleri Listesi */}
+        {/* Cart Products List */}
         <div className="space-y-5 mb-6 max-h-[60vh] md:max-h-[500px] overflow-y-auto">
           {Object.keys(cartItems).length === 0 ? (
-            <p className="text-gray-500 text-center py-10">Sepetiniz boş.</p>
+            <p className="text-gray-500 text-center py-10">Your cart is empty.</p>
           ) : (
             Object.values(cartItems).map((item, idx) => (
               <div
@@ -158,29 +158,29 @@ const OrderSummary = () => {
           )}
         </div>
 
-        {/* Adres Seçimi */}
+        {/* Address Selection */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <label className="block text-gray-700 font-medium">Select Address</label>
-            <button onClick={() => router.push('/account/addresses')} className="text-sm text-[#be531c] hover:underline">Adres Ekle/Düzenle</button>
+            <button onClick={() => router.push('/account/addresses')} className="text-sm text-[#be531c] hover:underline">Add/Edit Address</button>
           </div>
           <select
             value={selectedAddress}
             onChange={(e) => setSelectedAddress(e.target.value)}
             className="w-full border rounded-lg p-3 bg-[#ffffff] focus:outline-none focus:ring-2 focus:ring-[#be531c]"
           >
-            <option value="" disabled>-- Adres seçin --</option>
+            <option value="" disabled>-- Select address --</option>
             {addresses.length > 0 ? (
               addresses.map(addr => (
                 <option key={addr.id} value={addr.id}>{`${addr.full_name} - ${addr.area}, ${addr.city}`}</option>
               ))
             ) : (
-              <option disabled>Kayıtlı adresiniz bulunmuyor.</option>
+              <option disabled>You have no saved addresses.</option>
             )}
           </select>
         </div>
 
-        {/* Kupon Kodu */}
+        {/* Coupon Code */}
         <div className="mb-6">
           <label className="block text-gray-700 font-medium mb-2">Coupon Code</label>
           <div className="flex gap-2">
@@ -197,7 +197,7 @@ const OrderSummary = () => {
           </div>
         </div>
 
-        {/* Özet Kısmı */}
+        {/* Summary */}
         <div className="mt-8 border-t pt-5 space-y-3">
             <div className="flex justify-between text-sm text-gray-500">
             <span>Items ({getCartCount()})</span>
@@ -216,13 +216,13 @@ const OrderSummary = () => {
             </div>
         </div>
 
-        {/* Ödeme Butonu */}
+        {/* Payment Button */}
         <button
           onClick={handlePlaceOrder}
           disabled={getCartCount() === 0 || !selectedAddress || loading}
           className="w-full mt-6 py-4 bg-gradient-to-r from-[#be531c] to-[#a64919] text-white font-semibold rounded-2xl hover:from-[#a64919] hover:to-[#8e3b13] transition shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Yönlendiriliyor...' : 'Şimdi Öde'}
+          {loading ? 'Redirecting...' : 'Pay Now'}
         </button>
       </div>
     </>

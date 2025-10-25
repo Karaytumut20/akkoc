@@ -7,17 +7,20 @@ import Link from "next/link";
 export default function InfoSection() {
   return (
     <div className="min-h-screen bg-[#ECE4DC] px-4 py-14 flex flex-col items-center">
-<div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-12 text-center items-start mt-0 md:mt-10">
+      <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-12 text-center items-start mt-0 md:mt-10">
+
         {/* ================= SHIPPING & RETURNS ================= */}
         <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-28 h-28 md:w-36 md:h-36 mb-4 flex-shrink-0">
-            <Image
-              src="/assets/Shipping.png"
-              alt="Shipping & Returns"
-              fill
-              priority
-              className="object-contain"
-            />
+          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
+            <div className="relative w-28 h-28 md:w-36 md:h-36">
+              <Image
+                src="/assets/Shipping.png"
+                alt="Shipping & Returns"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
           </div>
           <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
             Shipping & Returns
@@ -35,14 +38,16 @@ export default function InfoSection() {
 
         {/* ================= AT YOUR SERVICE ================= */}
         <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-28 h-28 md:w-36 md:h-36 mb-4 flex-shrink-0">
-            <Image
-              src="/assets/Service.png"
-              alt="At Your Service"
-              fill
-              priority
-              className="object-contain"
-            />
+          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
+            <div className="relative w-28 h-28 md:w-36 md:h-36">
+              <Image
+                src="/assets/Service.png"
+                alt="At Your Service"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
           </div>
           <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
             At Your Service
@@ -60,14 +65,16 @@ export default function InfoSection() {
 
         {/* ================= ICONIC DINNER SET ================= */}
         <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-36 h-36 md:w-44 md:h-44 mb-4 flex-shrink-0">
-            <Image
-              src="/assets/Iconic.png"
-              alt="Iconic Dinner Set"
-              fill
-              priority
-              className="object-contain"
-            />
+          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
+            <div className="relative w-36 h-36 md:w-44 md:h-44">
+              <Image
+                src="/assets/Iconic.png"
+                alt="Iconic Dinner Set"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
           </div>
           <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
             Iconic Dinner Set
