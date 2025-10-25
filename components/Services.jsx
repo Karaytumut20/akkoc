@@ -18,7 +18,7 @@ export default function Services() {
       description: "Our client care experts are always here to help.",
       linkText: "CONTACT US",
       image: "/assets/Service.png",
-      href: "/services/shipping-returns",
+      href: "/contact",
     },
     {
       title: "Iconic Dinner Set",
