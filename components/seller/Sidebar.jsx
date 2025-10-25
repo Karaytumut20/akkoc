@@ -1,9 +1,11 @@
+// components/seller/Sidebar.jsx
+
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiPlusSquare, FiList, FiBox, FiMessageSquare,FiImage,FiFilm } from 'react-icons/fi';
+import { FiPlusSquare, FiList, FiBox, FiMessageSquare, FiImage, FiFilm, FiSettings } from 'react-icons/fi'; // FiSettings eklendi
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
@@ -16,6 +18,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     { name: 'Reviews', path: '/seller/reviews', icon: <FiMessageSquare className="w-6 h-6" /> },
     { name: 'Carousel Management', path: '/seller/carousel-management', icon: <FiImage className="w-6 h-6" /> },
     { name: 'Hero Video', path: '/seller/hero-video', icon: <FiFilm className="w-6 h-6" /> },
+    { name: 'Settings', path: '/seller/settings', icon: <FiSettings className="w-6 h-6" /> }, // Yeni link eklendi
   ];
 
   return (

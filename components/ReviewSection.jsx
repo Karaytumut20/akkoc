@@ -9,17 +9,22 @@ import Link from 'next/link';
 import { FiCheckCircle, FiInfo, FiMessageSquare } from 'react-icons/fi';
 import StarRating from './StarRating';
 
+// --- ReviewsList Component ---
 const ReviewsList = ({ reviews }) => {
-  const approvedReviews = reviews.filter((r) => r.is_approved === true);
-  
+  // Filter only approved reviews
+  // 🔥 FIX: Check for boolean true OR string "true" OR number 1 for flexibility
+  const approvedReviews = reviews.filter((r) => r.is_approved === true || r.is_approved === 'true' || r.is_approved === 1);
+
+  // If no approved reviews, show a message
   if (approvedReviews.length === 0) {
     return (
       <p className="text-gray-500 text-center py-8">
-There are no approved reviews for this product yet.
+        There are no approved reviews for this product yet.
       </p>
     );
   }
 
+  // Render the list of approved reviews
   return (
     <div className="pt-4 space-y-4">
       {approvedReviews.map((review) => (
@@ -28,7 +33,9 @@ There are no approved reviews for this product yet.
           className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2"
         >
           <div className="flex items-center justify-between">
+            {/* Star rating for the review */}
             <StarRating rating={Number(review.rating)} size={20} />
+            {/* Display user identifier (email prefix or "User") */}
             <span
               className={`text-sm font-medium ${
                 review.user_id === supabase.auth.user()?.id
@@ -37,18 +44,19 @@ There are no approved reviews for this product yet.
               }`}
             >
               {review.user_id === supabase.auth.user()?.id
-                ?"You (Your Review)"
-
+                ? "You (Your Review)"
                 : review.users?.email
                 ? `${review.users.email.split('@')[0]}...`
                 : "User"}
             </span>
           </div>
+          {/* Review comment */}
           <p className="text-gray-800 text-base leading-relaxed">
             "{review.comment}"
           </p>
+          {/* Review timestamp */}
           <span className="text-xs text-gray-400">
-            {new Date(review.created_at).toLocaleDateString("tr-TR", {
+            {new Date(review.created_at).toLocaleDateString("en-US", {
               year: 'numeric',
               month: 'short',
               day: 'numeric'
@@ -60,8 +68,11 @@ There are no approved reviews for this product yet.
   );
 };
 
+
+// --- ReviewForm Component ---
+// (ReviewForm component remains the same as the previous English version)
 const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
-  const { user, router } = useAppContext();
+  const { user, router, reviewPermissionSetting } = useAppContext();
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,13 +81,12 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
     return (
       <p className="text-center text-gray-600 p-4 rounded-lg flex items-center gap-3 justify-center">
         <FiInfo className="w-5 h-5 text-gray-500 flex-shrink-0" />
-       to write a review{" "}
+        To write a review, please{" "}
         <button
           onClick={() => router.push("/auth")}
           className="text-[#be531c] font-semibold underline hover:no-underline"
         >
-        log in
-
+          log in
         </button>.
       </p>
     );
@@ -89,31 +99,30 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
         <div>
           <p className="font-semibold">Your review has been submitted!</p>
           <p className="text-sm">
-          You have already submitted a review for this product. Your review is under review.
-
+            It will be published after approval. You can only submit one review per product.
           </p>
         </div>
       </div>
     );
   }
 
-  if (!hasPurchased) {
-    return (
-      <div className="bg-yellow-50 text-yellow-700 p-4 rounded-lg flex items-center gap-3">
-        <FiInfo className="w-5 h-5 flex-shrink-0" />
-        <div>
-          <p className="font-semibold">Purchase Required</p>
-          <p className="text-sm">
-To write a review, you must have <strong>purchased</strong> the product 🛍️
-          </p>
+  if (reviewPermissionSetting === 'purchasers_only' && !hasPurchased) {
+      return (
+        <div className="bg-yellow-50 text-yellow-700 p-4 rounded-lg flex items-center gap-3">
+          <FiInfo className="w-5 h-5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold">Purchase Required</p>
+            <p className="text-sm">
+              According to store settings, only users who have <strong>purchased</strong> this product can leave a review 🛍️
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
   }
 
   const handleSubmitReview = async () => {
     if (userRating === 0 || userComment.trim().length < 10) {
-      toast.error("Please rate and write a review of at least 10 characters.");
+      toast.error("Please provide a rating and a comment (at least 10 characters).");
       return;
     }
 
@@ -125,18 +134,18 @@ To write a review, you must have <strong>purchased</strong> the product 🛍️
           user_id: user.id,
           rating: Number(userRating),
           comment: userComment,
-          is_approved: false,
+          is_approved: false, // Start as unapproved
         },
       ]);
 
       if (error) throw new Error(error.message);
 
-      toast.success("Your review has been submitted for review! Thank you.");
+      toast.success("Your review has been submitted for approval! Thank you.");
       setUserRating(0);
       setUserComment("");
       fetchReviews();
     } catch (e) {
-      toast.error("Review could not be submitted: " + e.message);
+      toast.error("Could not submit review: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -172,7 +181,7 @@ To write a review, you must have <strong>purchased</strong> the product 🛍️
       <textarea
         value={userComment}
         onChange={(e) => setUserComment(e.target.value)}
-        placeholder="Please rate and write a review of at least 10 characters."
+        placeholder="Share your thoughts about this product (min. 10 characters)..."
         rows={4}
         className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] outline-none resize-none mb-3 transition"
         maxLength={500}
@@ -187,16 +196,17 @@ To write a review, you must have <strong>purchased</strong> the product 🛍️
             : "bg-[#be531c] hover:bg-[#a64919] text-white shadow-md"
         }`}
       >
-{loading ? 'Sending...' : 'Submit Review'}
+        {loading ? 'Submitting...' : 'Submit Review'}
       </button>
     </div>
   );
 };
 
+// --- ReviewSection Component (Main container) ---
 const ReviewSection = ({ productId, reviews, userReview, hasPurchased, fetchReviews }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4">
-      {/* Yosrum Yazma Formu */}
+      {/* Review Form Area */}
       <div className="lg:order-1 bg-gray-50 p-6 rounded-xl shadow-inner border border-gray-200">
         <ReviewForm
           productId={productId}
@@ -206,13 +216,13 @@ const ReviewSection = ({ productId, reviews, userReview, hasPurchased, fetchRevi
         />
       </div>
 
-      {/* Yosrum Listesi */}
+      {/* Reviews List Area */}
       <div className="lg:order-2">
         <h3 className="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
           <FiMessageSquare className="w-6 h-6 text-[#be531c]" /> Customer Reviews
-
         </h3>
         <div className="max-h-[500px] overflow-y-auto pr-2">
+          {/* Ensure the 'reviews' prop is passed correctly */}
           <ReviewsList reviews={reviews} />
         </div>
       </div>

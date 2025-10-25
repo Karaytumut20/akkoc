@@ -15,27 +15,30 @@ const ReviewsPage = () => {
   const fetchReviewsAndUsers = useCallback(async () => {
     setLoading(true);
 
-    // 1. ADIM: Tüm yosrumları çek.
+    // 1. ADIM: Tüm yorumları çek.
     const { data: reviewsData, error: reviewsError } = await supabase
       .from('reviews')
-      .select('*, product:products(id, name)')
-      .order('created_at', { ascending: false });
+      .select('*, product:products(id, name)') // Ürün bilgilerini de al
+      .order('created_at', { ascending: false }); // En yeniden eskiye sırala
 
     if (reviewsError) {
-      toast.error('Reviews could not be retrieved: ' + reviewsError.message);
+      toast.error('Yorumlar alınamadı: ' + reviewsError.message);
       setLoading(false);
       return;
     }
 
+    // Yorum yoksa boş dizi ata ve yüklemeyi bitir
     if (!reviewsData || reviewsData.length === 0) {
       setReviewsWithUsers([]);
       setLoading(false);
       return;
     }
 
-    // 2. ADIM: Yosrumlardaki tüm benzersiz kullanıcı ID'lerini topla.
+    // 2. ADIM: Yorumlardaki tüm benzersiz kullanıcı ID'lerini topla.
+    // Null veya undefined ID'leri filtrele
     const userIds = [...new Set(reviewsData.map(review => review.user_id).filter(id => id))];
 
+    // Eğer geçerli kullanıcı ID'si yoksa, kullanıcı profili olmadan devam et
     if (userIds.length === 0) {
         setReviewsWithUsers(reviewsData.map(review => ({ ...review, user_profile: null })));
         setLoading(false);
@@ -45,56 +48,65 @@ const ReviewsPage = () => {
     // =================================================================================
     // 3. ADIM (GÜNCELLENDİ): 'auth.users' tablosuna erişmek için oluşturduğumuz
     // 'get_users_by_ids' RPC fonksiyonunu çağırıyoruz.
+    // Bu fonksiyon Supabase'de tanımlanmış olmalı.
     // =================================================================================
     const { data: usersData, error: usersError } = await supabase
       .rpc('get_users_by_ids', { user_ids: userIds });
 
     if (usersError) {
-      toast.error("User information could not be fetched via RPC: " + usersError.message);
+      toast.error("Kullanıcı bilgileri RPC ile alınamadı: " + usersError.message);
+      // Kullanıcı bilgileri alınamasa bile yorumları göster
       setReviewsWithUsers(reviewsData.map(review => ({ ...review, user_profile: null })));
       setLoading(false);
       return;
     }
 
-    // 4. ADIM: Yosrumlar ve kullanıcıları kod içinde birleştir.
+    // 4. ADIM: Yorumlar ve kullanıcı bilgilerini birleştir.
     const combinedData = reviewsData.map(review => {
+      // Her yorum için eşleşen kullanıcı profilini bul
       const userProfile = usersData.find(user => user.id === review.user_id) || null;
       return {
         ...review,
-        user_profile: userProfile
+        user_profile: userProfile // Yorum objesine kullanıcı profilini ekle
       };
     });
 
-    setReviewsWithUsers(combinedData);
-    setLoading(false);
-  }, []);
+    setReviewsWithUsers(combinedData); // Birleştirilmiş veriyi state'e ata
+    setLoading(false); // Yüklemeyi bitir
+  }, []); // Bağımlılık yok, sadece ilk yüklemede çalışır
 
+  // Component yüklendiğinde verileri çek
   useEffect(() => {
     fetchReviewsAndUsers();
   }, [fetchReviewsAndUsers]);
 
+  // Yorumu onaylama fonksiyonu
   const handleApprove = async (e, id) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Linke tıklamayı engelle
+    // Yorumun 'is_approved' değerini true yap
     const { error } = await supabase.from('reviews').update({ is_approved: true }).eq('id', id);
-    if (error) toast.error('An error occurred while approving the review.');
+    if (error) toast.error('Yorum onaylanırken bir hata oluştu.');
     else {
-      toast.success('Review approved!');
-      fetchReviewsAndUsers();
+      toast.success('Yorum onaylandı!');
+      fetchReviewsAndUsers(); // Listeyi güncelle
     }
   };
 
+  // Yorumu silme fonksiyonu
   const handleDelete = async (e, id) => {
-    e.stopPropagation();
-    if (confirm('Are you sure you want to delete this review?')) {
+    e.stopPropagation(); // Linke tıklamayı engelle
+    // Silme onayı al
+    if (confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
       const { error } = await supabase.from('reviews').delete().eq('id', id);
-      if (error) toast.error('An error occurred while deleting the review.');
+      if (error) toast.error('Yorum silinirken bir hata oluştu.');
       else {
-        toast.success('Review deleted!');
-        fetchReviewsAndUsers();
+        toast.success('Yorum silindi!');
+        fetchReviewsAndUsers(); // Listeyi güncelle
       }
     }
   };
 
+  // Yükleme sırasında Loading component'ını göster
   if (loading) {
     return <Loading />;
   }
@@ -102,24 +114,35 @@ const ReviewsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">
-Product Reviews Management
+        Ürün Yorumları Yönetimi
       </h1>
 
+      {/* Yorum yoksa mesaj göster */}
       {reviewsWithUsers.length === 0 ? (
-        <p className="text-center text-xl text-gray-500 py-10">No reviews yet.
-</p>
+        <p className="text-center text-xl text-gray-500 py-10">
+          Henüz hiç yorum yapılmamış.
+        </p>
       ) : (
+        // Yorumları listele
         <div className="space-y-4">
           {reviewsWithUsers.map((review) => (
-            <div key={review.id} className="block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-orange-300 transition-all duration-200 group">
+            <div
+              key={review.id}
+              // Tıklanabilir blok, hover efektleri
+              className="block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-orange-300 transition-all duration-200 group"
+            >
               <div className="flex flex-col sm:flex-row justify-between items-start">
                 <div className="flex-1">
+                  {/* Ürün Adı (Linkli) */}
                   <Link href={`/product/${review.product?.id}`} className="inline-block">
                     <p className="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition-colors flex items-center gap-2">
+                      {/* Ürün silinmişse veya bulunamazsa 'Silinmiş Ürün' yaz */}
                       {review.product ? review.product.name : 'Silinmiş Ürün'}
+                      {/* Hover'da dış link ikonu */}
                       <FiExternalLink className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors opacity-0 group-hover:opacity-100"/>
                     </p>
                   </Link>
+                  {/* Yıldız Değerlendirmesi */}
                   <div className="flex items-center mt-1">
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} className={`w-5 h-5 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -127,9 +150,10 @@ Product Reviews Management
                       </svg>
                     ))}
                   </div>
+                  {/* Yorum Metni */}
                   <p className="text-gray-600 mt-2">{review.comment}</p>
-                  
-                  {/* Veri artık 'review.user_profile' objesinden geliyor */}
+
+                  {/* Kullanıcı Bilgileri (RPC'den gelen user_profile objesinden) */}
                   <div className="mt-4 border-t pt-3 text-xs text-gray-500 space-y-1">
                     <p className="flex items-center gap-2">
                       <FiUser className="w-4 h-4 text-gray-400"/>
@@ -145,8 +169,10 @@ Product Reviews Management
                     </p>
                   </div>
                 </div>
-                
+
+                {/* Onay/Sil Butonları */}
                 <div className="flex items-center gap-3 mt-4 sm:mt-0 flex-shrink-0">
+                  {/* Yorum onaylıysa 'Onaylı' etiketi göster, değilse 'Onayla' butonu */}
                   {review.is_approved ? (
                     <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">Onaylı</span>
                   ) : (
@@ -154,6 +180,7 @@ Product Reviews Management
                       <FiCheck /> Onayla
                     </button>
                   )}
+                  {/* Sil Butonu */}
                   <button onClick={(e) => handleDelete(e, review.id)} className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 transition z-10">
                     <FiTrash2 /> Sil
                   </button>
