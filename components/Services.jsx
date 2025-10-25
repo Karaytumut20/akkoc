@@ -10,6 +10,7 @@ export default function Services() {
       description: "Complimentary shipping and returns on all orders.",
       linkText: "LEARN MORE",
       image: "/assets/Shipping.png",
+      
       href: "/services/shipping-returns",
     },
     {
