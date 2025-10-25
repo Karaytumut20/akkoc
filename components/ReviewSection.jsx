@@ -95,7 +95,8 @@ const ReviewsList = ({ reviews, currentUserId }) => {
             </div>
             
             <p className="text-gray-800 text-base leading-relaxed">
-              "{review.comment}"
+              {/* ⭐ REVİZYON: Yorum metninin başındaki ve sonundaki tırnak işaretleri kaldırıldı. */}
+              {review.comment}
             </p>
             
             {/* Detay Bilgileri (Alt Alt) */}
@@ -178,8 +179,10 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
     }
 
     const handleSubmitReview = async () => {
-      if (userRating === 0 || userComment.trim().length < 10) {
-        toast.error("Please provide a rating and a comment (at least 10 characters).");
+      // ⭐ REVİZYON: Yorum metni zorunluluğu tamamen kaldırıldı.
+      if (userRating === 0) { 
+        // ⭐ REVİZYON: Hata mesajı güncellendi.
+        toast.error("Please provide a rating."); 
         return;
       }
 
@@ -190,7 +193,7 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
             product_id: productId,
             user_id: user.id,
             rating: Number(userRating),
-            comment: userComment,
+            comment: userComment, // Boş olsa bile gönderilecek
             is_approved: false, // Start as unapproved
           },
         ]);
@@ -238,7 +241,8 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
         <textarea
           value={userComment}
           onChange={(e) => setUserComment(e.target.value)}
-          placeholder="Share your thoughts about this product (min. 10 characters)..."
+          // ⭐ REVİZYON: Placeholder güncellendi
+          placeholder="Share your thoughts about this product..."
           rows={4}
           className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] outline-none resize-none mb-3 transition"
           maxLength={500}
@@ -246,9 +250,10 @@ const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
         />
         <button
           onClick={handleSubmitReview}
-          disabled={loading || userRating === 0 || userComment.trim().length < 10}
+          // ⭐ REVİZYON: Sadece loading ve userRating kontrolü kaldı.
+          disabled={loading || userRating === 0}
           className={`w-full font-semibold py-3 rounded-lg transition duration-300 ${
-            loading || userRating === 0 || userComment.trim().length < 10
+            loading || userRating === 0
               ? "bg-gray-400 cursor-not-allowed text-gray-100"
               : "bg-[#be531c] hover:bg-[#a64919] text-white shadow-md"
           }`}
