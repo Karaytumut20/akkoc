@@ -81,7 +81,8 @@ Reviews
                 : 'bg-gray-100 text-gray-600'
             }`}
           >
-            {approvedReviews.length}
+            {/* ⭐ REVİZYON: Yorum sayısı sadece parantez içinde sayı olarak gösterildi. */}
+            ({approvedReviews.length})
           </span>
         </button>
       </div>

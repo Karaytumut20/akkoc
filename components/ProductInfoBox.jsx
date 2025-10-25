@@ -27,7 +27,7 @@ const ProductInfoBox = ({
     if (quantity < product.stock) {
       setQuantity((prev) => prev + 1);
     } else {
-toast.error('There is not enough stock for this product.');
+      toast.error('There is not enough stock for this product.');
     }
   };
 
@@ -51,6 +51,9 @@ toast.error('There is not enough stock for this product.');
       router.push(`/all-products`);
     }
   };
+    // Onaylı yorum sayısını hesapla
+    const approvedReviewCount = reviews.filter((r) => r.is_approved).length;
+
 
   return (
     <div className="bg-[#ECE4DC] p-4 sm:p-6 rounded-xl border border-[#ECE4DC]">
@@ -96,9 +99,9 @@ aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
           <span className="font-bold text-xl text-gray-800">{averageRating.toFixed(1)}</span>
         )}
         <StarRating rating={averageRating} size={24} />
+        {/* ⭐ REVİZYON: Yorum sayısı gösterimi sadece (sayı) olarak değiştirildi. */}
         <span className="text-gray-500 text-sm">
-          {reviews.filter((r) => r.is_approved).length}Review
-
+          ({approvedReviewCount})
         </span>
       </div>
 
