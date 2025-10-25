@@ -16,12 +16,27 @@ const maskEmail = (email) => {
   const localPart = parts[0];
   const domain = parts[1];
 
-  // Show first 2 characters, then mask the rest of the local part
+  // E-postanın yerel kısmının ilk 2 karakterini göster, gerisini maskele
   const visibleChars = Math.min(2, localPart.length);
   const maskedLocal = localPart.substring(0, visibleChars) + '***';
 
   return `${maskedLocal}@${domain}`;
 };
+
+// --- Utility Function: Phone Masking ---
+const maskPhone = (phone) => {
+  if (!phone || typeof phone !== 'string' || phone.length < 4) return 'Telefon Yok';
+  
+  const digits = phone.replace(/\D/g, ''); // Tüm non-digit karakterleri kaldır
+  if (digits.length < 4) return 'Telefon Yok';
+  
+  // Sadece son 4 haneyi göster (Örn: *** *** 1234)
+  const visibleChars = digits.slice(-4);
+  const maskedPrefix = '*** *** '; 
+
+  return `${maskedPrefix}${visibleChars}`;
+};
+
 
 // --- ReviewsList Component ---
 const ReviewsList = ({ reviews, currentUserId }) => {
@@ -40,15 +55,23 @@ const ReviewsList = ({ reviews, currentUserId }) => {
     <div className="pt-4 space-y-4">
       {approvedReviews.map((review) => {
         const isCurrentUserReview = review.user_id === currentUserId;
-        // Reviewer's full name or email's local part
-        const reviewerName = review.reviewer?.full_name || review.reviewer?.email?.split('@')[0] || "Anonim Kullanıcı";
-        // Masked email for display in details
-        const reviewerEmail = review.reviewer?.email ? maskEmail(review.reviewer.email) : "Email Yok";
-        // Phone number
-        const reviewerPhone = review.reviewer?.phone || "Telefon Yok";
         
-        // Final displayed identifier next to stars
-        const displayedIdentifier = isCurrentUserReview ? "Siz" : reviewerName;
+        const profile = review.reviewer;
+        
+        // 1. Full Name > 2. Display Name > 3. Email Local Part önceliklendirmesi (Kullanıcının isteği)
+        const fullName = profile?.full_name;
+        const displayName = profile?.display_name;
+        const emailLocalPart = profile?.email?.split('@')[0];
+
+        // Gösterilecek kimlik bilgisini belirleme: FULL NAME en yüksek önceliktedir.
+        const displayedIdentifier = isCurrentUserReview 
+            ? "Siz"
+            : fullName || displayName || emailLocalPart || "Anonim Kullanıcı";
+        
+        // Maskelenmiş iletişim bilgileri
+        const maskedEmail = profile?.email ? maskEmail(profile.email) : "Email Yok";
+        const maskedPhone = profile?.phone ? maskPhone(profile.phone) : "Telefon Yok";
+
 
         return (
           <div
@@ -63,7 +86,7 @@ const ReviewsList = ({ reviews, currentUserId }) => {
                   className={`text-base font-semibold ${
                     isCurrentUserReview ? "text-[#be531c]" : "text-gray-800"
                   }`}
-                  title={isCurrentUserReview ? "Bu sizin yorumunuz." : reviewerEmail}
+                  title={isCurrentUserReview ? "Bu sizin yorumunuz." : maskedEmail}
                 >
                   {displayedIdentifier}
                   {isCurrentUserReview && <span className='text-sm font-normal text-gray-500 ml-1'>(Yorumunuz)</span>}
@@ -78,11 +101,11 @@ const ReviewsList = ({ reviews, currentUserId }) => {
             {/* Detay Bilgileri (Alt Alt) */}
             <div className="text-xs text-gray-500 space-y-1 pt-2 border-t mt-1">
                 <p>
-                    <strong>E-posta:</strong> {reviewerEmail}
+                    <strong>E-posta:</strong> {maskedEmail}
                 </p>
-                {reviewerPhone !== "Telefon Yok" && (
+                {maskedPhone !== "Telefon Yok" && (
                      <p>
-                        <strong>Telefon:</strong> {reviewerPhone}
+                        <strong>Telefon:</strong> {maskedPhone}
                     </p>
                 )}
                  <p className="text-xs text-gray-400">

@@ -132,8 +132,9 @@ const Product = () => {
                       ...review,
                       reviewer: userProfile ? {
                           email: userProfile.email,
-                          // Tam adı metadata'dan veya email'in ilk kısmından al
-                          full_name: userProfile.raw_user_meta_data?.full_name || userProfile.email.split('@')[0], 
+                          // Display Name, Full Name ve Phone'u raw_user_meta_data'dan al
+                          display_name: userProfile.raw_user_meta_data?.display_name || null,
+                          full_name: userProfile.raw_user_meta_data?.full_name || null, // Full Name'i metadata'dan al
                           phone: userProfile.raw_user_meta_data?.phone || null,
                       } : null
                   };
