@@ -23,8 +23,7 @@ export const useAppContext = () => {
 // Key for the review permission setting in the database
 const REVIEW_PERMISSION_KEY = 'review_permission';
 // Define the tax rate within the context scope
-const CALIFORNIA_TAX_RATE = 0.08; // Example tax rate (8%)
-
+const CALIFORNIA_TAX_RATE = 0.0825;
 // Context Provider Component
 export const AppContextProvider = (props) => {
     // ---- STATE VARIABLES ----

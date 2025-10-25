@@ -8,8 +8,7 @@ import React, { useState } from "react";
 import toast from 'react-hot-toast';
 
 // 🔥 FIX: Define the constant here (or import from a dedicated constants file if you prefer)
-const CALIFORNIA_TAX_RATE = 0.08; // Example tax rate (8%)
-
+export const CALIFORNIA_TAX_RATE = 0.0825;
 const OrderSummary = () => {
   // Get necessary functions and state from the AppContext
   const { currency, cartItems, user, updateCartQuantity, getCartCount, getCartAmount, setCartItems, addresses, router } = useAppContext();

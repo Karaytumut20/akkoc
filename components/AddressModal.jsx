@@ -87,7 +87,7 @@ const AddressModal = ({ isOpen, onClose, addressToEdit }) => {
                             <FloatingLabelInput
                                 id="city"
                                 name="city"
-                                label="District / City"
+                                label="City"
                                 value={address.city}
                                 onChange={onChangeHandler}
                                 required
@@ -95,7 +95,7 @@ const AddressModal = ({ isOpen, onClose, addressToEdit }) => {
                             <FloatingLabelInput
                                 id="state"
                                 name="state"
-                                label="Province / State"
+                                label="State"
                                 value={address.state}
                                 onChange={onChangeHandler}
                                 required
@@ -104,7 +104,7 @@ const AddressModal = ({ isOpen, onClose, addressToEdit }) => {
                         <FloatingLabelInput
                             id="pincode"
                             name="pincode"
-                            label="Postal Code (Optional)"
+                            label="ZIP Code"
                             value={address.pincode}
                             onChange={onChangeHandler}
                         />
