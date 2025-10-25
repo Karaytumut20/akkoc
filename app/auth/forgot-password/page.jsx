@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient'; // Supabase client'ı import ediyoruz
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Password reset link has been sent to your email!');
+      toast.success('Password reset link sent to your email address!');
       router.push('/auth');
     }
   };

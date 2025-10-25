@@ -88,7 +88,7 @@ export default function KnotVideoHero() {
        {isClient && (videoLoading || !activeVideoUrl) && (
            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                {/* İsteğe bağlı yükleniyor göstergesi */}
-                <div className="text-white">Video Yükleniyor...</div>
+                <div className="text-white">Video Loading...</div>
            </div>
        )}
 

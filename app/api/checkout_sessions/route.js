@@ -15,20 +15,20 @@ return NextResponse.json({ error: { message: "Missing or invalid parameters: Car
     const line_items = [
       {
         price_data: {
-          // ✅ STRIPE_CURRENCY_CODE kullanıldı, varsayılan olarak 'usd'
+          // ✅ STRIPE_CURRENCY_CODE used, default to 'usd'
           currency: process.env.STRIPE_CURRENCY_CODE || 'usd',
           product_data: {
           name: 'Total Order Amount (Tax Included)',
             images: items[0]?.product?.image_urls?.[0] ? [items[0].product.image_urls[0]] : [],
           },
-          // unit_amount olarak vergi dahil toplam tutarı gönder (cent cinsinden)
+          // Send total amount including tax as unit_amount (in cents)
           unit_amount: Math.round(totalAmount * 100),
         },
         quantity: 1, // Tek bir genel kalem olduğu için miktar 1
       }
     ];
 
-    // Webhook'un ürün detaylarını işlemesi için simplifiedCart'ı metadata'da tutmaya devam ediyoruz
+    // We continue to store simplifiedCart in metadata for the webhook to process product details
     const simplifiedCart = items.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
@@ -50,7 +50,7 @@ return NextResponse.json({ error: { message: "Missing or invalid parameters: Car
     return NextResponse.json({ url: session.url });
 
   } catch (err) {
-    console.error("Stripe Checkout Session Hatası:", err.message);
+    console.error("Stripe Checkout Session Error:", err.message);
     const errorMessage = err.message || "An unknown Stripe error occurred.";
     return NextResponse.json({ error: { message: errorMessage } }, { status: 500 });
   }

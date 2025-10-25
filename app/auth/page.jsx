@@ -260,7 +260,7 @@ export default function AuthPage() {
   // Modals state
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [modalContentType, setModalContentType] = useState(null);
-  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false); // New state for Forgot Password modal
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false); 
 
   // Policy Modal handlers
   const openPolicyModal = useCallback((type) => {

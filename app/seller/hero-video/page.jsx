@@ -46,7 +46,7 @@ export default function HeroVideoManager() {
     }
 
     setUploading(true);
-    const toastId = toast.loading('Video yükleniyor...');
+    const toastId = toast.loading('Video loading...');
     const filePath = `public/${Date.now()}_${file.name.replace(/\s/g, '_')}`;
 
     try {

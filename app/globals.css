@@ -31,7 +31,7 @@
   }
 }
 
-/* Yüzen etiket için placeholder'ı şeffaf yapma */
+/* Making the placeholder transparent for floating label */
 @layer utilities {
   .placeholder-transparent::placeholder {
     color: transparent;
@@ -49,12 +49,12 @@ html, body, #__next {
 :root { color-scheme: light; }
 
 
-/* globals.css — SONUNA ekle: */
+/* globals.css - Add to END: */
 @layer utilities {
-  /* Beyaz background kullanan blokları ivory'e çevir */
+  /* Convert blocks using white background to ivory */
   .bg-white { background-color:  #ECE4DC !important; }
   .bg-gray-50 { background-color:  #ECE4DC !important; }
   .bg-gray-100 { background-color:  #ECE4DC !important; }
-  /* Kart/transparan istemediğin birkaç varyant daha ekleyebilirsin: */
+  /* You can add a few more variants where you don't want card/transparent: */
   .backdrop-blur-sm.bg-white\/80 { background-color:  #ECE4DC !important; } /* %80 */
 }
