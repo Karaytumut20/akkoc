@@ -9,8 +9,21 @@ import Link from 'next/link';
 import { FiCheckCircle, FiInfo, FiMessageSquare } from 'react-icons/fi';
 import StarRating from './StarRating';
 
+// --- Utility Function: Email Masking ---
+const maskEmail = (email) => {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return 'Anonim Kullanıcı';
+  const parts = email.split('@');
+  const localPart = parts[0];
+  const domain = parts[1];
+
+  // Show first 2 characters, then mask the rest of the local part
+  const visibleChars = Math.min(2, localPart.length);
+  const maskedLocal = localPart.substring(0, visibleChars) + '***';
+
+  return `${maskedLocal}@${domain}`;
+};
+
 // --- ReviewsList Component ---
-// 🔥 FIX: Added 'currentUserId' prop
 const ReviewsList = ({ reviews, currentUserId }) => {
   // Filter only approved reviews
   const approvedReviews = reviews.filter((r) => r.is_approved === true || r.is_approved === 'true' || r.is_approved === 1);
@@ -26,38 +39,61 @@ const ReviewsList = ({ reviews, currentUserId }) => {
   return (
     <div className="pt-4 space-y-4">
       {approvedReviews.map((review) => {
-        // 🔥 FIX: Compare review.user_id with the currentUserId prop
         const isCurrentUserReview = review.user_id === currentUserId;
+        // Reviewer's full name or email's local part
+        const reviewerName = review.reviewer?.full_name || review.reviewer?.email?.split('@')[0] || "Anonim Kullanıcı";
+        // Masked email for display in details
+        const reviewerEmail = review.reviewer?.email ? maskEmail(review.reviewer.email) : "Email Yok";
+        // Phone number
+        const reviewerPhone = review.reviewer?.phone || "Telefon Yok";
+        
+        // Final displayed identifier next to stars
+        const displayedIdentifier = isCurrentUserReview ? "Siz" : reviewerName;
 
         return (
           <div
             key={review.id}
             className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2"
           >
+            {/* YILDIZ ve KULLANICI BİLGİSİ YANYANA */}
             <div className="flex items-center justify-between">
-              <StarRating rating={Number(review.rating)} size={20} />
-              <span
-                className={`text-sm font-medium ${
-                  // 🔥 FIX: Use the boolean variable
-                  isCurrentUserReview
-                    ? "text-[#be531c]"
-                    : "text-gray-600"
-                }`}
-              >
-                {/* 🔥 FIX: Use boolean variable. Removed review.users check as it's not fetched here */}
-                {isCurrentUserReview ? "You (Your Review)" : "User"}
-              </span>
+              <div className="flex items-center gap-3">
+                <StarRating rating={Number(review.rating)} size={20} />
+                <span
+                  className={`text-base font-semibold ${
+                    isCurrentUserReview ? "text-[#be531c]" : "text-gray-800"
+                  }`}
+                  title={isCurrentUserReview ? "Bu sizin yorumunuz." : reviewerEmail}
+                >
+                  {displayedIdentifier}
+                  {isCurrentUserReview && <span className='text-sm font-normal text-gray-500 ml-1'>(Yorumunuz)</span>}
+                </span>
+              </div>
             </div>
+            
             <p className="text-gray-800 text-base leading-relaxed">
               "{review.comment}"
             </p>
-            <span className="text-xs text-gray-400">
-              {new Date(review.created_at).toLocaleDateString("en-US", {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}
-            </span>
+            
+            {/* Detay Bilgileri (Alt Alt) */}
+            <div className="text-xs text-gray-500 space-y-1 pt-2 border-t mt-1">
+                <p>
+                    <strong>E-posta:</strong> {reviewerEmail}
+                </p>
+                {reviewerPhone !== "Telefon Yok" && (
+                     <p>
+                        <strong>Telefon:</strong> {reviewerPhone}
+                    </p>
+                )}
+                 <p className="text-xs text-gray-400">
+                    <strong>Tarih:</strong> {new Date(review.created_at).toLocaleDateString("tr-TR", {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    })}
+                </p>
+            </div>
+            
           </div>
         );
       })}
@@ -67,7 +103,6 @@ const ReviewsList = ({ reviews, currentUserId }) => {
 
 
 // --- ReviewForm Component ---
-// (No changes needed in ReviewForm from the previous version)
 const ReviewForm = ({ productId, userReview, hasPurchased, fetchReviews }) => {
     const { user, router, reviewPermissionSetting } = useAppContext();
     const [userRating, setUserRating] = useState(0);
