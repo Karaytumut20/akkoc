@@ -18,6 +18,9 @@ export const useAppContext = () => {
     return context;
 };
 
+// HATA DÜZELTMESİ: Bu sabiti dışa aktararak OrderSummary.jsx dosyasının almasını sağlıyoruz.
+export const CALIFORNIA_TAX_RATE = 0.0725; // Örnek bir vergi oranı (%7.25)
+
 export const AppContextProvider = (props) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY || "$";
     const router = useRouter();
@@ -381,7 +384,13 @@ export const AppContextProvider = (props) => {
     };
 
     const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0);
-    const getCartAmount = () => Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    // HATA DÜZELTMESİ: getCartAmount işlevini, OrderSummary.jsx dosyasının beklediği gibi subtotal, taxAmount ve totalAmount değerlerini döndürecek şekilde güncelliyoruz.
+    const getCartAmount = () => {
+        const subtotal = Object.values(cartItems).reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const taxAmount = subtotal * CALIFORNIA_TAX_RATE;
+        const totalAmount = subtotal + taxAmount;
+        return { subtotal, taxAmount, totalAmount };
+    };
     
     useEffect(() => { fetchProducts(); }, []);
 
