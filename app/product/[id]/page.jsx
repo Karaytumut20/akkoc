@@ -1,3 +1,5 @@
+// app/product/[id]/page.jsx
+
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -148,11 +150,15 @@ toast.error("Log in to add to favorites.");
   };
 
   const handleAddToCart = () => {
-    addToCart(productData, quantity);
+    // Normal ekleme: 1 adet ve ürünün kendi fiyatı kullanılır.
+    addToCart(productData, quantity, null);
     setQuantity(1);
+    toast.success("Ürün sepete eklendi!");
   };
 
+  // ✅ DÜZELTME: Total paket fiyatını (price) 3. parametre olarak gönderiyoruz.
   const handleBulkAddToCart = (quantity, price, packName) => {
+    // Toplu alım: paketin toplam fiyatını 3. parametre olarak gönderir.
     addToCart(productData, quantity, price);
     toast.success(`${packName} kampanyası sepete eklendi!`);
   };
