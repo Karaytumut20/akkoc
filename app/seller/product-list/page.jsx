@@ -14,7 +14,7 @@ const BUCKET_NAME = 'product-images';
 
 // GÜNCELLENEN LIMITS
 const LIMITS = {
-  bigcard: 100,
+  bigcard: 100, // Varsayılan olarak 100 olarak bıraktım, isteğe göre düzenlenebilir.
   doublebigcardtext: 100,
   icons: 100,
   brandicon: 100,
@@ -40,6 +40,11 @@ export default function ProductsTable() {
     category_id: '',
     price: '',
     stock: '',
+    // ⭐ YENİ ALANLAR ⭐
+    price_2_pack: '',
+    price_3_pack: '',
+    price_4_pack: '',
+    // ⭐ SONU ⭐
     image_urls: [],
     bigcard: false,
     doublebigcard: false,
@@ -51,6 +56,7 @@ export default function ProductsTable() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    // price_X_pack alanlarının çekildiğini varsayıyoruz, Supabase tüm sütunları çekmeli.
     const { data, error } = await supabase
       .from('products')
       .select('*, categories ( name )')
@@ -183,16 +189,22 @@ export default function ProductsTable() {
   };
 
 
+  // ⭐ handleEditClick GÜNCELLENDİ ⭐
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
     setFilesToUpload([]);
     setFormData({
-      name: product.name || '', // Null veya undefined ise boş string ata
+      name: product.name || '', 
       description: product.description || '',
       category_id: product.category_id || '',
       price: product.price || '',
-      stock: product.stock !== null ? product.stock : '', // Null ise boş string ata
-      image_urls: Array.isArray(product.image_urls) ? product.image_urls : [], // Her zaman array olmasını sağla
+      stock: product.stock !== null ? product.stock : '', 
+      // ⭐ YENİ ALANLAR YÜKLENİYOR ⭐
+      price_2_pack: product.price_2_pack || '',
+      price_3_pack: product.price_3_pack || '',
+      price_4_pack: product.price_4_pack || '',
+      // ⭐ SONU ⭐
+      image_urls: Array.isArray(product.image_urls) ? product.image_urls : [], 
       bigcard: product.bigcard || false,
       doublebigcard: product.doublebigcard || false,
       doublebigcardtext: product.doublebigcardtext || false,
@@ -314,6 +326,7 @@ export default function ProductsTable() {
     // };
 
 
+  // ⭐ handleUpdate GÜNCELLENDİ ⭐
   const handleUpdate = async () => {
     if (!formData.name || !formData.category_id || formData.price === '' || formData.stock === '') {
       return toast.error('Lütfen isim, kategori, fiyat ve stok alanlarını doldurun.');
@@ -334,6 +347,11 @@ export default function ProductsTable() {
         category_id: formData.category_id,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
+        // ⭐ YENİ ALANLAR DAHİL EDİLDİ ⭐
+        price_2_pack: parseFloat(formData.price_2_pack) || 0,
+        price_3_pack: parseFloat(formData.price_3_pack) || 0,
+        price_4_pack: parseFloat(formData.price_4_pack) || 0,
+        // ⭐ SONU ⭐
         image_urls: finalImageUrls, // Sıralanmış ve yeni eklenen URL'ler
         bigcard: formData.bigcard,
         doublebigcard: formData.doublebigcard,
@@ -444,6 +462,13 @@ export default function ProductsTable() {
 
                   <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required step="0.01" />
                   <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+
+                  {/* ⭐ YENİ ALANLAR: Kampanya Fiyatları ⭐ */}
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4 pt-4 border-t border-indigo-200/50">Kampanya Fiyatları (Opsiyonel)</h3>
+                    <FloatingLabelInput id="edit-price-2" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-3" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-4" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
+                  {/* ⭐ SONU ⭐ */}
 
                   {/* === Görsel Yönetimi (Sıralanabilir) === */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner modal-image-container"> {/* Container için class */}
