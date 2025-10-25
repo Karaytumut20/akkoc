@@ -17,14 +17,14 @@ export default function Services() {
       description: "Our client care experts are always here to help.",
       linkText: "CONTACT US",
       image: "/assets/Service.png",
-      href: "/services/at-your-service",
+      href: "/services/shipping-returns",
     },
     {
       title: "Iconic Dinner Set",
       description: "Your purchase comes wrapped in our Dinner Set packaging.",
       linkText: "EXPLORE",
       image: "/assets/Iconic.png",
-      href: "/services/iconic-dinner-set",
+      href: "/services/shipping-returns",
     },
   ];
 
