@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react'; // useRef eklendi
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FiX, FiUploadCloud, FiMove } from 'react-icons/fi'; // FiMove eklendi
+import { FiX, FiUploadCloud, FiMove } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,14 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 import Loading from '@/components/Loading'; // Loading component'ını import et
 
 const BUCKET_NAME = 'product-images';
-const LIMITS = { bigcard: 1, doublebigcardtext: 4, icons: 6, brandicon: 4, homepage_carousel: 8 };
+// BÜTÜN LİMİTLER 100 OLARAK GÜNCELLENDİ
+const LIMITS = { 
+  bigcard: 100, 
+  doublebigcardtext: 100, 
+  icons: 100, 
+  brandicon: 100, 
+  homepage_carousel: 100 
+};
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -27,20 +34,20 @@ export default function AddProductPage() {
   const dragOverIndex = useRef(null); // Üzerine gelinen index
 
   const [formData, setFormData] = useState({
-    name: '', 
-    description: '', 
-    category_id: '', 
-    price: '', 
+    name: '',
+    description: '',
+    category_id: '',
+    price: '',
     stock: '',
     // ⭐ YENİ ALANLAR ⭐
     price_2_pack: '',
     price_3_pack: '',
     price_4_pack: '',
     // ⭐ SONU ⭐
-    bigcard: false, 
-    doublebigcardtext: false, 
-    icons: false, 
-    brandicon: false, 
+    bigcard: false,
+    doublebigcardtext: false,
+    icons: false,
+    brandicon: false,
     homepage_carousel: false,
   });
 
@@ -111,8 +118,8 @@ export default function AddProductPage() {
   };
 
   const handleAddDragEnter = (e, index) => {
-     const dropZone = e.target.closest('[draggable="true"]');
-     if (dragItemNode.current !== dropZone && draggedIndex.current !== index) {
+      const dropZone = e.target.closest('[draggable="true"]');
+      if (dragItemNode.current !== dropZone && draggedIndex.current !== index) {
         dragOverIndex.current = index;
 
         const reorderedFiles = [...filesToUpload];
@@ -122,7 +129,7 @@ export default function AddProductPage() {
         setFilesToUpload(reorderedFiles); // State'i güncelle
 
         draggedIndex.current = index; // Sürüklenen index'i güncelle
-     }
+      }
   };
 
   const handleAddDragEnd = () => {
@@ -137,42 +144,42 @@ export default function AddProductPage() {
     e.preventDefault(); // Drop işlemine izin ver
   };
 
-   // === Touch Event Handlers (Yüklenecek Görseller İçin) ===
-   const handleAddTouchStart = (e, index) => {
-       draggedIndex.current = index;
-       dragItemNode.current = e.target.closest('[draggable="true"]');
-   };
+    // === Touch Event Handlers (Yüklenecek Görseller İçin) ===
+    const handleAddTouchStart = (e, index) => {
+        draggedIndex.current = index;
+        dragItemNode.current = e.target.closest('[draggable="true"]');
+    };
 
-   const handleAddTouchMove = (e) => {
-       if (draggedIndex.current === null || !dragItemNode.current) return;
-       e.preventDefault(); // Sayfa kaymasını engelle
+    const handleAddTouchMove = (e) => {
+        if (draggedIndex.current === null || !dragItemNode.current) return;
+        e.preventDefault(); // Sayfa kaymasını engelle
 
-       const touchLocation = e.touches[0];
-       const elementOver = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
-       const dropZone = elementOver?.closest('[draggable="true"]');
+        const touchLocation = e.touches[0];
+        const elementOver = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
+        const dropZone = elementOver?.closest('[draggable="true"]');
 
-       // Sadece yükleme alanındaki draggable elemanları dikkate al
-       if (dropZone && dropZone.closest('.upload-preview-container')?.contains(dropZone)) {
-           const overIndexAttr = dropZone.getAttribute('data-index');
-           if (overIndexAttr !== null) {
-               const overIndex = parseInt(overIndexAttr, 10);
-               if (overIndex !== draggedIndex.current) {
-                   dragOverIndex.current = overIndex;
+        // Sadece yükleme alanındaki draggable elemanları dikkate al
+        if (dropZone && dropZone.closest('.upload-preview-container')?.contains(dropZone)) {
+            const overIndexAttr = dropZone.getAttribute('data-index');
+            if (overIndexAttr !== null) {
+                const overIndex = parseInt(overIndexAttr, 10);
+                if (overIndex !== draggedIndex.current) {
+                    dragOverIndex.current = overIndex;
 
-                   const reorderedFiles = [...filesToUpload];
-                   const [movedItem] = reorderedFiles.splice(draggedIndex.current, 1);
-                   reorderedFiles.splice(overIndex, 0, movedItem);
+                    const reorderedFiles = [...filesToUpload];
+                    const [movedItem] = reorderedFiles.splice(draggedIndex.current, 1);
+                    reorderedFiles.splice(overIndex, 0, movedItem);
 
-                   setFilesToUpload(reorderedFiles); // State'i güncelle
-                   draggedIndex.current = overIndex; // Sürüklenen index'i güncelle
-               }
-           }
-       }
-   };
+                    setFilesToUpload(reorderedFiles); // State'i güncelle
+                    draggedIndex.current = overIndex; // Sürüklenen index'i güncelle
+                }
+            }
+        }
+    };
 
-   const handleAddTouchEnd = () => {
-       handleAddDragEnd(); // Aynı ref temizleme mantığı
-   };
+    const handleAddTouchEnd = () => {
+        handleAddDragEnd(); // Aynı ref temizleme mantığı
+    };
 
 
   // Seçilen ve sıralanmış dosyaları yükle
@@ -210,7 +217,7 @@ export default function AddProductPage() {
     if (!formData.name || !formData.category_id || formData.price === '' || formData.stock === '') {
       return toast.error('Lütfen isim, kategori, fiyat ve stok alanlarını doldurun.');
     }
-     if (filesToUpload.length === 0) {
+      if (filesToUpload.length === 0) {
       return toast.error('Lütfen en az bir görsel yükleyin.');
     }
 
@@ -220,14 +227,14 @@ export default function AddProductPage() {
     // Sıralanmış dosyaları yükle
     const uploadedUrls = await uploadFiles();
 
-     if (uploadedUrls.length !== filesToUpload.length) {
-         toast.error('Bazı görseller yüklenemediği için ürün eklenemedi.', { id: toastId });
-         setActionLoading(false);
-         // Başarısız yüklemeler için önizlemeleri temizlememek iyi olabilir, kullanıcı tekrar deneyebilir.
-         return;
-     }
+      if (uploadedUrls.length !== filesToUpload.length) {
+          toast.error('Bazı görseller yüklenemediği için ürün eklenemedi.', { id: toastId });
+          setActionLoading(false);
+          // Başarısız yüklemeler için önizlemeleri temizlememek iyi olabilir, kullanıcı tekrar deneyebilir.
+          return;
+      }
 
-     // Eğer tüm yüklemeler başarılıysa ürünü ekle
+      // Eğer tüm yüklemeler başarılıysa ürünü ekle
     const { error: insertError } = await supabase
       .from('products')
       .insert([{
@@ -256,18 +263,20 @@ export default function AddProductPage() {
     } else {
       toast.error('Veritabanına ekleme hatası: ' + insertError.message, { id: toastId });
       // Veritabanı hatası durumunda yüklenen görselleri silmeyi düşünebilirsin (opsiyonel ama önerilir)
-       if (uploadedUrls.length > 0) {
-           const filePathsToRemove = uploadedUrls.map(url => {
-               try {
-                   const urlParts = new URL(url);
-                   return urlParts.pathname.split('/').slice(6).join('/');
-               } catch { return null; }
-           }).filter(path => path);
-           if (filePathsToRemove.length > 0) {
+        if (uploadedUrls.length > 0) {
+            const filePathsToRemove = uploadedUrls.map(url => {
+                try {
+                    const urlParts = new URL(url);
+                    // Supabase public URL yapısına göre path'i doğru ayıklama
+                    // "/storage/v1/object/public/BUCKET_NAME/path/to/file.jpg"
+                    return urlParts.pathname.split('/').slice(6).join('/');
+                } catch { return null; }
+            }).filter(path => path);
+            if (filePathsToRemove.length > 0) {
               await supabase.storage.from(BUCKET_NAME).remove(filePathsToRemove);
               console.log("DB hatası nedeniyle yüklenen görseller Storage'dan silindi.");
-           }
-       }
+            }
+        }
     }
     setActionLoading(false);
   };
@@ -276,26 +285,34 @@ export default function AddProductPage() {
     <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">Yeni Ürün Ekle</h1>
       <form onSubmit={handleAddProduct} className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg space-y-8">
-        {/* Form Alanları */}
-        <FloatingLabelInput id="name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} required />
-        <FloatingLabelInput as="textarea" id="description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
-        <select name="category_id" value={formData.category_id} onChange={handleFormChange} required className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
-          <option value="" disabled>Kategori Seç</option>
-          {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-        </select>
-        <FloatingLabelInput id="price" name="price" type="number" label="Fiyat (₺)" value={formData.price} onChange={handleFormChange} required step="0.01" />
-        <FloatingLabelInput id="stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+        
+        {/* Temel Bilgiler */}
+        <div className="space-y-6">
+          <h3 className="font-bold text-xl text-gray-700 border-b pb-2">Temel Ürün Bilgileri</h3>
+          <FloatingLabelInput id="name" name="name" label="Ürün Adı" value={formData.name} onChange={handleFormChange} required />
+          <FloatingLabelInput as="textarea" id="description" name="description" label="Açıklama" value={formData.description} onChange={handleFormChange} />
+          <select name="category_id" value={formData.category_id} onChange={handleFormChange} required className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <option value="" disabled>Kategori Seç</option>
+            {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+          </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FloatingLabelInput id="price" name="price" type="number" label="Fiyat (₺)" value={formData.price} onChange={handleFormChange} required step="0.01" />
+            <FloatingLabelInput id="stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
+          </div>
+        </div>
 
-        {/* ⭐ YENİ ALANLAR: Kampanya Fiyatları ⭐ */}
-        <h3 className="font-bold text-lg text-indigo-700 mb-4 pt-4 border-t border-indigo-200/50">Kampanya Fiyatları (Opsiyonel)</h3>
-        <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
-        <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
-        <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
-        {/* ⭐ SONU ⭐ */}
+
+        {/* Kampanya Fiyatları */}
+        <div className="space-y-6 border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-inner">
+          <h3 className="font-bold text-xl text-indigo-700 border-b pb-2">Paket/Kampanya Fiyatları (Opsiyonel)</h3>
+          <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
+        </div>
 
         {/* Görsel Yükleme ve Sıralama Alanı */}
-        <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner upload-preview-container"> {/* Container için class */}
-          <h3 className="font-bold text-lg text-indigo-700 mb-4">Görsel Yükle (Sıralamak için sürükleyin)</h3>
+        <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-lg upload-preview-container"> {/* Container için class */}
+          <h3 className="font-bold text-xl text-indigo-700 mb-4 border-b pb-2">Görsel Yükle & Sırala</h3>
           <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-100/50 transition">
             <FiUploadCloud className="w-8 h-8 text-indigo-500" />
             <p className="text-sm text-indigo-600">Sürükle bırak veya tıkla (Çoklu seçim)</p>
@@ -303,8 +320,8 @@ export default function AddProductPage() {
           <input id="file-upload" type="file" name="files" onChange={handleFileChange} multiple accept="image/*" className="hidden" />
 
           {filesToUpload.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold mb-3 text-gray-600">Yüklenecekler ({filesToUpload.length} adet) - İlk görsel kapak olacaktır.</h4>
+            <div className="mt-6">
+              <h4 className="text-md font-semibold mb-3 text-gray-700">Yüklenecekler ({filesToUpload.length} adet) - Sıralamak için sürükleyin/basılı tutun.</h4>
               <div className="flex flex-wrap gap-3">
                 {filesToUpload.map((fileObj, index) => (
                   <div
@@ -318,28 +335,29 @@ export default function AddProductPage() {
                     onTouchMove={handleAddTouchMove}
                     onTouchEnd={handleAddTouchEnd}
                     data-index={index}
-                    className="relative w-20 h-20 border-2 border-transparent hover:border-indigo-300 rounded-lg overflow-hidden shadow-md group cursor-move"
+                    className="relative w-20 h-20 border-2 border-transparent hover:border-indigo-500 rounded-lg overflow-hidden shadow-md group cursor-move transition-all"
                     style={{ touchAction: 'none' }} // Mobil scroll engelleme
                   >
                     <Image
                       src={fileObj.preview}
                       alt={`Preview ${index}`}
                       fill
+                      sizes="80px"
                       style={{ objectFit: "cover", pointerEvents: 'none' }} // pointerEvents none
                     />
-                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
-                        <FiMove className="text-white w-5 h-5 opacity-0 group-hover:opacity-80 transition-opacity" />
-                     </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
+                          <FiMove className="text-white w-5 h-5 opacity-0 group-hover:opacity-80 transition-opacity" />
+                      </div>
                     <button
                       type="button" // Formu submit etmesin
                       onClick={(e) => { e.stopPropagation(); handleRemoveNewImage(fileObj.preview); }}
-                      className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-700"
                       title="Kaldır"
                     >
                       <FiX className="w-3 h-3" />
                     </button>
-                    {/* Sıra Numarası (Opsiyonel) */}
-                    <span className="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                    {/* Sıra Numarası */}
+                    <span className="absolute bottom-1 left-1 bg-indigo-600 bg-opacity-90 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                       {index + 1}
                     </span>
                   </div>
@@ -350,32 +368,32 @@ export default function AddProductPage() {
         </div>
 
         {/* Vitrin Ayarları */}
-        <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner">
-          <h3 className="font-bold text-lg text-indigo-700 mb-4">Vitrin Ayarları</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-inner">
+          <h3 className="font-bold text-xl text-indigo-700 mb-4 border-b pb-2">Vitrin Ayarları (Limitler: {LIMITS.bigcard})</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm sm:text-base">
             {Object.entries(LIMITS).map(([key, value]) => (
-              <label key={key} className="flex items-center gap-2">
+              <label key={key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-indigo-100/50 transition">
                 <input
                     type="checkbox"
                     name={key}
                     checked={!!formData[key]} // Undefined ise false olsun
                     onChange={handleFormChange}
-                    className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500"
-                 />
-                {key} (Max: {value})
+                    className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                  />
+                <span className="capitalize text-gray-700">{key.replace(/_/g, ' ')}</span>
               </label>
             ))}
           </div>
         </div>
 
         {/* Ekle Butonu */}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-8 flex justify-end gap-3">
           <button
             type="submit"
             disabled={actionLoading}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            {actionLoading ? 'Ekleniyor...' : 'Ürünü Ekle'}
+            {actionLoading ? <Loading className="text-white h-5 w-5" /> : 'Ürünü Ekle'}
           </button>
         </div>
       </form>

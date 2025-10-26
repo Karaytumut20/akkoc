@@ -71,7 +71,7 @@ const HomeProducts = () => {
               onClick={() => router.push("/all-products")}
               className="px-10 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
           >
-              Tüm Ürünleri Gör
+             View All Products
           </button>
         </div>
       )}
