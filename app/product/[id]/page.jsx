@@ -1,3 +1,5 @@
+// app/product/[id]/page.jsx
+
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -64,7 +66,7 @@ const Product = () => {
       // Fetch product information including category and bulk prices
       const { data: productInfo, error: productError } = await supabase
         .from("products")
-        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack") // Select related category name and bulk prices
+        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack, price_5_pack, price_6_pack, price_7_pack, price_8_pack, price_9_pack, price_10_pack, price_11_pack") // 11'li pakete kadar güncellendi
         .eq("id", id) // Filter by product ID
         .single(); // Expect only one result
 
@@ -262,11 +264,20 @@ const Product = () => {
   if (loading || !productData) return <Loading />;
 
   // Prepare available bulk buy packs based on stock and defined prices
+  // ⭐ 11'li pakete kadar güncellenen kısım ⭐
   const availablePacks = [
     { quantity: 2, price: productData.price_2_pack, name: "2 Piece Package" },
     { quantity: 3, price: productData.price_3_pack, name: "3 Piece Package" },
     { quantity: 4, price: productData.price_4_pack, name: "4 Piece Package" },
+    { quantity: 5, price: productData.price_5_pack, name: "5 Piece Package" },
+    { quantity: 6, price: productData.price_6_pack, name: "6 Piece Package" },
+    { quantity: 7, price: productData.price_7_pack, name: "7 Piece Package" },
+    { quantity: 8, price: productData.price_8_pack, name: "8 Piece Package" },
+    { quantity: 9, price: productData.price_9_pack, name: "9 Piece Package" },
+    { quantity: 10, price: productData.price_10_pack, name: "10 Piece Package" },
+    { quantity: 11, price: productData.price_11_pack, name: "11 Piece Package" },
   ].filter(pack => pack.price > 0 && pack.quantity <= productData.stock); // Only show valid packs with stock
+  // ⭐ SONU ⭐
 
   // Props to pass down to child components
   const sharedProps = {

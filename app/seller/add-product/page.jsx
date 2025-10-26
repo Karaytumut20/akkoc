@@ -39,10 +39,17 @@ export default function AddProductPage() {
     category_id: '',
     price: '',
     stock: '',
-    // ⭐ YENİ ALANLAR ⭐
+    // ⭐ YENİ ALANLAR - 11'li pakete kadar güncellendi ⭐
     price_2_pack: '',
     price_3_pack: '',
     price_4_pack: '',
+    price_5_pack: '', // YENİ
+    price_6_pack: '', // YENİ
+    price_7_pack: '', // YENİ
+    price_8_pack: '', // YENİ
+    price_9_pack: '', // YENİ
+    price_10_pack: '', // YENİ
+    price_11_pack: '', // YENİ
     // ⭐ SONU ⭐
     bigcard: false,
     doublebigcardtext: false,
@@ -243,10 +250,17 @@ export default function AddProductPage() {
         category_id: formData.category_id,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        // ⭐ YENİ ALANLAR DAHİL EDİLDİ ⭐
+        // ⭐ YENİ ALANLAR DAHİL EDİLDİ (2'den 11'e kadar) ⭐
         price_2_pack: parseFloat(formData.price_2_pack) || 0,
         price_3_pack: parseFloat(formData.price_3_pack) || 0,
         price_4_pack: parseFloat(formData.price_4_pack) || 0,
+        price_5_pack: parseFloat(formData.price_5_pack) || 0, // YENİ
+        price_6_pack: parseFloat(formData.price_6_pack) || 0, // YENİ
+        price_7_pack: parseFloat(formData.price_7_pack) || 0, // YENİ
+        price_8_pack: parseFloat(formData.price_8_pack) || 0, // YENİ
+        price_9_pack: parseFloat(formData.price_9_pack) || 0, // YENİ
+        price_10_pack: parseFloat(formData.price_10_pack) || 0, // YENİ
+        price_11_pack: parseFloat(formData.price_11_pack) || 0, // YENİ
         // ⭐ SONU ⭐
         image_urls: uploadedUrls, // Yüklenen ve sıralanmış URL'ler
         bigcard: formData.bigcard,
@@ -303,12 +317,23 @@ export default function AddProductPage() {
 
 
         {/* Kampanya Fiyatları */}
+        {/* ⭐ 11'li pakete kadar güncellenen kısım ⭐ */}
         <div className="space-y-6 border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-inner">
           <h3 className="font-bold text-xl text-indigo-700 border-b pb-2">Paket/Kampanya Fiyatları (Opsiyonel)</h3>
-          <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
-          <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
-          <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
+          {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(packSize => (
+             <FloatingLabelInput
+                key={packSize}
+                id={`price_${packSize}_pack`}
+                name={`price_${packSize}_pack`}
+                type="number"
+                label={`${packSize}'li Paket Fiyatı (₺)`}
+                value={formData[`price_${packSize}_pack`]}
+                onChange={handleFormChange}
+                step="0.01"
+              />
+          ))}
         </div>
+        {/* ⭐ SONU ⭐ */}
 
         {/* Görsel Yükleme ve Sıralama Alanı */}
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-lg upload-preview-container"> {/* Container için class */}
