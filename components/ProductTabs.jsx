@@ -24,7 +24,8 @@ const ProductTabs = ({
         <h2 className="font-semibold text-xl text-gray-900 mb-2 tracking-wide">
 Product Description
         </h2>
-        <p className="text-gray-700 leading-relaxed text-base">
+        {/* DÜZELTME: whitespace-pre-wrap sınıfı, metindeki satır sonlarını korur */}
+        <p className="text-gray-700 leading-relaxed text-base whitespace-pre-wrap">
           {product.description || "There is no description available for this product."}
         </p>
       </div>
@@ -81,8 +82,7 @@ Reviews
                 : 'bg-gray-100 text-gray-600'
             }`}
           >
-            {/* ⭐ REVİZYON: Yorum sayısı sadece parantez içinde sayı olarak gösterildi. */}
-            ({approvedReviews.length})
+            {approvedReviews.length}
           </span>
         </button>
       </div>
