@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
-import { FiMove, FiTrash2, FiPlusSquare, FiSave } from 'react-icons/fi';
+// Yeni ikonlar: FiChevronUp, FiChevronDown eklendi
+import { FiTrash2, FiPlusSquare, FiSave, FiChevronUp, FiChevronDown } from 'react-icons/fi'; 
 import Loading from '@/components/Loading';
 import Image from 'next/image';
 import { getSafeImageUrl } from '@/lib/utils';
@@ -18,10 +19,8 @@ export default function HomeProductsManager() {
   const [availableProducts, setAvailableProducts] = useState([]); // Anasayfaya eklenebilecek tüm ürünler
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // Drag & Drop için durumlar
-  const draggedIndex = useRef(null);
-  const dragOverIndex = useRef(null);
+  
+  // Drag & Drop kaldırıldığı için ref'ler temizlendi.
 
   // --- Veri Çekme Fonksiyonları ---
 
@@ -78,38 +77,28 @@ export default function HomeProductsManager() {
     fetchData();
   }, [fetchData]);
 
-  // --- Sıralama Mantığı (Drag & Drop) ---
+  // --- YENİ SIRALAMA MANTIKLARI (UP/DOWN BUTONLARI) ---
 
-  const handleDragStart = (e, index) => {
-    draggedIndex.current = index;
-    // e.target.closest('[draggable="true"]').style.opacity = '0.5'; // Görsel feedback
-  };
+  const handleMove = (index, direction) => {
+    // Yön (direction) -1: yukarı, 1: aşağı
+    const newIndex = index + direction;
 
-  const handleDragEnter = (e, index) => {
-    if (draggedIndex.current === null || draggedIndex.current === index) return;
+    // Sınır kontrolü
+    if (newIndex < 0 || newIndex >= homeProducts.length) {
+      return;
+    }
 
-    dragOverIndex.current = index;
+    // Ürünlerin kopyasını oluştur
+    const newProducts = [...homeProducts];
+    
+    // Öğeleri yer değiştir
+    [newProducts[index], newProducts[newIndex]] = [newProducts[newIndex], newProducts[index]];
 
-    const reordered = [...homeProducts];
-    const [movedItem] = reordered.splice(draggedIndex.current, 1);
-    reordered.splice(index, 0, movedItem);
-
-    setHomeProducts(reordered); // Anlık görsel güncelleme
-    draggedIndex.current = index; // Yeni sürüklenen index'i güncelle
+    // State'i güncelle
+    setHomeProducts(newProducts);
+    toast.success('Sıralama yerel olarak değiştirildi. Kaydetmeyi unutmayın!', { duration: 1000 });
   };
   
-  const handleDragEnd = () => {
-    // const draggedElement = document.querySelector(`[data-index="${draggedIndex.current}"]`);
-    // if (draggedElement) draggedElement.style.opacity = '1'; 
-    draggedIndex.current = null;
-    dragOverIndex.current = null;
-    toast.success('Sıralama değiştirildi. Kaydetmeyi unutmayın!', { duration: 1500 });
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault(); // Drop işlemine izin ver
-  };
-
   // --- Aksiyon Fonksiyonları ---
 
   // Sıralamayı Veritabanına Kaydet
@@ -145,7 +134,7 @@ export default function HomeProductsManager() {
     setSaving(true);
     const toastId = toast.loading('Ürün anasayfadan kaldırılıyor...');
 
-    // home_display_order'ı 0 yapıyoruz (NULL yapınca sıralamayı tekrar çekmek zorlaşır)
+    // home_display_order'ı 0 yapıyoruz 
     const { error } = await supabase
       .from('products')
       .update({ [ORDER_COLUMN]: 0 }) 
@@ -206,7 +195,7 @@ export default function HomeProductsManager() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* --- 1. Anasayfa Ürünleri ve Sıralama --- */}
+        {/* --- 1. Anasayfa Ürünleri ve Sıralama (BUTONLU TASARIM) --- */}
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 h-fit">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
             Anasayfa Ürün Sıralaması ({homeProducts.length} adet)
@@ -216,20 +205,17 @@ export default function HomeProductsManager() {
               Anasayfada gösterilecek ürün seçilmemiş.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 home-products-sort-container"> 
               {homeProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnter={(e) => handleDragEnter(e, index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={handleDragOver}
                   data-index={index}
-                  className="relative flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-orange-50 cursor-move transition-all group"
+                  // Mobilde dikey yerleşim ve butonların genişlemesi için sınıflar ayarlandı.
+                  className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-orange-50 transition-all group"
                 >
-                  <div className="flex items-center gap-3">
-                    <FiMove className="w-5 h-5 text-gray-500 flex-shrink-0 opacity-0 group-hover:opacity-100" />
+                  
+                  {/* Sol Kısım: Sıra, Görsel ve İsim */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto pb-3 sm:pb-0">
                     <span className="font-bold text-lg text-orange-600">{index + 1}.</span>
                     <Image
                       src={getSafeImageUrl(product.image_urls)}
@@ -240,14 +226,40 @@ export default function HomeProductsManager() {
                     />
                     <p className="font-medium text-gray-800 truncate">{product.name}</p>
                   </div>
-                  <button
-                    onClick={() => handleRemoveFromHome(product.id)}
-                    disabled={saving}
-                    className="flex-shrink-0 p-2 text-red-600 hover:bg-red-100 rounded-full transition disabled:opacity-50"
-                    title="Anasayfadan Kaldır"
-                  >
-                    <FiTrash2 className="w-5 h-5" />
-                  </button>
+                  
+                  {/* Sağ Kısım: Butonlar */}
+                  <div className="flex items-center gap-2 pt-3 sm:pt-0 border-t border-gray-200 sm:border-t-0 w-full sm:w-auto justify-end">
+                    
+                    {/* Yukarı Taşı Butonu */}
+                    <button
+                      onClick={() => handleMove(index, -1)}
+                      disabled={index === 0 || saving}
+                      className="flex-1 sm:flex-none p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed border border-indigo-200"
+                      title="Yukarı Taşı"
+                    >
+                      <FiChevronUp className="w-5 h-5 mx-auto" />
+                    </button>
+                    
+                    {/* Aşağı Taşı Butonu */}
+                    <button
+                      onClick={() => handleMove(index, 1)}
+                      disabled={index === homeProducts.length - 1 || saving}
+                      className="flex-1 sm:flex-none p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed border border-indigo-200"
+                      title="Aşağı Taşı"
+                    >
+                      <FiChevronDown className="w-5 h-5 mx-auto" />
+                    </button>
+                    
+                    {/* Kaldır Butonu (Mobilde Görünür) */}
+                    <button
+                      onClick={() => handleRemoveFromHome(product.id)}
+                      disabled={saving}
+                      className="flex-1 sm:flex-none p-2 text-red-600 hover:bg-red-100 rounded-lg transition disabled:opacity-50 border border-red-200"
+                      title="Anasayfadan Kaldır"
+                    >
+                      <FiTrash2 className="w-5 h-5 mx-auto" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -264,7 +276,7 @@ export default function HomeProductsManager() {
               Eklenebilecek başka ürün bulunmuyor.
             </p>
           ) : (
-            <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2"> 
               {availableProducts.map((product) => (
                 <div
                   key={product.id}
