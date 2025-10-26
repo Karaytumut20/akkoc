@@ -86,7 +86,7 @@ const CategoryAdd = () => {
 
   // JSX Render
   return (
-    <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center mt-20">
       {/* Yeni Kategori Ekleme Formu */}
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg mb-8 transition hover-shadow-2xl">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">Yeni Kategori Ekle</h2>
