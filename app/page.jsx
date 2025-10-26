@@ -13,6 +13,7 @@ import VideoBar from "@/components/VideoBar";
 import Footer from "@/components/Footer";
 import HomepageCarousel from "@/components/HomepageCarousel";
 import HomeCarousel from "@/components/HomeCarousel";
+import Bigcard from "@/components/Bigcard";
 
 const Home = () => {
   return (
@@ -23,6 +24,8 @@ const Home = () => {
       <CategoryPicture/>
         <HomeProducts />
         {/* <DoubleBigCard/> Kullanımı kaldırıldı */}
+                <Bigcard/>
+
         <Services/>
         <ShopNow/>
         <DoubleBigCardText/>

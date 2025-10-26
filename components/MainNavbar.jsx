@@ -258,7 +258,7 @@ Log Out
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Ürün Ara..."
+              placeholder="Search product..."
               autoFocus
               className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
                 isSticky
