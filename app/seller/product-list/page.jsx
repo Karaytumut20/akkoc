@@ -11,6 +11,7 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput';
 import Loading from '@/components/Loading'; // Loading component'ını import ettik
 
 const BUCKET_NAME = 'product-images';
+const HOME_ORDER_COLUMN = 'home_display_order'; // Yeni ana sayfa sıralama sütunu
 
 // GÜNCELLENEN LIMITS
 const LIMITS = {
@@ -40,17 +41,19 @@ export default function ProductsTable() {
     category_id: '',
     price: '',
     stock: '',
-    // ⭐ YENİ ALANLAR - 11'li pakete kadar güncellendi ⭐
+    // ⭐ YENİ ALANLAR (11'Lİ PAKETE KADAR) ⭐
     price_2_pack: '',
     price_3_pack: '',
     price_4_pack: '',
-    price_5_pack: '', // YENİ
-    price_6_pack: '', // YENİ
-    price_7_pack: '', // YENİ
-    price_8_pack: '', // YENİ
-    price_9_pack: '', // YENİ
-    price_10_pack: '', // YENİ
-    price_11_pack: '', // YENİ
+    price_5_pack: '',
+    price_6_pack: '',
+    price_7_pack: '',
+    price_8_pack: '',
+    price_9_pack: '',
+    price_10_pack: '',
+    price_11_pack: '',
+    // ⭐ ANA SAYFA SIRALAMA ALANI ⭐
+    [HOME_ORDER_COLUMN]: '',
     // ⭐ SONU ⭐
     image_urls: [],
     bigcard: false,
@@ -200,23 +203,28 @@ export default function ProductsTable() {
   const handleEditClick = (product) => {
     setEditingProduct(product.id);
     setFilesToUpload([]);
+    // home_display_order sütununu okuyoruz
+    const homeOrderValue = product[HOME_ORDER_COLUMN] !== null && product[HOME_ORDER_COLUMN] !== 0 ? product[HOME_ORDER_COLUMN] : '';
+    
     setFormData({
       name: product.name || '', 
       description: product.description || '',
       category_id: product.category_id || '',
       price: product.price || '',
       stock: product.stock !== null ? product.stock : '', 
-      // ⭐ YENİ ALANLAR YÜKLENİYOR (2'den 11'e kadar) ⭐
+      // ⭐ YENİ ALANLAR YÜKLENİYOR (11'Lİ PAKETE KADAR) ⭐
       price_2_pack: product.price_2_pack || '',
       price_3_pack: product.price_3_pack || '',
       price_4_pack: product.price_4_pack || '',
-      price_5_pack: product.price_5_pack || '', // YENİ
-      price_6_pack: product.price_6_pack || '', // YENİ
-      price_7_pack: product.price_7_pack || '', // YENİ
-      price_8_pack: product.price_8_pack || '', // YENİ
-      price_9_pack: product.price_9_pack || '', // YENİ
-      price_10_pack: product.price_10_pack || '', // YENİ
-      price_11_pack: product.price_11_pack || '', // YENİ
+      price_5_pack: product.price_5_pack || '',
+      price_6_pack: product.price_6_pack || '',
+      price_7_pack: product.price_7_pack || '',
+      price_8_pack: product.price_8_pack || '',
+      price_9_pack: product.price_9_pack || '',
+      price_10_pack: product.price_10_pack || '',
+      price_11_pack: product.price_11_pack || '',
+      // ⭐ ANA SAYFA SIRALAMA ALANI OKUNUYOR ⭐
+      [HOME_ORDER_COLUMN]: homeOrderValue,
       // ⭐ SONU ⭐
       image_urls: Array.isArray(product.image_urls) ? product.image_urls : [], 
       bigcard: product.bigcard || false,
@@ -346,6 +354,16 @@ export default function ProductsTable() {
       return toast.error('Lütfen isim, kategori, fiyat ve stok alanlarını doldurun.');
     }
 
+    // Home display order değerini kontrol et ve formatla
+    let homeOrderValue = 0;
+    const inputOrder = formData[HOME_ORDER_COLUMN];
+    if (inputOrder !== '' && !isNaN(inputOrder)) {
+        homeOrderValue = parseInt(inputOrder);
+        if (homeOrderValue < 1) homeOrderValue = 0;
+    } else {
+        homeOrderValue = 0;
+    }
+
     setActionLoading(true);
     const toastId = toast.loading('Ürün güncelleniyor...');
 
@@ -361,17 +379,19 @@ export default function ProductsTable() {
         category_id: formData.category_id,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        // ⭐ YENİ ALANLAR DAHİL EDİLDİ (2'den 11'e kadar) ⭐
+        // ⭐ YENİ ALANLAR DAHİL EDİLDİ (11'Lİ PAKETE KADAR) ⭐
         price_2_pack: parseFloat(formData.price_2_pack) || 0,
         price_3_pack: parseFloat(formData.price_3_pack) || 0,
         price_4_pack: parseFloat(formData.price_4_pack) || 0,
-        price_5_pack: parseFloat(formData.price_5_pack) || 0, // YENİ
-        price_6_pack: parseFloat(formData.price_6_pack) || 0, // YENİ
-        price_7_pack: parseFloat(formData.price_7_pack) || 0, // YENİ
-        price_8_pack: parseFloat(formData.price_8_pack) || 0, // YENİ
-        price_9_pack: parseFloat(formData.price_9_pack) || 0, // YENİ
-        price_10_pack: parseFloat(formData.price_10_pack) || 0, // YENİ
-        price_11_pack: parseFloat(formData.price_11_pack) || 0, // YENİ
+        price_5_pack: parseFloat(formData.price_5_pack) || 0,
+        price_6_pack: parseFloat(formData.price_6_pack) || 0,
+        price_7_pack: parseFloat(formData.price_7_pack) || 0,
+        price_8_pack: parseFloat(formData.price_8_pack) || 0,
+        price_9_pack: parseFloat(formData.price_9_pack) || 0,
+        price_10_pack: parseFloat(formData.price_10_pack) || 0,
+        price_11_pack: parseFloat(formData.price_11_pack) || 0,
+        // ⭐ ANA SAYFA SIRALAMA ALANI DAHİL EDİLDİ ⭐
+        [HOME_ORDER_COLUMN]: homeOrderValue,
         // ⭐ SONU ⭐
         image_urls: finalImageUrls, // Sıralanmış ve yeni eklenen URL'ler
         bigcard: formData.bigcard,
@@ -444,6 +464,8 @@ export default function ProductsTable() {
                       {product.icons && <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full mr-1">Icons</span>}
                       {product.brandicon && <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full mr-1">Brand</span>}
                       {product.homepage_carousel && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Carousel</span>}
+                      {/* ANA SAYFA SIRALAMA ETİKETİ */}
+                      {product[HOME_ORDER_COLUMN] > 0 && <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">Home: {product[HOME_ORDER_COLUMN]}</span>}
                     </td>
                     <td className="px-4 py-3 sm:px-6 text-center space-y-1 sm:space-x-2 sm:space-y-0 flex flex-col sm:flex-row justify-center items-center">
                       <button onClick={() => handleEditClick(product)} className="w-full sm:w-auto px-3 py-1 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition shadow-md flex items-center justify-center gap-1">
@@ -484,25 +506,35 @@ export default function ProductsTable() {
                   <FloatingLabelInput id="edit-price" name="price" type="number" label="Fiyat" value={formData.price} onChange={handleFormChange} required step="0.01" />
                   <FloatingLabelInput id="edit-stock" name="stock" type="number" label="Stok Adedi" value={formData.stock} onChange={handleFormChange} required />
 
-                  {/* ⭐ YENİ ALANLAR: Kampanya Fiyatları (2'den 11'e kadar) ⭐ */}
-                  <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner mt-6">
-                    <h3 className="font-bold text-lg text-indigo-700 mb-4 pb-2 border-b border-indigo-200/50">Kampanya Fiyatları (Opsiyonel)</h3>
-                    <div className="space-y-4">
-                        {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(packSize => (
-                            <FloatingLabelInput
-                                key={packSize}
-                                id={`edit-price-${packSize}`}
-                                name={`price_${packSize}_pack`}
-                                type="number"
-                                label={`${packSize}'li Paket Fiyatı (₺)`}
-                                value={formData[`price_${packSize}_pack`]}
-                                onChange={handleFormChange}
-                                step="0.01"
-                            />
-                        ))}
-                    </div>
-                  </div>
+                  {/* ⭐ YENİ ALANLAR: Kampanya Fiyatları (GÜNCELLENDİ) ⭐ */}
+                    <h3 className="font-bold text-lg text-indigo-700 mb-4 pt-4 border-t border-indigo-200/50">Kampanya Fiyatları (Opsiyonel)</h3>
+                    <FloatingLabelInput id="edit-price-2" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-3" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-4" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-5" name="price_5_pack" type="number" label="5'li Paket Fiyatı (₺)" value={formData.price_5_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-6" name="price_6_pack" type="number" label="6'lı Paket Fiyatı (₺)" value={formData.price_6_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-7" name="price_7_pack" type="number" label="7'li Paket Fiyatı (₺)" value={formData.price_7_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-8" name="price_8_pack" type="number" label="8'li Paket Fiyatı (₺)" value={formData.price_8_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-9" name="price_9_pack" type="number" label="9'lu Paket Fiyatı (₺)" value={formData.price_9_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-10" name="price_10_pack" type="number" label="10'lu Paket Fiyatı (₺)" value={formData.price_10_pack} onChange={handleFormChange} step="0.01" />
+                    <FloatingLabelInput id="edit-price-11" name="price_11_pack" type="number" label="11'li Paket Fiyatı (₺)" value={formData.price_11_pack} onChange={handleFormChange} step="0.01" />
                   {/* ⭐ SONU ⭐ */}
+
+                   {/* ANA SAYFA SIRALAMASI */}
+                    <div className="space-y-6 border border-orange-200/50 bg-orange-50/50 rounded-xl p-4 shadow-inner">
+                        <h3 className="font-bold text-lg text-orange-700 border-b pb-2">Anasayfa Sıralaması (Opsiyonel)</h3>
+                        <FloatingLabelInput 
+                            id="edit-home_display_order" 
+                            name={HOME_ORDER_COLUMN} 
+                            type="number" 
+                            label="Ana Sayfadaki Sıra Numarası (1'den büyük bir sayı girin)" 
+                            value={formData[HOME_ORDER_COLUMN]} 
+                            onChange={handleFormChange}
+                            placeholder="Boş bırakılırsa ana sayfada gözükmez"
+                            min="0"
+                        />
+                         <p className="text-xs text-gray-600">Not: Ana sayfadaki sıralamayı daha kolay düzenlemek için "Homepage Products" menüsünü kullanın.</p>
+                    </div>
 
                   {/* === Görsel Yönetimi (Sıralanabilir) === */}
                   <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-4 shadow-inner modal-image-container"> {/* Container için class */}
@@ -520,7 +552,7 @@ export default function ProductsTable() {
                           onTouchMove={handleModalTouchMove}
                           onTouchEnd={handleModalTouchEnd}
                           data-index={index} // Touch için index
-                          className="relative w-20 h-20 border-2 border-transparent hover:border-indigo-300 rounded-lg overflow-hidden shadow-md group cursor-move"
+                          className="relative w-20 h-20 border-2 border-transparent hover:border-indigo-500 rounded-lg overflow-hidden shadow-md group cursor-move"
                           style={{ touchAction: 'none' }} // Mobil scroll engelleme
                         >
                           <Image src={url} alt={`Görsel ${index + 1}`} fill style={{objectFit: 'cover', pointerEvents: 'none'}} /> {/* pointerEvents none önemli */}

@@ -21,6 +21,9 @@ const LIMITS = {
   homepage_carousel: 100 
 };
 
+// Yeni ana sayfa sıralama sütunu
+const HOME_ORDER_COLUMN = 'home_display_order';
+
 export default function AddProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
@@ -39,17 +42,19 @@ export default function AddProductPage() {
     category_id: '',
     price: '',
     stock: '',
-    // ⭐ YENİ ALANLAR - 11'li pakete kadar güncellendi ⭐
+    // ⭐ YENİ ALANLAR (11'Lİ PAKETE KADAR) ⭐
     price_2_pack: '',
     price_3_pack: '',
     price_4_pack: '',
-    price_5_pack: '', // YENİ
-    price_6_pack: '', // YENİ
-    price_7_pack: '', // YENİ
-    price_8_pack: '', // YENİ
-    price_9_pack: '', // YENİ
-    price_10_pack: '', // YENİ
-    price_11_pack: '', // YENİ
+    price_5_pack: '',
+    price_6_pack: '',
+    price_7_pack: '',
+    price_8_pack: '',
+    price_9_pack: '',
+    price_10_pack: '',
+    price_11_pack: '',
+    // ⭐ ANA SAYFA SIRALAMA ALANI ⭐
+    [HOME_ORDER_COLUMN]: '', 
     // ⭐ SONU ⭐
     bigcard: false,
     doublebigcardtext: false,
@@ -228,6 +233,19 @@ export default function AddProductPage() {
       return toast.error('Lütfen en az bir görsel yükleyin.');
     }
 
+    // Home display order değerini kontrol et ve formatla
+    let homeOrderValue = 0;
+    const inputOrder = formData[HOME_ORDER_COLUMN];
+    if (inputOrder !== '' && !isNaN(inputOrder)) {
+        homeOrderValue = parseInt(inputOrder);
+        // Eğer 1'den küçük bir değer girildiyse 0 olarak kabul et (gösterme)
+        if (homeOrderValue < 1) homeOrderValue = 0;
+    } else {
+        // Eğer alan boş bırakıldıysa, null yerine 0 olarak kaydet (gösterme)
+        homeOrderValue = 0;
+    }
+
+
     setActionLoading(true);
     const toastId = toast.loading('Ürün ekleniyor ve görseller yükleniyor...');
 
@@ -250,17 +268,19 @@ export default function AddProductPage() {
         category_id: formData.category_id,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        // ⭐ YENİ ALANLAR DAHİL EDİLDİ (2'den 11'e kadar) ⭐
+        // ⭐ YENİ ALANLAR (11'Lİ PAKETE KADAR) DAHİL EDİLDİ ⭐
         price_2_pack: parseFloat(formData.price_2_pack) || 0,
         price_3_pack: parseFloat(formData.price_3_pack) || 0,
         price_4_pack: parseFloat(formData.price_4_pack) || 0,
-        price_5_pack: parseFloat(formData.price_5_pack) || 0, // YENİ
-        price_6_pack: parseFloat(formData.price_6_pack) || 0, // YENİ
-        price_7_pack: parseFloat(formData.price_7_pack) || 0, // YENİ
-        price_8_pack: parseFloat(formData.price_8_pack) || 0, // YENİ
-        price_9_pack: parseFloat(formData.price_9_pack) || 0, // YENİ
-        price_10_pack: parseFloat(formData.price_10_pack) || 0, // YENİ
-        price_11_pack: parseFloat(formData.price_11_pack) || 0, // YENİ
+        price_5_pack: parseFloat(formData.price_5_pack) || 0,
+        price_6_pack: parseFloat(formData.price_6_pack) || 0,
+        price_7_pack: parseFloat(formData.price_7_pack) || 0,
+        price_8_pack: parseFloat(formData.price_8_pack) || 0,
+        price_9_pack: parseFloat(formData.price_9_pack) || 0,
+        price_10_pack: parseFloat(formData.price_10_pack) || 0,
+        price_11_pack: parseFloat(formData.price_11_pack) || 0,
+        // ⭐ ANA SAYFA SIRALAMA ALANI DAHİL EDİLDİ ⭐
+        [HOME_ORDER_COLUMN]: homeOrderValue,
         // ⭐ SONU ⭐
         image_urls: uploadedUrls, // Yüklenen ve sıralanmış URL'ler
         bigcard: formData.bigcard,
@@ -316,24 +336,37 @@ export default function AddProductPage() {
         </div>
 
 
-        {/* Kampanya Fiyatları */}
-        {/* ⭐ 11'li pakete kadar güncellenen kısım ⭐ */}
+        {/* Kampanya Fiyatları (GÜNCELLENDİ) */}
         <div className="space-y-6 border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-inner">
           <h3 className="font-bold text-xl text-indigo-700 border-b pb-2">Paket/Kampanya Fiyatları (Opsiyonel)</h3>
-          {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(packSize => (
-             <FloatingLabelInput
-                key={packSize}
-                id={`price_${packSize}_pack`}
-                name={`price_${packSize}_pack`}
-                type="number"
-                label={`${packSize}'li Paket Fiyatı (₺)`}
-                value={formData[`price_${packSize}_pack`]}
-                onChange={handleFormChange}
-                step="0.01"
-              />
-          ))}
+          <FloatingLabelInput id="price_2_pack" name="price_2_pack" type="number" label="2'li Paket Fiyatı (₺)" value={formData.price_2_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_3_pack" name="price_3_pack" type="number" label="3'lü Paket Fiyatı (₺)" value={formData.price_3_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_4_pack" name="price_4_pack" type="number" label="4'lü Paket Fiyatı (₺)" value={formData.price_4_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_5_pack" name="price_5_pack" type="number" label="5'li Paket Fiyatı (₺)" value={formData.price_5_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_6_pack" name="price_6_pack" type="number" label="6'lı Paket Fiyatı (₺)" value={formData.price_6_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_7_pack" name="price_7_pack" type="number" label="7'li Paket Fiyatı (₺)" value={formData.price_7_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_8_pack" name="price_8_pack" type="number" label="8'li Paket Fiyatı (₺)" value={formData.price_8_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_9_pack" name="price_9_pack" type="number" label="9'lu Paket Fiyatı (₺)" value={formData.price_9_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_10_pack" name="price_10_pack" type="number" label="10'lu Paket Fiyatı (₺)" value={formData.price_10_pack} onChange={handleFormChange} step="0.01" />
+          <FloatingLabelInput id="price_11_pack" name="price_11_pack" type="number" label="11'li Paket Fiyatı (₺)" value={formData.price_11_pack} onChange={handleFormChange} step="0.01" />
         </div>
-        {/* ⭐ SONU ⭐ */}
+
+        {/* ANA SAYFA SIRALAMASI */}
+        <div className="space-y-6 border border-orange-200/50 bg-orange-50/50 rounded-xl p-6 shadow-inner">
+            <h3 className="font-bold text-xl text-orange-700 border-b pb-2">Anasayfa Sıralaması (Opsiyonel)</h3>
+            <FloatingLabelInput 
+                id="home_display_order" 
+                name={HOME_ORDER_COLUMN} 
+                type="number" 
+                label="Ana Sayfadaki Sıra Numarası (1'den büyük bir sayı girin)" 
+                value={formData[HOME_ORDER_COLUMN]} 
+                onChange={handleFormChange}
+                placeholder="Boş bırakırsanız ana sayfada gözükmez"
+                min="0"
+            />
+             <p className="text-xs text-gray-600">Not: Eğer bu alana 0'dan büyük bir sayı girerseniz, ürün otomatik olarak ana sayfada gösterilecek ürünler arasına eklenir. Sıralamayı değiştirmek için Yönetim Paneli'ndeki "Homepage Products" bölümünü kullanabilirsiniz.</p>
+        </div>
+
 
         {/* Görsel Yükleme ve Sıralama Alanı */}
         <div className="border border-indigo-200/50 bg-indigo-50/50 rounded-xl p-6 shadow-lg upload-preview-container"> {/* Container için class */}

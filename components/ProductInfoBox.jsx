@@ -24,20 +24,30 @@ const ProductInfoBox = ({
   const router = useRouter();
 
   const increaseQuantity = () => {
+    // Miktarı artırır, ancak stoktan fazla olamaz
     if (quantity < product.stock) {
       setQuantity((prev) => prev + 1);
     } else {
+      // Yeterli stok yoksa hata mesajı gösterir
       toast.error('There is not enough stock for this product.');
     }
   };
 
   const decreaseQuantity = () => {
+    // Miktarı azaltır, ancak 1'den az olamaz
     setQuantity((prev) => Math.max(1, prev - 1));
   };
 
   const getStockStatus = (stock) => {
-    if (stock > 10) return { text: 'In Stock', color: 'text-green-600', pulse: true };
-    if (stock > 0) return { text: `${stock} Adet Kaldı`, color: 'text-orange-600', pulse: false };
+    // Stok 4'ten büyükse 'In Stock' yazısını göster (Yeşil, Pulse efektli)
+    if (stock > 4) {
+      return { text: 'In Stock', color: 'text-green-600', pulse: true };
+    }
+    // Stok 1 ile 4 arasında ise kalan adedi göster (Turuncu, Pulse yok)
+    if (stock >= 1) {
+      return { text: `${stock} Adet Kaldı`, color: 'text-orange-600', pulse: false };
+    }
+    // Stok 0 ise 'Tükendi' yazısını göster (Kırmızı, Pulse yok)
     return { text: 'Tükendi', color: 'text-red-600', pulse: false };
   };
 

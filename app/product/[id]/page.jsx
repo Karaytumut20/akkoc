@@ -63,10 +63,10 @@ const Product = () => {
     if (!id) return; // Exit if no ID is present
     setLoading(true); // Start loading indicator
     try {
-      // Fetch product information including category and bulk prices
+      // Fetch product information including category and bulk prices (GÜNCELLENDİ)
       const { data: productInfo, error: productError } = await supabase
         .from("products")
-        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack, price_5_pack, price_6_pack, price_7_pack, price_8_pack, price_9_pack, price_10_pack, price_11_pack") // 11'li pakete kadar güncellendi
+        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack, price_5_pack, price_6_pack, price_7_pack, price_8_pack, price_9_pack, price_10_pack, price_11_pack") // Tüm paket fiyatlarını çek
         .eq("id", id) // Filter by product ID
         .single(); // Expect only one result
 
@@ -263,8 +263,7 @@ const Product = () => {
   // Show loading component if data is still loading or productData is null
   if (loading || !productData) return <Loading />;
 
-  // Prepare available bulk buy packs based on stock and defined prices
-  // ⭐ 11'li pakete kadar güncellenen kısım ⭐
+  // Prepare available bulk buy packs based on stock and defined prices (GÜNCELLENDİ)
   const availablePacks = [
     { quantity: 2, price: productData.price_2_pack, name: "2 Piece Package" },
     { quantity: 3, price: productData.price_3_pack, name: "3 Piece Package" },
@@ -277,7 +276,6 @@ const Product = () => {
     { quantity: 10, price: productData.price_10_pack, name: "10 Piece Package" },
     { quantity: 11, price: productData.price_11_pack, name: "11 Piece Package" },
   ].filter(pack => pack.price > 0 && pack.quantity <= productData.stock); // Only show valid packs with stock
-  // ⭐ SONU ⭐
 
   // Props to pass down to child components
   const sharedProps = {
@@ -354,7 +352,7 @@ const Product = () => {
   );
 };
 
-// --- Sub-Component: BulkBuyOptions ---
+// --- Sub-Component: BulkBuyOptions (DEĞİŞİKLİK YOK - availablePacks dizisini kullanır) ---
 const BulkBuyOptions = ({ availablePacks, handleBulkAddToCart, basePrice }) => {
   // Hide if no bulk options are available
   if (!availablePacks || availablePacks.length === 0) return null;

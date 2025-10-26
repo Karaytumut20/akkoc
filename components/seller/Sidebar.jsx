@@ -5,7 +5,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiPlusSquare, FiList, FiBox, FiMessageSquare, FiImage, FiFilm, FiSettings } from 'react-icons/fi'; // FiSettings eklendi
+// FiGrid ikonu eklendi
+import { FiPlusSquare, FiList, FiBox, FiMessageSquare, FiImage, FiFilm, FiSettings, FiGrid } from 'react-icons/fi'; 
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
@@ -14,6 +15,8 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     { name: 'Add Product', path: '/seller/add-product', icon: <FiPlusSquare className="w-6 h-6" /> },
     { name: 'Product List', path: '/seller/product-list', icon: <FiList className="w-6 h-6" /> },
     { name: 'Orders', path: '/seller/orders', icon: <FiBox className="w-6 h-6" /> },
+    // YENİ EKLENTİ: Anasayfa Ürünleri Yönetimi
+    { name: 'Homepage Products', path: '/seller/home-products-manager', icon: <FiGrid className="w-6 h-6" /> },
     { name: 'Category Add', path: '/seller/category-add', icon: <FiList className="w-6 h-6" /> },
     { name: 'Reviews', path: '/seller/reviews', icon: <FiMessageSquare className="w-6 h-6" /> },
     { name: 'Carousel Management', path: '/seller/carousel-management', icon: <FiImage className="w-6 h-6" /> },
