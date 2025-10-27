@@ -94,7 +94,7 @@ export default function KnotVideoHero() {
 
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] z-10"></div>
+      <div className="absolute inset-0 bg-black/30  z-10"></div>
 
       {/* Navbar */}
       <MainNavbar />
