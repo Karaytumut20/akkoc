@@ -1,3 +1,5 @@
+// app/api/checkout_sessions/route.js (İlgili kısımları güncelle)
+
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
@@ -5,34 +7,44 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { items, userId, addressId, totalAmount } = await req.json();
+    // === YENİ: couponCode'u request body'den al ===
+    const { items, userId, addressId, totalAmount, couponCode } = await req.json();
 
     if (!items || !userId || !addressId || typeof totalAmount !== 'number' || totalAmount <= 0) {
-return NextResponse.json({ error: { message: "Missing or invalid parameters: Cart, user, address ID, or valid total amount not provided." } }, { status: 400 });
+        return NextResponse.json({ error: { message: "Missing or invalid parameters: Cart, user, address ID, or valid total amount not provided." } }, { status: 400 });
     }
 
-    // Tek bir line_item oluştur
+    // Tek line_item mantığı aynı kalır
     const line_items = [
       {
         price_data: {
-          // ✅ STRIPE_CURRENCY_CODE used, default to 'usd'
           currency: process.env.STRIPE_CURRENCY_CODE || 'usd',
           product_data: {
-          name: 'Total Order Amount (Tax Included)',
+            name: `Total Order Amount (Tax Included${couponCode ? ` with coupon ${couponCode}` : ''})`, // Kuponu isme ekleyebiliriz (opsiyonel)
+            // İlk ürünün resmini kullanmaya devam et
             images: items[0]?.product?.image_urls?.[0] ? [items[0].product.image_urls[0]] : [],
           },
-          // Send total amount including tax as unit_amount (in cents)
-          unit_amount: Math.round(totalAmount * 100),
+          unit_amount: Math.round(totalAmount * 100), // İndirimli toplam tutarı gönder
         },
-        quantity: 1, // Tek bir genel kalem olduğu için miktar 1
+        quantity: 1,
       }
     ];
 
-    // We continue to store simplifiedCart in metadata for the webhook to process product details
+    // Sepet detayları metadata için aynı kalır
     const simplifiedCart = items.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
     }));
+
+    // === YENİ: Metadata'ya couponCode ekle ===
+    const metadata = {
+        userId,
+        addressId,
+        cartItems: JSON.stringify(simplifiedCart),
+    };
+    if (couponCode) {
+        metadata.couponCode = couponCode; // Eğer kupon varsa metadata'ya ekle
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -40,11 +52,7 @@ return NextResponse.json({ error: { message: "Missing or invalid parameters: Car
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_URL}/order-placed`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/cart`,
-      metadata: {
-        userId,
-        addressId,
-        cartItems: JSON.stringify(simplifiedCart),
-      },
+      metadata: metadata, // Güncellenmiş metadata'yı kullan
     });
 
     return NextResponse.json({ url: session.url });

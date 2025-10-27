@@ -1,12 +1,14 @@
-// app/api/webhook/route.js
+// app/api/webhook/route.js (İlgili kısımları güncelle)
 
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Stripe and Supabase on the server with secret keys
-//
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Supabase client'ını oluştururken service_role key kullanmak gerekebilir
+// çünkü RLS'i bypass edip kupon sayacını artırmamız gerekebilir.
+// Ya da kupon tablosuna özel bir RLS politikası tanımlanabilir.
+// Şimdilik anon key ile devam edelim, gerekirse değiştiririz.
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -16,8 +18,6 @@ export async function POST(req) {
 
   let event;
 
-  // 1. Webhook Signature Verification
-  //
   try {
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err) {
@@ -25,75 +25,62 @@ export async function POST(req) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // 2. Handle Successful Payment Event
-  //
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     
-    // Extract data from metadata
-    //
-    const { userId, addressId, cartItems } = session.metadata;
-    const simplifiedCart = JSON.parse(cartItems); // [{productId, quantity}]
-    const totalAmount = session.amount_total / 100;
+    // === YENİ: couponCode'u metadata'dan al ===
+    const { userId, addressId, cartItems, couponCode } = session.metadata; 
+    const simplifiedCart = JSON.parse(cartItems); 
+    const totalAmount = session.amount_total / 100; // Bu zaten indirimli tutar olmalı
 
     try {
-      // 3. Fetch address information (to be saved as JSON in the orders table)
-      //
-      const { data: addressData, error: addressError } = await supabase
+      // 3. Fetch address (Aynı kalır)
+       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
         .select('*')
         .eq('id', addressId)
         .single();
-      
       if (addressError) throw new Error(`Address not found: ${addressError.message}`);
 
-      // 4. Create a new order in the 'orders' table
-      //
-      // NOTE: Status can be set to a standardized English term like 'Processing' 
-      // or kept as is to match existing database logic.
+      // 4. Create order (Aynı kalır, totalAmount indirimli)
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([{ 
             user_id: userId, 
-            total_amount: totalAmount, 
+            total_amount: totalAmount, // İndirimli toplam tutarı kaydet
             address: addressData, 
-            status: 'Processing' // Changed status to English equivalent
+            status: 'Processing',
+            // === YENİ: Kullanılan kupon kodunu siparişe ekle (opsiyonel ama faydalı) ===
+            coupon_code_used: couponCode || null 
         }])
         .select()
         .single();
-      
       if (orderError) throw new Error(`Could not create order: ${orderError.message}`);
       
-      // 5. Fetch product details (price, stock)
-      //
+      // 5. Fetch product details (Aynı kalır)
       const productIds = simplifiedCart.map(item => item.productId);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('id, price, stock')
         .in('id', productIds);
-
       if (productsError) throw new Error(`Could not retrieve product details: ${productsError.message}`);
 
-      // 6. Create the order_items list and strictly use the price fetched from the DB
-      //
+      // 6. Create order_items (Aynı kalır - DB'deki orijinal fiyatı kullanır)
       const orderItems = simplifiedCart.map(item => {
         const product = productsData.find(p => p.id === item.productId);
-        // Use the price fetched from the database for security/accuracy
         return {
             order_id: orderData.id,
             product_id: item.productId,
             quantity: item.quantity,
-            price: product.price, 
+            price: product.price, // Orijinal ürün fiyatını kaydet
         };
       });
 
-      // 7. Insert into the order_items table
-      //
+      // 7. Insert order_items (Aynı kalır)
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
       if (itemsError) throw new Error(`Could not add order items: ${itemsError.message}`);
 
-      // 8. Update stocks
-      //
+      // 8. Update stocks (Aynı kalır)
       for (const item of orderItems) {
         const product = productsData.find(p => p.id === item.product_id);
         const newStock = product.stock - item.quantity;
@@ -102,6 +89,31 @@ export async function POST(req) {
           .update({ stock: newStock > 0 ? newStock : 0 })
           .eq('id', item.product_id);
       }
+
+      // === YENİ: Kupon kullanıldıysa sayacını artır ===
+      if (couponCode) {
+          const { error: couponUsageError } = await supabase.rpc('increment_coupon_usage', { 
+              coupon_code: couponCode 
+          });
+          // Supabase'de 'increment_coupon_usage' adında bir SQL fonksiyonu oluşturman gerekecek:
+          // CREATE OR REPLACE FUNCTION increment_coupon_usage(coupon_code TEXT)
+          // RETURNS void AS $$
+          // BEGIN
+          //   UPDATE coupons
+          //   SET usage_count = usage_count + 1
+          //   WHERE code = coupon_code;
+          // END;
+          // $$ LANGUAGE plpgsql;
+          // Bu fonksiyonu Supabase SQL Editor'de çalıştır.
+          
+          if (couponUsageError) {
+              // Hata loglanır ama işlem devam eder, sipariş zaten oluştu.
+              console.error(`Error incrementing coupon usage for ${couponCode}: ${couponUsageError.message}`);
+          } else {
+              console.log(`Usage count for coupon ${couponCode} incremented.`);
+          }
+      }
+      // ===============================================
       
       console.log(`Order ${orderData.id} created successfully.`);
 
@@ -111,7 +123,5 @@ export async function POST(req) {
     }
   }
 
-  // Return successful response to Stripe
-  //
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
 }
