@@ -1,65 +1,104 @@
-// app/api/checkout_sessions/route.js (İlgili kısımları güncelle)
+    // C:\Users\umut\akkoc\app\api\checkout_sessions\route.js
+// Stripe SDK Edge runtime'da çalışmaz, Node runtime zorunlu:
+export const runtime = 'nodejs';
+// Bu endpointler cache'lenmesin:
+export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    // === YENİ: couponCode'u request body'den al ===
     const { items, userId, addressId, totalAmount, couponCode } = await req.json();
 
-    if (!items || !userId || !addressId || typeof totalAmount !== 'number' || totalAmount <= 0) {
-        return NextResponse.json({ error: { message: "Missing or invalid parameters: Cart, user, address ID, or valid total amount not provided." } }, { status: 400 });
+    // 📌 Parametre doğrulama
+    if (!items || !userId || !addressId || typeof totalAmount !== "number" || totalAmount <= 0) {
+      return new NextResponse(
+        JSON.stringify({
+          error: {
+            message:
+              "Missing or invalid parameters: Cart, user, address ID, or valid total amount not provided.",
+          },
+        }),
+        {
+          status: 400,
+          headers: corsHeaders(),
+        }
+      );
     }
 
-    // Tek line_item mantığı aynı kalır
+    // 🧾 Stripe line_items oluştur
     const line_items = [
       {
         price_data: {
-          currency: process.env.STRIPE_CURRENCY_CODE || 'usd',
+          currency: process.env.STRIPE_CURRENCY_CODE || "usd",
           product_data: {
-            name: `Total Order Amount (Tax Included${couponCode ? ` with coupon ${couponCode}` : ''})`, // Kuponu isme ekleyebiliriz (opsiyonel)
-            // İlk ürünün resmini kullanmaya devam et
-            images: items[0]?.product?.image_urls?.[0] ? [items[0].product.image_urls[0]] : [],
+            name: `Total Order Amount (Tax Included${
+              couponCode ? ` with coupon ${couponCode}` : ""
+            })`,
+            images:
+              items[0]?.product?.image_urls?.[0] ?
+                [items[0].product.image_urls[0]] :
+                [],
           },
-          unit_amount: Math.round(totalAmount * 100), // İndirimli toplam tutarı gönder
+          unit_amount: Math.round(totalAmount * 100),
         },
         quantity: 1,
-      }
+      },
     ];
 
-    // Sepet detayları metadata için aynı kalır
-    const simplifiedCart = items.map(item => ({
-        productId: item.product.id,
-        quantity: item.quantity,
+    // 🛒 Sepeti metadata'ya çevir
+    const simplifiedCart = items.map((item) => ({
+      productId: item.product.id,
+      quantity: item.quantity,
     }));
 
-    // === YENİ: Metadata'ya couponCode ekle ===
     const metadata = {
-        userId,
-        addressId,
-        cartItems: JSON.stringify(simplifiedCart),
+      userId,
+      addressId,
+      cartItems: JSON.stringify(simplifiedCart),
     };
-    if (couponCode) {
-        metadata.couponCode = couponCode; // Eğer kupon varsa metadata'ya ekle
-    }
+    if (couponCode) metadata.couponCode = couponCode;
 
+    // 💳 Stripe Checkout Session oluştur
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: line_items,
-      mode: 'payment',
+      payment_method_types: ["card"],
+      line_items,
+      mode: "payment",
       success_url: `${process.env.NEXT_PUBLIC_URL}/order-placed`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/cart`,
-      metadata: metadata, // Güncellenmiş metadata'yı kullan
+      metadata,
     });
 
-    return NextResponse.json({ url: session.url });
-
+    // ✅ Başarılı yanıt — CORS header'lı
+    return new NextResponse(JSON.stringify({ url: session.url }), {
+      status: 200,
+      headers: corsHeaders(),
+    });
   } catch (err) {
     console.error("Stripe Checkout Session Error:", err.message);
-    const errorMessage = err.message || "An unknown Stripe error occurred.";
-    return NextResponse.json({ error: { message: errorMessage } }, { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: { message: err.message || "Unknown Stripe error" } }),
+      { status: 500, headers: corsHeaders() }
+    );
   }
+}
+
+// ✅ CORS preflight desteği
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(),
+  });
+}
+
+// 🌐 CORS header fonksiyonu
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "https://www.nestcome.com", // ⚠️ buraya kendi domainini yaz
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
 }
