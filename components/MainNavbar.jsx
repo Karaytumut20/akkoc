@@ -8,7 +8,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { assets } from "@/assets/assets";
 
-/* Icons */
+/* === ICONLAR === */
 const icons = {
   Menu: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>),
   Close: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>),
@@ -16,7 +16,7 @@ const icons = {
   ShoppingBag: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>),
 };
 
-/* Languages */
+/* === DİL LİSTESİ === */
 const LANGS = [
   { code: "en", label: "English" },
   { code: "tr", label: "Türkçe" },
@@ -28,29 +28,41 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* Translate helpers */
+/* === COOKIE YÖNETİMİ === */
+function getBaseDomain() {
+  const host = window.location.hostname;
+  return host.startsWith("www.") ? `.${host.replace("www.", "")}` : `.${host}`;
+}
+
 function readGoogTrans() {
   const m = typeof document !== "undefined" && document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
   return m ? decodeURIComponent(m[1]) : null;
 }
+
 function setGoogTransCookie(from, to) {
   const v = encodeURIComponent(`/${from}/${to}`);
+  const baseDomain = getBaseDomain();
   const base = `googtrans=${v}; path=/; max-age=31536000`;
   document.cookie = base;
-  document.cookie = `googtrans=${v}; path=/; domain=${window.location.hostname}; max-age=31536000`;
+  document.cookie = `googtrans=${v}; path=/; domain=${baseDomain}; max-age=31536000; Secure; SameSite=None`;
 }
+
 function clearGoogTransCookie() {
+  const baseDomain = getBaseDomain();
   const past = "expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   document.cookie = `googtrans=; ${past}`;
-  document.cookie = `googtrans=; ${past}; domain=${window.location.hostname}`;
+  document.cookie = `googtrans=; ${past}; domain=${baseDomain}; Secure; SameSite=None`;
 }
+
 function triggerComboChange(lang) {
   const combo = document.querySelector("select.goog-te-combo");
   if (!combo) return false;
-  combo.value = lang === "en" ? "" : lang; // why: empty resets to original (EN)
+  combo.value = lang === "en" ? "" : lang;
   combo.dispatchEvent(new Event("change"));
   return true;
 }
+
+/* === DİL HOOK === */
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
   useEffect(() => {
@@ -60,36 +72,22 @@ function useCurrentLang(defaultLang = "en") {
     setCurrent(to || defaultLang);
   }, [defaultLang]);
 
-  // Burası güncellenen kısım
   const setLang = useCallback((lang) => {
     setCurrent(lang);
-    
     if (lang === "en") {
       clearGoogTransCookie();
-      // Google Çeviri widget'ını tetiklemeyi dene.
-      const ok = triggerComboChange(lang); 
-      
-      // Çerezi temizlediğimiz için, çevirinin tamamen sıfırlanması için 
-      // her durumda sayfayı yeniden yüklemek en güvenilir yoldur.
-      if (!ok || true) { 
-        window.location.reload();
-      }
-      
+      setTimeout(() => window.location.reload(), 300);
     } else {
       setGoogTransCookie("en", lang);
       const ok = triggerComboChange(lang);
-      
-      // Widget'ı tetikleyemediysek, sayfa yeniden yüklensin
-      if (!ok) {
-        window.location.reload();
-      }
+      if (!ok) setTimeout(() => window.location.reload(), 300);
     }
   }, []);
-  
+
   return [current, setLang];
 }
 
-/* Mobile: compact button shows ONLY current code; full list in sheet */
+/* === MOBILE DİL SEÇİCİ === */
 function MobileLangCompact({ dark = false }) {
   const [current, setLang] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -135,7 +133,7 @@ function MobileLangCompact({ dark = false }) {
   );
 }
 
-/* Desktop: dropdown with all languages */
+/* === DESKTOP DİL SEÇİCİ === */
 function DesktopLanguageSwitcher({ dark = false }) {
   const [current, setLang] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -190,7 +188,7 @@ function DesktopLanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === Main Navbar (integrates language switchers) === */
+/* === ANA NAVBAR === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -202,7 +200,7 @@ export default function MainNavbar() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false); // why: avoid SSR/CSR mismatch
+  const [mounted, setMounted] = useState(false);
 
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -287,6 +285,7 @@ export default function MainNavbar() {
 
       <header className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}>
         <div className="flex items-center justify-between relative">
+          {/* Sol */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             <button aria-label="Menu" className="p-2 rounded-full hover:bg-black/10 transition lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
@@ -301,13 +300,12 @@ export default function MainNavbar() {
             <Image className="w-28 md:w-32" src={logoSrc} alt="logo" style={{ filter: isSticky ? "none" : "brightness(0) invert(1)" }} />
           </div>
 
+          {/* Sağ */}
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Language UI only after mount */}
             {mounted && (
               <>
                 <MobileLangCompact dark={!isSticky} />
                 <DesktopLanguageSwitcher dark={!isSticky} />
-                {/* hidden real widget instance */}
                 <div id="google_translate_element" className="pointer-events-none absolute opacity-0 -z-10" />
               </>
             )}
@@ -341,65 +339,8 @@ export default function MainNavbar() {
             </button>
           </div>
         </div>
-
-        {/* Search */}
-        {isSearchVisible && (
-          <div ref={searchRef} className="relative mt-4 max-w-md mx-auto">
-            <form onSubmit={handleSearchSubmit} className="flex">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search product..."
-                autoFocus
-                className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${isSticky ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-orange-500" : "bg-white/20 text-white placeholder-white/70 focus:ring-white/50"}`}
-              />
-            </form>
-            {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 w-full bg-white text-black mt-2 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
-                <ul>
-                  {searchResults.map((product) => (
-                    <li key={product.id}>
-                      <div onClick={() => { handleProductClick(product.id); }} className="flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                        <div className="relative w-12 h-12 mr-4 flex-shrink-0">
-                          <Image src={getSafeImageUrl(product.image_urls)} alt={product.name} fill className="object-cover rounded-md" />
-                        </div>
-                        <span className="font-medium text-gray-800">{product.name}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Nav links */}
-        <nav className={`mt-6 hidden lg:flex justify-center space-x-10 text-sm font-light tracking-[0.25em] uppercase ${isSticky ? "text-gray-700" : "text-gray-200"}`}>
-          {navLinks.map((item) => (
-            <Link key={item.name} href={item.href} className="relative group hover:text-current transition">
-              {item.name}
-              <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300" />
-            </Link>
-          ))}
-        </nav>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-50 flex flex-col items-center justify-center text-center space-y-8 text-white text-lg font-light uppercase tracking-widest animate-fadeIn">
-            <button aria-label="Close menu" className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/20 transition" onClick={() => setMenuOpen(false)}>
-              <icons.Close className="w-7 h-7" />
-            </button>
-            {navLinks.map((item) => (
-              <Link key={item.name} href={item.href} onClick={() => setMenuOpen(false)} className="hover:text-orange-300 transition">
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        )}
       </header>
 
-      {/* Global cleanup for Google UI (extra safety) */}
       {mounted && (
         <style jsx global>{`
           .goog-te-banner-frame { display: none !important; }
