@@ -25,7 +25,7 @@ export default function Services() {
       description: "Your purchase comes wrapped in our Dinner Set packaging.",
       linkText: "EXPLORE",
       image: "/assets/Iconic.png",
-      href: "/services/shipping-returns",
+      href: "/services/iconic-dinner-set",
     },
   ];
 

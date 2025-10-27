@@ -2,103 +2,117 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 
-export default function InfoSection() {
+export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-[#ECE4DC] px-4 py-14 flex flex-col items-center">
-      <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-12 text-center items-start mt-0 md:mt-10">
-
-        {/* ================= SHIPPING & RETURNS ================= */}
-        <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
-            <div className="relative w-28 h-28 md:w-36 md:h-36">
-              <Image
-                src="/assets/Shipping.png"
-                alt="Shipping & Returns"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div>
-          </div>
-          <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
-            Shipping & Returns
-          </h2>
-          <p className="text-gray-600 text-sm md:text-base max-w-xs mb-4">
-            Enjoy complimentary delivery and effortless returns on every order.
-            We ensure your purchase reaches you with care and elegance.
-          </p>
-          <ul className="text-gray-600 text-sm md:text-base space-y-1">
-            <li>🚚 Free worldwide shipping</li>
-            <li>🕒 Fast & reliable delivery</li>
-            <li>💳 Easy return process</li>
-          </ul>
-        </div>
-
-        {/* ================= AT YOUR SERVICE ================= */}
-        <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
-            <div className="relative w-28 h-28 md:w-36 md:h-36">
-              <Image
-                src="/assets/Service.png"
-                alt="At Your Service"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div>
-          </div>
-          <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
-            At Your Service
-          </h2>
-          <p className="text-gray-600 text-sm md:text-base max-w-xs mb-4">
-            Our dedicated client care team is here to provide personalized
-            assistance, ensuring every detail of your experience feels exceptional.
-          </p>
-          <ul className="text-gray-600 text-sm md:text-base space-y-1">
-            <li>🤝 Personalized support</li>
-            <li>📞 24/7 customer care</li>
-            <li>✨ Luxury shopping experience</li>
-          </ul>
-        </div>
-
-        {/* ================= ICONIC DINNER SET ================= */}
-        <div className="flex flex-col items-center mt-0 md:mt-4">
-          <div className="relative w-full h-44 flex justify-center items-center mb-4 flex-shrink-0">
-            <div className="relative w-36 h-36 md:w-44 md:h-44">
-              <Image
-                src="/assets/Iconic.png"
-                alt="Iconic Dinner Set"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div>
-          </div>
-          <h2 className="text-xl md:text-2xl font-serif text-gray-900 mb-2">
-            Iconic Dinner Set
-          </h2>
-          <p className="text-gray-600 text-sm md:text-base max-w-xs mb-4">
-            Every piece is presented in our signature dinner set packaging,
-            making your unboxing moment as timeless as the product itself.
-          </p>
-          <ul className="text-gray-600 text-sm md:text-base space-y-1">
-            <li>🎁 Elegant signature packaging</li>
-            <li>🍽️ Perfect for gifting</li>
-            <li>💫 Timeless presentation</li>
-          </ul>
-        </div>
+    <div className="min-h-screen bg-white px-6 py-12 flex flex-col items-center">
+      {/* Logo */}
+      <div className="flex justify-center mb-6">
+        <Image
+          src="/assets/Shipping.png"
+          alt="Shipping Logo"
+          width={100}
+          height={100}
+          className="object-contain"
+        />
       </div>
 
-      {/* ================= BACK TO HOME ================= */}
-      <div className="mt-12 text-center">
-        <Link
-          href="/"
-          className="inline-block px-8 py-3 rounded-full bg-[#BE531C] text-white text-sm font-semibold hover:bg-[#9e4518] transition-all duration-300 shadow-md"
+      {/* Başlık */}
+      <h1 className="text-2xl font-bold text-[#BE531C] mb-10 text-center">
+        Terms of Service
+      </h1>
+
+      <div className="max-w-3xl w-full text-left space-y-10">
+        {/* ================= SHIPPING POLICY ================= */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Shipping Policy
+          </h2>
+
+          <p className="text-gray-700 mb-2">
+            <span className="font-semibold">Service Area:</span> We currently ship within the United States.
+          </p>
+
+          <p className="text-gray-700 mb-2">
+            <span className="font-semibold">Processing Time:</span> Orders are processed within 1–3 business days after payment is confirmed. Custom or bulk orders may take longer; you’ll be notified by email if there is any delay.
+          </p>
+
+          <p className="text-gray-700 mb-2">
+            <span className="font-semibold">Shipping Rates:</span> Shipping costs are calculated at checkout based on the total weight and destination of your order.
+          </p>
+
+          <p className="text-gray-700 mb-2">
+            <span className="font-semibold">Estimated Delivery Time:</span>
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 mb-2">
+            <li>Standard Shipping: 3–7 business days</li>
+            <li>Expedited Shipping: 1–3 business days</li>
+          </ul>
+
+          <p className="text-gray-700 italic mb-2">
+            Please note: We are not responsible for shipping delays caused by the carrier, weather, or incorrect addresses provided by the customer.
+          </p>
+
+          <p className="text-gray-700">
+            <span className="font-semibold">Tracking Information:</span> Once your order has shipped, you will receive an email with tracking details.
+          </p>
+        </section>
+
+        {/* ================= RETURN & REFUND POLICY ================= */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Return & Refund Policy
+          </h2>
+
+          <p className="text-gray-700 mb-4">
+            We want you to love your purchase! If you are not satisfied with your order, you may request a return within{" "}
+            <span className="font-semibold italic">14 days of receiving it.</span>
+          </p>
+
+          <p className="text-gray-900 font-semibold mb-1">Return Conditions:</p>
+          <ul className="list-disc pl-6 text-gray-700 mb-4">
+            <li>Items must be unused, undamaged, and in their original packaging.</li>
+            <li>You are responsible for return shipping costs unless the item arrived damaged or defective.</li>
+          </ul>
+
+          <p className="text-gray-700 mb-4">
+            To start a return, contact us at{" "}
+            <a
+              href="mailto:nestcomecontact@gmail.com"
+              className="text-[#BE531C] underline"
+            >
+              nestcomecontact@gmail.com
+            </a>{" "}
+            with your order number.
+          </p>
+
+          <p className="text-gray-900 font-semibold mb-1">Non-returnable items:</p>
+          <ul className="list-disc pl-6 text-gray-700 mb-4">
+            <li>Used or washed items</li>
+            <li>Clearance or final sale items</li>
+            <li>Customized products</li>
+          </ul>
+
+          <p className="text-gray-900 font-semibold mb-1">Refunds:</p>
+          <p className="text-gray-700 mb-4">
+            Approved refunds will be issued to your original payment method within 5–7 business days after your return is received and inspected.
+          </p>
+
+          <p className="text-gray-900 font-semibold mb-1">Damaged or Broken Items:</p>
+          <p className="text-gray-700">
+            If your order arrives damaged, please contact us within 48 hours of delivery with photos. We will send a replacement or issue a full refund.
+          </p>
+        </section>
+      </div>
+
+      {/* ================= BUTTON ================= */}
+      <div className="mt-12">
+        <button
+          onClick={() => window.location.href = "/"}
+          className="px-8 py-3 rounded-full bg-[#BE531C] text-white text-sm font-semibold hover:bg-[#9e4518] transition-all duration-300 shadow-md"
         >
-          Back to Home
-        </Link>
+          I Understand
+        </button>
       </div>
     </div>
   );

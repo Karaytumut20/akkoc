@@ -124,7 +124,7 @@ export default function CollectionPage() {
                 ))}
               </div>
             </section>
-          );
+          );  
         })}
 
         {Object.keys(groupedProducts).length === 0 && !loading && (

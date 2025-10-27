@@ -16,23 +16,27 @@ export const PolicyContent = ({ type }) => {
           information. This Privacy Policy explains how we collect, use, and protect your data when you visit or make a
           purchase from our website.
         </p>
-        <p>
-          <strong>Information We Collect:</strong> We may collect the following types of information:
-          <ul className="list-disc ml-6 mt-1 space-y-1">
-              <li>Personal details such as name, billing and shipping address, email, and phone number.</li>
-              <li>Payment information (processed securely through third-party payment gateways).</li>
-              <li>Device information (browser type, IP address, cookies, etc.) for analytics and website performance.</li>
-          </ul>
-        </p>
-        <p>
-          <strong>How We Use Your Information:</strong> We use your information to:
-          <ul className="list-disc ml-6 mt-1 space-y-1">
-              <li>Process and fulfill your orders.</li>
-              <li>Communicate with you about your purchase or account.</li>
-              <li>Improve our website and services.</li>
-              <li>Send marketing emails only if you opt-in.</li>
-          </ul>
-        </p>
+        {/* HATA DÜZELTMESİ: <p> etiketleri kaldırıldı, çünkü <ul>'leri içeriyorlardı. */}
+        <div className='space-y-3'>
+            <strong>Information We Collect:</strong> We may collect the following types of information:
+            <ul className="list-disc ml-6 mt-1 space-y-1">
+                <li>Personal details such as name, billing and shipping address, email, and phone number.</li>
+                <li>Payment information (processed securely through third-party payment gateways).</li>
+                <li>Device information (browser type, IP address, cookies, etc.) for analytics and website performance.</li>
+            </ul>
+        </div>
+        
+        <div className='space-y-3'>
+            <strong>How We Use Your Information:</strong> We use your information to:
+            <ul className="list-disc ml-6 mt-1 space-y-1">
+                <li>Process and fulfill your orders.</li>
+                <li>Communicate with you about your purchase or account.</li>
+                <li>Improve our website and services.</li>
+                <li>Send marketing emails only if you opt-in.</li>
+            </ul>
+        </div>
+        {/* HATA DÜZELTMESİ BİTİŞİ */}
+        
         <p>
           <strong>Sharing Your Information:</strong> We do not sell or rent your personal information. We may share it only with trusted service providers (e.g., payment processors, shipping carriers) who help us operate our business.
         </p>
@@ -61,13 +65,15 @@ export const PolicyContent = ({ type }) => {
             <p>
                 <strong>Shipping Rates:</strong> Shipping costs are calculated at checkout based on the total weight and destination of your order.
             </p>
-            <p>
+            {/* HATA DÜZELTMESİ: <p> etiketleri kaldırıldı, çünkü <ul>'leri içeriyorlardı. */}
+            <div className='space-y-3'>
                 <strong>Estimated Delivery Time:</strong>
                 <ul className="list-disc ml-6 mt-1 space-y-1">
                     <li>Standard Shipping: 3–7 business days</li>
                     <li>Expedited Shipping: 1–3 business days</li>
                 </ul>
-            </p>
+            </div>
+            {/* HATA DÜZELTMESİ BİTİŞİ */}
             <p className="text-sm italic">
                 Please note: We are not responsible for shipping delays caused by the carrier, weather, or incorrect addresses provided by the customer.
             </p>
@@ -82,13 +88,15 @@ export const PolicyContent = ({ type }) => {
             <p>
                 We want you to love your purchase! If you are not satisfied with your order, you may request a return within <strong>14 days of receiving it</strong>.
             </p>
-            <p>
+             {/* HATA DÜZELTMESİ: <p> etiketleri kaldırıldı, çünkü <ul>'leri içeriyorlardı. */}
+            <div className='space-y-3'>
                 <strong>Return Conditions:</strong>
                 <ul className="list-disc ml-6 mt-1 space-y-1">
                     <li>Items must be unused, undamaged, and in their original packaging.</li>
                     <li>You are responsible for return shipping costs unless the item arrived damaged or defective.</li>
                 </ul>
-            </p>
+            </div>
+            {/* HATA DÜZELTMESİ BİTİŞİ */}
             <p>
                 To start a return, contact us at <a href="mailto:nestcomecontact@gmail.com" className="text-[#be531c] hover:underline">nestcomecontact@gmail.com</a> with your order number.
             </p>
