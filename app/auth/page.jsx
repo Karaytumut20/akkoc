@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import logo from '@/assets/logos.png';
 import { supabase } from '@/lib/supabaseClient';
+// PolicyModal'ı merkezi bileşenden içe aktarıyoruz
+import { PolicyModal } from '@/components/PolicyModal'; 
 
 // === INPUT ===
 /**
@@ -36,133 +38,12 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
 // === POLICY MODAL ===
 /**
  * Modal to display Privacy Policy or Terms of Service.
+ * Artık merkezi bileşenden içe aktarılmaktadır.
  */
-const PolicyModal = ({ isOpen, onClose, type }) => {
-  if (!isOpen) return null;
-  const isPrivacy = type === 'privacy';
-  const title = isPrivacy ? 'Privacy Policy' : 'Terms of Service';
+// const PolicyModal = ({ isOpen, onClose, type }) => { ... ESKİ KOD ... };
 
-  const content = isPrivacy ? (
-    <div className="space-y-4 text-gray-700 leading-relaxed">
-      <p>
-        At <strong>Your Company</strong>, we value your trust and are committed to safeguarding
-        your personal information. This Privacy Policy explains how we collect, use, store, and
-        protect your data when you use our services.
-      </p>
-      <p>
-        <strong>1. Information We Collect:</strong> We collect personal information you provide
-        during account registration, checkout, or communication with our support team. This may
-        include your name, email address, phone number (optional), shipping address, and payment
-        details.
-      </p>
-      <p>
-        <strong>2. How We Use Your Information:</strong> We use your information to process
-        transactions, deliver products, improve user experience, send order updates, and ensure
-        secure account management.
-      </p>
-      <p>
-        <strong>3. Data Protection:</strong> Your data is stored securely on encrypted servers.
-        We implement industry-standard security protocols to protect against unauthorized access,
-        disclosure, or misuse.
-      </p>
-      <p>
-        <strong>4. Third-Party Disclosure:</strong> We do not sell or rent your data. Limited
-        data may be shared with trusted third parties (e.g., payment gateways, logistics partners)
-        solely for order fulfillment.
-      </p>
-      <p>
-        <strong>5. Your Rights:</strong> You have the right to access, modify, or delete your data
-        at any time. You can also manage your communication preferences or withdraw consent for
-        data processing.
-      </p>
-      <p>
-        <strong>6. Policy Updates:</strong> We may update this policy to reflect legal,
-        technological, or business changes. All updates will be announced through our platform.
-      </p>
-      <p>
-        By continuing to use our platform, you acknowledge that you have read and understood this
-        Privacy Policy.
-      </p>
-    </div>
-  ) : (
-    <div className="space-y-4 text-gray-700 leading-relaxed">
-      <p>
-        Welcome to <strong>Your Company</strong>. These Terms of Service outline the rules and
-        regulations for using our website and services. By accessing our platform, you agree to
-        comply with these terms.
-      </p>
-      <p>
-        <strong>1. Account Responsibility:</strong> You are responsible for maintaining the
-        confidentiality of your login credentials and all activities under your account.
-        We reserve the right to suspend or terminate accounts for policy violations.
-      </p>
-      <p>
-        <strong>2. Acceptable Use:</strong> You agree to use our services only for lawful
-        purposes. Fraudulent activities or misuse of our platform will result in immediate
-        termination and possible legal action.
-      </p>
-      <p>
-        <strong>3. Orders & Payments:</strong> All transactions must be valid and authorized.
-        We reserve the right to cancel orders in case of payment issues, pricing errors, or
-        stock unavailability.
-      </p>
-      <p>
-        <strong>4. Intellectual Property:</strong> All text, images, graphics, and software are
-        the property of <strong>Your Company</strong> and protected under applicable laws.
-        Unauthorized use is strictly prohibited.
-      </p>
-      <p>
-        <strong>5. Limitation of Liability:</strong> We are not liable for any indirect,
-        incidental, or consequential damages resulting from the use of our services to the
-        maximum extent permitted by law.
-      </p>
-      <p>
-        <strong>6. Changes to Terms:</strong> We may update these Terms at any time to reflect
-        new legal requirements or business practices. Continued use of the platform constitutes
-        acceptance of these changes.
-      </p>
-      <p>
-        <strong>7. Governing Law:</strong> These Terms are governed by applicable local laws.
-        Any disputes will be resolved under the exclusive jurisdiction of the competent courts.
-      </p>
-      <p>
-        By creating an account or using our services, you confirm that you have read, understood,
-        and agreed to these Terms of Service.
-      </p>
-    </div>
-  );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="bg-[#FFFFFF] rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-[#be531c] hover:text-[#a64919] text-2xl font-bold"
-        >
-          &times;
-        </button>
-        <div className="flex items-center gap-3 mb-4">
-          <Image src={logo} alt="Logo" width={40} height={40} />
-          <h3 className="text-2xl font-semibold text-[#be531c]">{title}</h3>
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto text-sm pr-2">{content}</div>
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 bg-[#be531c] text-white rounded-lg hover:bg-[#a64919] transition"
-          >
-            I Understand
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- NEW COMPONENT ---
+// --- FORGOT PASSWORD MODAL ---
 /**
  * Modal for initiating the Forgot Password process.
  */
@@ -244,7 +125,7 @@ const { error } = await supabase.auth.resetPasswordForEmail(email, {
     </div>
   );
 };
-// --- END NEW COMPONENT ---
+// --- END FORGOT PASSWORD MODAL ---
 
 // === AUTH PAGE ===
 export default function AuthPage() {
