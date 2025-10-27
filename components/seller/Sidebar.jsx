@@ -6,7 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 // FiGrid ikonu eklendi
-import { FiPlusSquare, FiList, FiBox, FiMessageSquare, FiImage, FiFilm, FiSettings, FiGrid,FiGift } from 'react-icons/fi'; 
+import { FiPlusSquare, FiList, FiBox, FiMessageSquare, FiImage, FiFilm, FiSettings, FiGrid,FiGift,FiArchive } from 'react-icons/fi'; 
 
 const SideBar = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
@@ -23,6 +23,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     { name: 'Hero Video', path: '/seller/hero-video', icon: <FiFilm className="w-6 h-6" /> },
     { name: 'Settings', path: '/seller/settings', icon: <FiSettings className="w-6 h-6" /> }, // Yeni link eklendi
     { name: 'Coupon Management', path: '/seller/coupons', icon: <FiGift className="w-6 h-6" /> }, // FiGift ikonunu react-icons/fi'dan import etmeyi unutma
+    { name: 'İade Talepleri', path: '/seller/returns', icon: <FiArchive className="w-6 h-6" /> }, // <-- YENİ LİNK
   ];
 
   return (

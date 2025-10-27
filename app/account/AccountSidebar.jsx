@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { 
     FiGrid, FiPackage, FiHeart, FiStar, FiMapPin, 
-    FiLock, FiBell, FiLogOut, FiChevronRight, FiCreditCard, FiUser 
+    FiLock, FiBell, FiLogOut, FiChevronRight, FiCreditCard, FiUser ,FiArchive
 } from 'react-icons/fi';
 import { useAppContext } from "@/context/AppContext";
 
@@ -23,6 +23,7 @@ export default function AccountSidebar() {
         { name: "My Addresses", href: "/account/addresses", activeIdentifier: "/account/addresses", isTab: false, icon: <FiMapPin /> },
         { name: "Password Security", href: "/account?tab=password", activeIdentifier: "password", isTab: true, icon: <FiLock /> },
         { name: "Notification Preferences", href: "/account?tab=notifications", activeIdentifier: "notifications", isTab: true, icon: <FiBell /> },
+        { name: "İade Taleplerim", href: "/account?tab=returns", activeIdentifier: "returns", isTab: true, icon: <FiArchive /> }, // <-- YENİ LİNK
     ];
     
     const activeTab = searchParams.get('tab');
