@@ -9,7 +9,7 @@ import Script from "next/script";
 import { assets } from "@/assets/assets";
 
 /* === ICONLAR === */
-// İkon SVG tanımlamaları (kısaltıldı)
+// İkon SVG tanımlamaları
 const icons = {
   Menu: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>),
   Close: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>),
@@ -22,11 +22,11 @@ const icons = {
 // Desteklenen dillerin listesi
 const LANGS = [
   { code: "en", label: "English" },
+  { code: "es", label: "Español" },
   { code: "tr", label: "Türkçe" },
   { code: "de", label: "Deutsch" },
   { code: "fr", label: "Français" },
   { code: "it", label: "Italiano" },
-  { code: "es", label: "Español" },
   { code: "ar", label: "العربية" },
   { code: "ru", label: "Русский" },
 ];
@@ -78,27 +78,96 @@ function triggerComboChange(lang) {
 // Mevcut dili yönetmek ve değiştirmek için özel hook
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
+  const pollIntervalRef = useRef(null); // Polling interval referansı
 
-  // Başlangıçta çerezden dili okur
-  useEffect(() => {
+  // Çerezi okuyup dili ayarlayan fonksiyon
+  const checkCookieAndSetLang = useCallback((targetLang = null) => {
     const c = readGoogTrans();
-    if (!c) { setCurrent(defaultLang); return; } // Çerez yoksa varsayılanı kullan
-    const to = c.split("/")[2]; // Çerez formatı: /fromLang/toLang
-    setCurrent(to || defaultLang); // Dili ayarla
+    let currentLangInCookie = defaultLang;
+    if (c) {
+      const parts = c.split("/");
+      if (parts.length === 3 && parts[2]) {
+        currentLangInCookie = parts[2];
+      }
+    }
+
+    // Eğer bir hedef dil belirtilmişse ve çerezdeki dil hedef dil ile eşleşiyorsa
+    // veya hedef dil belirtilmemişse, state'i güncelle
+    if ((targetLang && currentLangInCookie === targetLang) || !targetLang) {
+       setCurrent(currentLangInCookie);
+       // Polling'i durdur (hedefe ulaşıldı veya başlangıç kontrolü yapıldı)
+       if (pollIntervalRef.current) {
+         clearInterval(pollIntervalRef.current);
+         pollIntervalRef.current = null;
+       }
+       return true; // Başarılı veya hedef yok
+    }
+    return false; // Hedef belirtilmiş ama çerez henüz güncellenmemiş
   }, [defaultLang]);
 
-  // Dili değiştiren fonksiyon
+  // Başlangıçta çerezden dili oku
+  useEffect(() => {
+    checkCookieAndSetLang();
+    // Komponent unmount olduğunda polling'i temizle
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [checkCookieAndSetLang]);
+
+
+  // Dili değiştiren fonksiyon (GÜNCELLENDİ)
   const setLang = useCallback((lang) => {
-    setCurrent(lang); // State'i güncelle
+     // Önceki polling varsa temizle
+     if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+     }
+
     if (lang === "en") {
       clearGoogTransCookie(); // İngilizce seçilirse çerezi temizle
-      setTimeout(() => window.location.reload(), 300); // Sayfayı yenile (çeviriyi kaldırmak için)
+      setCurrent("en"); // State'i hemen güncelle
+      // Google Translate widget'ı varsa onu da sıfırla
+      triggerComboChange("en");
+      // Sayfayı yenilemek genellikle en temiz yöntemdir.
+      // Not: Yenileme yapmadan önce widget'ın kaldırılmasına izin vermek için küçük bir gecikme ekleyebiliriz.
+      setTimeout(() => window.location.reload(), 300);
     } else {
+       // State'i hemen güncelle (kullanıcı anında geri bildirim alır)
+       // Ancak bu, çerez güncellenene kadar geçici olabilir
+       // setCurrent(lang); // İsteğe bağlı: Anında geri bildirim için
+
       setGoogTransCookie("en", lang); // Diğer diller için çerezi ayarla
       const ok = triggerComboChange(lang); // Widget'ı tetikle
-      if (!ok) setTimeout(() => window.location.reload(), 300); // Widget hazır değilse sayfayı yenile
+
+       // Widget tetiklenemezse veya hızlı güncelleme isteniyorsa sayfayı yenile
+       if (!ok) {
+         setTimeout(() => window.location.reload(), 300);
+         return; // Yenileme yapılıyorsa polling'e gerek yok
+       }
+
+      // Widget tetiklendiyse, çerezin güncellenmesini bekle (Polling)
+      let attempts = 0;
+      const maxAttempts = 15; // Maksimum 3 saniye bekle (15 * 200ms)
+      pollIntervalRef.current = setInterval(() => {
+        attempts++;
+        // Çerezi kontrol et ve state'i güncellemeye çalış
+        const updated = checkCookieAndSetLang(lang);
+        if (updated || attempts >= maxAttempts) {
+          clearInterval(pollIntervalRef.current); // Interval'i temizle
+          pollIntervalRef.current = null;
+          // Eğer maxAttempts'e ulaşıldıysa ve hala güncellenmediyse, sayfayı yenilemeyi düşünebiliriz
+          if (!updated && attempts >= maxAttempts) {
+              console.warn("Google Translate cookie update timed out. Reloading might be needed.");
+              // Opsiyonel: Burada sayfayı yenileme eklenebilir
+              // window.location.reload();
+          }
+        }
+      }, 200); // Her 200ms'de bir kontrol et
     }
-  }, []);
+  }, [checkCookieAndSetLang]); // checkCookieAndSetLang'ı bağımlılıklara ekle
+
 
   return [current, setLang]; // Mevcut dil ve değiştirme fonksiyonunu döndürür
 }
@@ -124,35 +193,35 @@ function MobileLangCompact({ dark = false }) {
       </button>
       {/* Dil Seçim Modalı */}
       {open && (
-        <div className="fixed inset-0 z-[70] sm:hidden"> {/* Yüksek z-index, sadece sm altında */}
-           {/* Arka plan overlay */}
-           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-           {/* Modal içeriği */}
-           <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white text-gray-800 shadow-xl">
-             <div className="flex items-center justify-between px-4 py-3 border-b">
-               <span className="text-sm font-medium">Select language</span>
-               <button onClick={() => setOpen(false)} className="px-2 py-1 text-sm rounded hover:bg-black/5">Close</button>
-             </div>
-             {/* Dil listesi */}
-             <ul className="max-h-[60vh] overflow-y-auto py-1">
-               {LANGS.map((l) => (
-                 <li key={l.code}>
-                   <button
-                     onClick={() => { setLang(l.code); setOpen(false); }} // Dili ayarla ve modalı kapat
-                     className={[
-                       "w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-black/5",
-                       l.code === current ? "font-medium" : "", // Seçili dili vurgula
-                     ].join(" ")}
-                   >
-                     {/* Dil kodu */}
-                     <span className="inline-block w-9 text-[11px] text-center rounded border">{l.code.toUpperCase()}</span>
-                     {/* Dil adı */}
-                     <span className="text-sm">{l.label}</span>
-                   </button>
-                 </li>
-               ))}
-             </ul>
-           </div>
+        <div className="fixed inset-0 z-[110] sm:hidden"> {/* Yüksek z-index, sadece sm altında */}
+            {/* Arka plan overlay */}
+            <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+            {/* Modal içeriği */}
+            <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white text-gray-800 shadow-xl">
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <span className="text-sm font-medium">Select language</span>
+                <button onClick={() => setOpen(false)} className="px-2 py-1 text-sm rounded hover:bg-black/5">Close</button>
+              </div>
+              {/* Dil listesi */}
+              <ul className="max-h-[60vh] overflow-y-auto py-1">
+                {LANGS.map((l) => (
+                  <li key={l.code}>
+                    <button
+                      onClick={() => { setLang(l.code); setOpen(false); }} // Dili ayarla ve modalı kapat
+                      className={[
+                        "w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-black/5",
+                        l.code === current ? "font-medium" : "", // Seçili dili vurgula
+                      ].join(" ")}
+                    >
+                      {/* Dil kodu */}
+                      <span className="inline-block w-9 text-[11px] text-center rounded border">{l.code.toUpperCase()}</span>
+                      {/* Dil adı */}
+                      <span className="text-sm">{l.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
         </div>
       )}
     </>
@@ -198,7 +267,7 @@ function DesktopLanguageSwitcher({ dark = false }) {
       </button>
       {/* Açılır Menü İçeriği */}
       {open && (
-        <div role="listbox" className={["absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[60]", // Yüksek z-index
+        <div role="listbox" className={["absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[110]", // Yüksek z-index
           dark ? "bg-neutral-900 text-white" : "bg-white text-gray-800"].join(" ")}>
           <ul className="py-1 max-h-64 overflow-auto"> {/* Kaydırılabilir liste */}
             {LANGS.map((l) => (
@@ -569,7 +638,6 @@ export default function MainNavbar() {
 
         {/* Mobil Menü (Eğer açıksa) */}
         {menuOpen && (
-          // **İSTEĞİNİZ ÜZERE Z-INDEX EKLENDİ (z-50)**
           <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-50 flex flex-col items-center justify-center text-center space-y-8 text-white text-lg font-light uppercase tracking-widest animate-fadeIn">
             {/* Kapatma butonu */}
             <button
