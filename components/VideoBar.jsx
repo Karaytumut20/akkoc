@@ -1,4 +1,6 @@
-"use client";
+// components/VideoBar.jsx
+
+'use client';
 
 import React, { useState, useEffect } from "react";
 import MainNavbar from "./MainNavbar"; // Ana navigasyon barını içe aktar
@@ -49,10 +51,12 @@ export default function KnotVideoHero() {
   }, [isHomePage]); // isHomePage değişirse bu effect'i tekrar çalıştır
 
   // ✅ Anasayfa değilse veya henüz client yüklenmediyse sadece Navbar'ı göster
+  // Bu blok anasayfa dışındaki sayfalar için Navbar'ı render eder
   if (!isHomePage && !isClient) {
     return (
       <div className="relative w-full bg-[#ECE4DC] backdrop-blur-md"> {/* Arka plan rengi */}
-        <MainNavbar /> {/* Ana navigasyon barı */}
+        {/* Navbar burada render edilir, kendi içinde sticky vs. yönetir */}
+        <MainNavbar />
       </div>
     );
   }
@@ -60,26 +64,31 @@ export default function KnotVideoHero() {
   if (!isHomePage) {
     return (
       <div className="relative w-full bg-[#ECE4DC] backdrop-blur-md"> {/* Arka plan rengi */}
-        <MainNavbar /> {/* Ana navigasyon barı */}
+         {/* Navbar burada render edilir, kendi içinde sticky vs. yönetir */}
+        <MainNavbar />
       </div>
     );
   }
 
   // ✅ Anasayfadaysa video hero alanı
   return (
+    // Ana section: Yüksekliği ekran boyutlarına göre ayarla, video için relativ konumlandırma
     <section className="w-full h-[60vh] sm:h-[80vh] md:h-screen relative overflow-hidden bg-[#ECE4DC] font-sans">
+
       {/* === Arka Plan Videosu === */}
-      {/* Client tarafında yüklendiğinde, video yüklenmediğinde ve URL varsa videoyu göster */}
+      {/* Sadece client'ta, video yüklenmişse ve URL varsa render et */}
       {isClient && !videoLoading && activeVideoUrl && (
         <video
           key={activeVideoUrl} // URL değişirse videoyu yeniden yükle
-          // Stil sınıfları: Mutlak konumlandırma, tam ekran kaplama, içerik sığdırma/kaplama
-          // ✨ YENİ: 'transform scale-[1.08]' eklenerek %8 zoom yapıldı
-          className="absolute top-0 left-0 w-full h-full object-contain md:object-cover transition-all duration-500 transform scale-[1.08]"
+          // === DEĞİŞİKLİK BURADA ===
+          // Stil: Mutlak konum, tam ekran kaplama, TÜM boyutlarda 'object-contain'.
+          // md ve üzeri ekranlarda %8 zoom ('md:transform md:scale-[1.08]') uygula.
+          className="absolute top-0 left-0 w-full h-full object-contain transition-all duration-500 md:transform md:scale-[1.08]"
+          // === DEĞİŞİKLİK SONU ===
           autoPlay // Otomatik oynat
-          loop // Döngüye al
+          loop // Döngüsel oynat
           muted // Sesi kapat
-          playsInline // Mobil cihazlarda tam ekran olmadan oynat
+          playsInline // iOS'ta tam ekran olmadan oynat
         >
           <source src={activeVideoUrl} type="video/mp4" /> {/* Video kaynağı */}
           Tarayıcınız video etiketini desteklemiyor. {/* Desteklenmeyen tarayıcılar için mesaj */}
@@ -87,7 +96,7 @@ export default function KnotVideoHero() {
       )}
 
       {/* === Yükleme Göstergesi === */}
-      {/* Client tarafında yüklendiğinde ve video yükleniyorsa veya URL yoksa göster */}
+      {/* Client'ta, video yüklenirken veya URL yoksa göster */}
       {isClient && (videoLoading || !activeVideoUrl) && (
         <div className="absolute inset-0 bg-[#ECE4DC] flex items-center justify-center">
           <div className="text-gray-800 font-medium">Video Loading...</div> {/* Yükleme metni */}
@@ -95,16 +104,22 @@ export default function KnotVideoHero() {
       )}
 
       {/* === Kaplama Katmanı === */}
-      <div className="absolute inset-0 bg-black/30 z-10"></div> {/* Yarı saydam siyah kaplama */}
+      {/* Video üzerine yarı saydam siyah bir katman ekler (z-10) */}
+      <div className="absolute inset-0 bg-black/30 z-10"></div>
 
       {/* === Navbar === */}
-      <MainNavbar /> {/* Ana navigasyon barı */}
+      {/* Navbar'ı içeren div'e z-index ekleyerek butonun üzerine çıkarıyoruz */}
+      <div className="absolute top-0 left-0 right-0 z-40"> {/* Navbar için z-40 */}
+        <MainNavbar /> {/* Ana navigasyon barı */}
+      </div>
 
       {/* === Shop Now Butonu === */}
-      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-30"> {/* Butonu ortala */}
+      {/* Butonu absolute konumlandırıp ortalıyoruz (z-30) */}
+      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-30">
         <a
           href="/all-products" // Tüm ürünler sayfasına link
-          className="bg-white/95 text-gray-900 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase py-3 px-10 hover:bg-white transition-all duration-300" // Buton stilleri
+          // Buton stilleri: Beyaz arka plan, metin rengi, boyut, hover efekti vb.
+          className="bg-white/95 text-gray-900 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase py-3 px-10 hover:bg-white transition-all duration-300"
         >
           Shop Now
         </a>
