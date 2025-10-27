@@ -1,109 +1,110 @@
-// components/VideoBar.jsx
-
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
-import MainNavbar from "./MainNavbar";
-import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient"; // Supabase client'ı import et
+import MainNavbar from "./MainNavbar"; // Ana navigasyon barını içe aktar
+import { usePathname } from "next/navigation"; // Mevcut yolu almak için hook
+import { supabase } from "@/lib/supabaseClient"; // Supabase istemcisini içe aktar
 
 export default function KnotVideoHero() {
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
-  const [isClient, setIsClient] = useState(false);
-  const [activeVideoUrl, setActiveVideoUrl] = useState(null); // Video URL'sini tutacak state
-  const [videoLoading, setVideoLoading] = useState(true); // Video yüklenme durumu
+  const pathname = usePathname(); // Mevcut yolu al
+  const isHomePage = pathname === "/"; // Anasayfa olup olmadığını kontrol et
+  const [isClient, setIsClient] = useState(false); // Komponentin client tarafında yüklendiğini takip et
+  const [activeVideoUrl, setActiveVideoUrl] = useState(null); // Aktif video URL'sini tut
+  const [videoLoading, setVideoLoading] = useState(true); // Video yüklenme durumunu tut
 
+  // Komponent yüklendiğinde client tarafında olduğunu işaretle ve videoyu çek (eğer anasayfaysa)
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true); // Client tarafında yüklendi
 
     // Sadece anasayfada videoyu çek
     if (isHomePage) {
       const fetchActiveVideo = async () => {
-        setVideoLoading(true);
+        setVideoLoading(true); // Yüklemeyi başlat
+        // Supabase'den aktif videoyu ('is_active' true olanı) çek
         const { data, error } = await supabase
-          .from('hero_videos')
-          .select('video_url')
-          .eq('is_active', true)
-          .limit(1) // Sadece bir tane aktif olmalı
-          .single(); // Tek bir kayıt bekliyoruz
+          .from("hero_videos") // 'hero_videos' tablosundan
+          .select("video_url") // Sadece video URL'sini seç
+          .eq("is_active", true) // 'is_active' sütunu true olanları filtrele
+          .limit(1) // Sadece bir tane getir
+          .single(); // Tek bir sonuç bekle
 
-        if (error && error.code !== 'PGRST116') { // PGRST116: No rows found
+        // Hata kontrolü (Satır bulunamadı hatasını (PGRST116) göz ardı et)
+        if (error && error.code !== "PGRST116") {
           console.error("Aktif video çekme hatası:", error);
-          // Hata durumunda varsayılan videoyu kullanabilir veya boş bırakabilirsiniz
-          setActiveVideoUrl("/assets/video.mp4"); // Varsayılan video
+          setActiveVideoUrl("/assets/video.mp4"); // Hata durumunda varsayılan videoyu ayarla
         } else if (data) {
-          setActiveVideoUrl(data.video_url);
+          setActiveVideoUrl(data.video_url); // Gelen veriyi URL olarak ayarla
         } else {
           // Aktif video bulunamazsa varsayılanı kullan
-          setActiveVideoUrl("/assets/video.mp4"); // Varsayılan video
+          setActiveVideoUrl("/assets/video.mp4");
         }
-        setVideoLoading(false);
+
+        setVideoLoading(false); // Yüklemeyi bitir
       };
 
-      fetchActiveVideo();
+      fetchActiveVideo(); // Videoyu çekme fonksiyonunu çağır
     } else {
-        setVideoLoading(false); // Anasayfa değilse yüklemeye gerek yok
+      setVideoLoading(false); // Anasayfa değilse yüklemeye gerek yok
     }
+  }, [isHomePage]); // isHomePage değişirse bu effect'i tekrar çalıştır
 
-  }, [isHomePage]); // isHomePage değiştiğinde tekrar çalışır (gerçi pek değişmez ama doğru dependency)
-
-  // Anasayfa dışındaysa veya henüz client tarafı yüklenmediyse sadece Navbar'ı göster
+  // ✅ Anasayfa değilse veya henüz client yüklenmediyse sadece Navbar'ı göster
   if (!isHomePage && !isClient) {
-      return (
-         <div className="relative w-full bg-black/70 backdrop-blur-md">
-            <MainNavbar />
-         </div>
-      );
+    return (
+      <div className="relative w-full bg-[#ECE4DC] backdrop-blur-md"> {/* Arka plan rengi */}
+        <MainNavbar /> {/* Ana navigasyon barı */}
+      </div>
+    );
   }
-   // Anasayfa dışındaysa sadece Navbar göster
-   if (!isHomePage) {
-      return (
-         <div className="relative w-full bg-black/70 backdrop-blur-md">
-           <MainNavbar />
-         </div>
-      )
-   }
+  // ✅ Anasayfa değilse Navbar'ı göster
+  if (!isHomePage) {
+    return (
+      <div className="relative w-full bg-[#ECE4DC] backdrop-blur-md"> {/* Arka plan rengi */}
+        <MainNavbar /> {/* Ana navigasyon barı */}
+      </div>
+    );
+  }
 
-  // Anasayfadaysak video arka planlı hero gözükecek
+  // ✅ Anasayfadaysa video hero alanı
   return (
-    <section className="w-full h-screen relative overflow-hidden bg-black font-sans">
-      {/* Background Video */}
+    <section className="w-full h-[60vh] sm:h-[80vh] md:h-screen relative overflow-hidden bg-[#ECE4DC] font-sans">
+      {/* === Arka Plan Videosu === */}
+      {/* Client tarafında yüklendiğinde, video yüklenmediğinde ve URL varsa videoyu göster */}
       {isClient && !videoLoading && activeVideoUrl && (
         <video
-          key={activeVideoUrl} // URL değiştiğinde videonun yeniden yüklenmesini sağlar
-          className="absolute top-0 left-0 w-full h-full object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
+          key={activeVideoUrl} // URL değişirse videoyu yeniden yükle
+          // Stil sınıfları: Mutlak konumlandırma, tam ekran kaplama, içerik sığdırma/kaplama
+          // ✨ YENİ: 'transform scale-[1.08]' eklenerek %8 zoom yapıldı
+          className="absolute top-0 left-0 w-full h-full object-contain md:object-cover transition-all duration-500 transform scale-[1.08]"
+          autoPlay // Otomatik oynat
+          loop // Döngüye al
+          muted // Sesi kapat
+          playsInline // Mobil cihazlarda tam ekran olmadan oynat
         >
-          <source src={activeVideoUrl} type="video/mp4" />
-          {/* İsteğe bağlı olarak farklı formatlar için source ekleyebilirsiniz */}
-          {/* <source src={activeVideoUrl.replace('.mp4', '.webm')} type="video/webm" /> */}
-          Tarayıcınız video etiketini desteklemiyor.
+          <source src={activeVideoUrl} type="video/mp4" /> {/* Video kaynağı */}
+          Tarayıcınız video etiketini desteklemiyor. {/* Desteklenmeyen tarayıcılar için mesaj */}
         </video>
       )}
-       {/* Video yüklenirken veya URL yoksa bir placeholder gösterilebilir */}
-       {isClient && (videoLoading || !activeVideoUrl) && (
-           <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-               {/* İsteğe bağlı yükleniyor göstergesi */}
-                <div className="text-white">Video Loading...</div>
-           </div>
-       )}
 
+      {/* === Yükleme Göstergesi === */}
+      {/* Client tarafında yüklendiğinde ve video yükleniyorsa veya URL yoksa göster */}
+      {isClient && (videoLoading || !activeVideoUrl) && (
+        <div className="absolute inset-0 bg-[#ECE4DC] flex items-center justify-center">
+          <div className="text-gray-800 font-medium">Video Loading...</div> {/* Yükleme metni */}
+        </div>
+      )}
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/30  z-10"></div>
+      {/* === Kaplama Katmanı === */}
+      <div className="absolute inset-0 bg-black/30 z-10"></div> {/* Yarı saydam siyah kaplama */}
 
-      {/* Navbar */}
-      <MainNavbar />
+      {/* === Navbar === */}
+      <MainNavbar /> {/* Ana navigasyon barı */}
 
-      {/* SHOP NOW BUTTON */}
-      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-30">
+      {/* === Shop Now Butonu === */}
+      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-30"> {/* Butonu ortala */}
         <a
-          href="/all-products"
-          className="bg-white/95 text-gray-900 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase py-3 px-10 hover:bg-white transition-all duration-300"
+          href="/all-products" // Tüm ürünler sayfasına link
+          className="bg-white/95 text-gray-900 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase py-3 px-10 hover:bg-white transition-all duration-300" // Buton stilleri
         >
           Shop Now
         </a>
