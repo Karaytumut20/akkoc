@@ -8,7 +8,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { assets } from "@/assets/assets";
 
-/* === ICONLAR === */
+/* Icons */
 const icons = {
   Menu: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>),
   Close: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>),
@@ -16,7 +16,7 @@ const icons = {
   ShoppingBag: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>),
 };
 
-/* === DİL LİSTESİ === */
+/* Languages */
 const LANGS = [
   { code: "en", label: "English" },
   { code: "tr", label: "Türkçe" },
@@ -28,7 +28,7 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* === GOOGLE TRANSLATE COOKIE FONKSİYONLARI === */
+/* Translate helpers */
 function readGoogTrans() {
   const m = typeof document !== "undefined" && document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
   return m ? decodeURIComponent(m[1]) : null;
@@ -47,12 +47,10 @@ function clearGoogTransCookie() {
 function triggerComboChange(lang) {
   const combo = document.querySelector("select.goog-te-combo");
   if (!combo) return false;
-  combo.value = lang === "en" ? "" : lang;
+  combo.value = lang === "en" ? "" : lang; // why: empty resets to original (EN)
   combo.dispatchEvent(new Event("change"));
   return true;
 }
-
-/* === DİL HOOK'U === */
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
   useEffect(() => {
@@ -62,22 +60,36 @@ function useCurrentLang(defaultLang = "en") {
     setCurrent(to || defaultLang);
   }, [defaultLang]);
 
+  // Burası güncellenen kısım
   const setLang = useCallback((lang) => {
     setCurrent(lang);
+    
     if (lang === "en") {
       clearGoogTransCookie();
-      window.location.reload(); // ✅ İngilizce seçildiğinde sayfayı yenile
+      // Google Çeviri widget'ını tetiklemeyi dene.
+      const ok = triggerComboChange(lang); 
+      
+      // Çerezi temizlediğimiz için, çevirinin tamamen sıfırlanması için 
+      // her durumda sayfayı yeniden yüklemek en güvenilir yoldur.
+      if (!ok || true) { 
+        window.location.reload();
+      }
+      
     } else {
       setGoogTransCookie("en", lang);
       const ok = triggerComboChange(lang);
-      if (!ok) window.location.reload();
+      
+      // Widget'ı tetikleyemediysek, sayfa yeniden yüklensin
+      if (!ok) {
+        window.location.reload();
+      }
     }
   }, []);
-
+  
   return [current, setLang];
 }
 
-/* === MOBILE DİL SEÇİCİ === */
+/* Mobile: compact button shows ONLY current code; full list in sheet */
 function MobileLangCompact({ dark = false }) {
   const [current, setLang] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -123,7 +135,7 @@ function MobileLangCompact({ dark = false }) {
   );
 }
 
-/* === DESKTOP DİL SEÇİCİ === */
+/* Desktop: dropdown with all languages */
 function DesktopLanguageSwitcher({ dark = false }) {
   const [current, setLang] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -178,7 +190,7 @@ function DesktopLanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === ANA NAVBAR === */
+/* === Main Navbar (integrates language switchers) === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -190,7 +202,7 @@ export default function MainNavbar() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false); // why: avoid SSR/CSR mismatch
 
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -275,7 +287,6 @@ export default function MainNavbar() {
 
       <header className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}>
         <div className="flex items-center justify-between relative">
-          {/* Sol taraf */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             <button aria-label="Menu" className="p-2 rounded-full hover:bg-black/10 transition lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
@@ -290,12 +301,13 @@ export default function MainNavbar() {
             <Image className="w-28 md:w-32" src={logoSrc} alt="logo" style={{ filter: isSticky ? "none" : "brightness(0) invert(1)" }} />
           </div>
 
-          {/* Sağ taraf */}
           <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Language UI only after mount */}
             {mounted && (
               <>
                 <MobileLangCompact dark={!isSticky} />
                 <DesktopLanguageSwitcher dark={!isSticky} />
+                {/* hidden real widget instance */}
                 <div id="google_translate_element" className="pointer-events-none absolute opacity-0 -z-10" />
               </>
             )}
@@ -362,7 +374,7 @@ export default function MainNavbar() {
           </div>
         )}
 
-        {/* Desktop Nav */}
+        {/* Nav links */}
         <nav className={`mt-6 hidden lg:flex justify-center space-x-10 text-sm font-light tracking-[0.25em] uppercase ${isSticky ? "text-gray-700" : "text-gray-200"}`}>
           {navLinks.map((item) => (
             <Link key={item.name} href={item.href} className="relative group hover:text-current transition">
@@ -387,7 +399,7 @@ export default function MainNavbar() {
         )}
       </header>
 
-      {/* Google Translate UI Temizleme */}
+      {/* Global cleanup for Google UI (extra safety) */}
       {mounted && (
         <style jsx global>{`
           .goog-te-banner-frame { display: none !important; }
