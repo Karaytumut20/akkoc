@@ -58,3 +58,26 @@ html, body, #__next {
   /* You can add a few more variants where you don't want card/transparent: */
   .backdrop-blur-sm.bg-white\/80 { background-color:  #ECE4DC !important; } /* %80 */
 }
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt {
+  display: none !important;
+}
+
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd {
+  display: none !important;
+}
+
+.goog-logo-link,
+.goog-te-gadget-icon {
+  display: none !important;
+}
+
+body, html { top: 0 !important; }
+
+.skiptranslate iframe,
+.skiptranslate .goog-te-gadget {
+  display: none !important;
+}
