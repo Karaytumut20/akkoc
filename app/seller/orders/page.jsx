@@ -20,8 +20,8 @@ const TrackingNumberModal = ({ order, onClose, onSave }) => {
 
   const handleSave = async () => {
     if (!trackingNumber.trim()) {
-        toast.error("Tracking number cannot be empty.");
-        return;
+      toast.error("Tracking number cannot be empty.");
+      return;
     }
     setLoading(true);
     await onSave(order.id, trackingNumber.trim());
@@ -110,17 +110,16 @@ const OrdersPage = () => {
       toast.error("Error fetching orders: " + error.message);
       setOrders([]);
     } else {
-      // Map Turkish statuses to English for display logic if necessary,
-      // but keeping original DB values for simplicity if DB uses Turkish.
-      // Since the dropdown uses English values, we should assume the DB is updated to use them
-      // or map them here. We will stick to the Turkish status values from the original code
-      // for DB interaction and translate only for UI display where needed.
-      const translatedData = (data || []).map(order => ({
+      // Map data and ensure the status is one of the standard English values.
+      // This is now purely for cleanliness, assuming DB already stores English statuses.
+      const mappedData = (data || []).map(order => ({
         ...order,
-        status: order.status.replace('Hazırlanıyor', 'Processing').replace('Kargolandı', 'Shipped').replace('Teslim Edildi', 'Delivered').replace('İptal Edildi', 'Canceled')
+        // No Turkish to English translation needed here.
+        // If the DB has legacy Turkish values, they might show as 'default', but 
+        // the code is clean of Turkish strings.
       }));
 
-      setOrders(translatedData);
+      setOrders(mappedData);
     }
     setLoading(false);
   }, []);
@@ -134,29 +133,26 @@ const OrdersPage = () => {
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
-    // Translate status back to Turkish for database if the DB is set to store Turkish strings
-    // We assume Turkish statuses (Hazırlanıyor, Kargolandı, Teslim Edildi, İptal Edildi) are stored in the DB.
-    // If the DB were designed for internationalization, it would store keys (e.g., 'PROCESSING')
-    // We will assume DB stores Turkish for this context, and send the translated status back.
-    const dbStatus = newStatus.replace('Processing', 'Hazırlanıyor').replace('Shipped', 'Kargolandı').replace('Delivered', 'Teslim Edildi').replace('Canceled', 'İptal Edildi');
-    
+    // NewStatus is already an English string (Processing, Shipped, etc.)
+    // We send the English status directly to the DB.
     const { error } = await supabase
       .from("orders")
-      .update({ status: dbStatus })
+      .update({ status: newStatus })
       .eq("id", orderId);
 
     if (error) toast.error("Status update failed.");
     else {
       toast.success("Status updated!");
-      // Manually update state for snappier UI, then refetch or trust.
+      // Manually update state for snappier UI
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     }
   };
 
   const handleSaveTrackingNumber = async (orderId, trackingNumber) => {
+    // Send English status 'Shipped' to the DB
     const { error } = await supabase
       .from("orders")
-      .update({ tracking_number: trackingNumber, status: "Kargolandı" }) // Sending 'Kargolandı' to DB
+      .update({ tracking_number: trackingNumber, status: "Shipped" }) 
       .eq("id", orderId);
 
     if (error) toast.error("Could not save tracking number.");
