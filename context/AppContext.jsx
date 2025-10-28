@@ -1,11 +1,12 @@
 // context/AppContext.jsx
-'use client';
+
+'use client'
 
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
-import { supabase } from "@/lib/supabaseClient"; // Supabase istemcisini içe aktar
-import toast from "react-hot-toast"; // Bildirimler için
-import { getSafeImageUrl } from "@/lib/utils"; // Güvenli resim URL'si almak için yardımcı fonksiyon
+import { supabase } from "@/lib/supabaseClient";
+import toast from "react-hot-toast";
+import { getSafeImageUrl } from "@/lib/utils";
 
 // Context'i oluştur
 export const AppContext = createContext(undefined);
@@ -14,7 +15,7 @@ export const AppContext = createContext(undefined);
 export const useAppContext = () => {
     const context = useContext(AppContext);
     if (context === undefined) {
-        throw new Error('useAppContext must be used within an AppContextProvider'); // Hata mesajı: AppContextProvider içinde kullanılmalı
+        throw new Error('useAppContext must be used within an AppContextProvider');
     }
     return context;
 };
@@ -22,16 +23,15 @@ export const useAppContext = () => {
 // Veritabanındaki yorum izni ayarının anahtarı
 const REVIEW_PERMISSION_KEY = 'review_permission';
 // Vergi oranını context kapsamında tanımla
-const CALIFORNIA_TAX_RATE = 0.0825; // California vergi oranı (örnek)
-
-// Context Provider Bileşeni
+const CALIFORNIA_TAX_RATE = 0.0825;
+// Context Sağlayıcı Bileşeni
 export const AppContextProvider = (props) => {
     // ---- STATE DEĞİŞKENLERİ ----
     const currency = process.env.NEXT_PUBLIC_CURRENCY || "$"; // Para birimi sembolü
     const router = useRouter(); // Next.js router
 
     // Ürün state'i
-    const [products, setProducts] = useState([]); // Tüm ürünler
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true); // Ürünler için genel yükleme durumu
     const [error, setError] = useState(null); // Ürün getirme için hata durumu
 
@@ -45,41 +45,41 @@ export const AppContextProvider = (props) => {
     // Kullanıcı hesabı ile ilgili state'ler
     const [addresses, setAddresses] = useState([]); // Kullanıcının kayıtlı adresleri
     const [myOrders, setMyOrders] = useState([]); // Kullanıcının geçmiş siparişleri
-    const [wishlist, setWishlist] = useState([]); // Kullanıcının favori listesi öğeleri
+    const [wishlist, setWishlist] = useState([]); // Kullanıcının istek listesi öğeleri
     const [myReviews, setMyReviews] = useState([]); // Kullanıcının gönderdiği yorumlar
     const [savedCards, setSavedCards] = useState([]); // Kullanıcının kayıtlı ödeme kartları
-    const [myReturnRequests, setMyReturnRequests] = useState([]); // Kullanıcının iade talepleri (YENİ EKLENDİ)
+    const [myReturnRequests, setMyReturnRequests] = useState([]); // Kullanıcının iade talepleri state'i
 
     // Mağaza ayarları state'i
     const [reviewPermissionSetting, setReviewPermissionSetting] = useState('purchasers_only'); // Varsayılan yorum izni
 
     // Hareketsizlik zamanlayıcısı state'i
-    const inactivityTimer = useRef(null); // Hareketsizlik zamanlayıcısı referansı
+    const inactivityTimer = useRef(null);
 
     // ---- FONKSİYONLAR ----
 
-    // Belirli bir süre hareketsizlikten sonra oturumu kapat
+    // Belirli bir süre hareketsizlikten sonra çıkış yap
     const signOutAfterInactivity = useCallback(() => {
-        toast('Hareketsizlik nedeniyle oturum sona erdi, çıkış yapılıyor.', { icon: '👋' }); // Türkçe bildirim
-        supabase.auth.signOut(); // Oturumu kapat
+        toast('Hareketsizlik nedeniyle oturum sona erdi, çıkış yapılıyor.', { icon: '👋' });
+        supabase.auth.signOut();
     }, []);
 
     // Kullanıcı etkinliğinde hareketsizlik zamanlayıcısını sıfırla
     const resetInactivityTimer = useCallback(() => {
-        clearTimeout(inactivityTimer.current); // Mevcut zamanlayıcıyı temizle
+        clearTimeout(inactivityTimer.current);
         // Zamanlayıcıyı 10 dakikaya ayarla (10 * 60 * 1000 milisaniye)
         inactivityTimer.current = setTimeout(signOutAfterInactivity, 10 * 60 * 1000);
     }, [signOutAfterInactivity]);
 
-    // Hareketsizlik zamanlayıcısı dinleyicisini yönetmek için Effect
+    // Hareketsizlik zamanlayıcısı dinleyicisini yönetmek için effect
     useEffect(() => {
-        if (user) { // Sadece kullanıcı giriş yapmışsa
-            const events = ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll']; // Takip edilecek olaylar
+        if (user) {
+            const events = ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'];
             // Kullanıcı etkinliği için olay dinleyicilerini ekle
             events.forEach(event => window.addEventListener(event, resetInactivityTimer));
             resetInactivityTimer(); // Zamanlayıcıyı başlangıçta başlat
 
-            // Component kaldırıldığında veya kullanıcı değiştiğinde dinleyicileri kaldır ve zamanlayıcıyı temizle
+            // Component kaldırıldığında veya kullanıcı değiştiğinde dinleyicileri kaldırmak ve zamanlayıcıyı temizlemek için temizleme fonksiyonu
             return () => {
                 events.forEach(event => window.removeEventListener(event, resetInactivityTimer));
                 clearTimeout(inactivityTimer.current);
@@ -87,13 +87,13 @@ export const AppContextProvider = (props) => {
         }
     }, [user, resetInactivityTimer]);
 
-    // Kimlik doğrulama durumu değişikliklerini dinlemek için Effect
+    // Kimlik doğrulama durumu değişikliklerini dinlemek için effect
     useEffect(() => {
-        setAuthLoading(true); // Kimlik doğrulama kontrolü yükleniyor
+        setAuthLoading(true);
         const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            const currentUser = session?.user; // Mevcut oturumun kullanıcısı
+            const currentUser = session?.user;
             setUser(currentUser || null); // Kullanıcı state'ini güncelle
-            // Kullanıcı çıkış yaparsa ilgili verilerini temizle
+            // Kullanıcı çıkış yaparsa, ilgili verilerini temizle
             if (!currentUser) {
                 setCartItems({});
                 setAddresses([]);
@@ -101,9 +101,9 @@ export const AppContextProvider = (props) => {
                 setWishlist([]);
                 setMyReviews([]);
                 setSavedCards([]);
-                setMyReturnRequests([]); // İade taleplerini de temizle (YENİ EKLENDİ)
+                setMyReturnRequests([]); // İade taleplerini de sıfırla
             }
-            setAuthLoading(false); // Kimlik doğrulama kontrolü tamamlandı
+            setAuthLoading(false); // Kimlik doğrulama kontrolü bitti
         });
 
         // Dinleyiciden aboneliği kaldırmak için temizleme fonksiyonu
@@ -113,22 +113,13 @@ export const AppContextProvider = (props) => {
     }, []);
 
     // Kullanıcı kayıt fonksiyonu
-    const signUp = async (email, password, fullName, phone) => {
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { // Meta verileri ekle
-                    full_name: fullName,
-                    phone: phone || null
-                }
-            }
-        });
+    const signUp = async (email, password) => {
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
-            toast.error(error.message); // Hata mesajını göster
+            toast.error(error.message);
             return false; // Başarısızlığı belirt
         }
-        toast.success('Kayıt başarılı! Lütfen e-postanızı doğrulayın.'); // Türkçe başarı mesajı
+        toast.success('Kayıt başarılı! Lütfen e-postanızı doğrulayın.');
         return true; // Başarıyı belirt
     };
 
@@ -137,13 +128,13 @@ export const AppContextProvider = (props) => {
         const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
         if (authError) {
-            toast.error('Geçersiz kullanıcı adı veya şifre.'); // Türkçe genel hata mesajı
+            toast.error('Geçersiz kullanıcı adı veya şifre.'); // Genel hata mesajı
             return; // Hata durumunda işlemi durdur
         }
 
         if (signInData.user) {
-            toast.success('Giriş başarılı!'); // Türkçe başarı mesajı
-            // Bildirim mesajının görünmesi için yönlendirmeyi biraz geciktir
+            toast.success('Giriş başarılı!');
+            // Toast mesajının görünmeye başlaması için yönlendirmeyi biraz geciktir
             setTimeout(() => {
                 if (source === 'seller') {
                     router.push('/seller/product-list'); // Satıcıyı yönlendir
@@ -156,163 +147,140 @@ export const AppContextProvider = (props) => {
 
     // Kullanıcı çıkış fonksiyonu
     const signOut = useCallback(async () => {
-        await supabase.auth.signOut(); // Supabase oturumunu kapat
+        await supabase.auth.signOut();
         clearTimeout(inactivityTimer.current); // Hareketsizlik zamanlayıcısını temizle
         router.push('/'); // Anasayfaya yönlendir
-        toast.success('Başarıyla çıkış yapıldı.'); // Türkçe başarı mesajı
-    }, [router]); // router bir bağımlılık
+        toast.success('Başarıyla çıkış yapıldı.');
+    }, [router]); // router bir bağımlılıktır
 
     // Kullanıcı şifresini değiştirme fonksiyonu
     const changeUserPassword = async (currentPassword, newPassword) => {
-        if (!user) { // Kullanıcı kontrolü
-            toast.error("Bu işlemi yapmak için giriş yapmalısınız."); // Türkçe hata mesajı
+        if (!user) {
+            toast.error("Bu işlemi yapmak için giriş yapmış olmalısınız.");
             return false;
         }
-        const toastId = toast.loading("İşleniyor..."); // Yükleme göstergesi
+        const toastId = toast.loading("İşleniyor..."); // Yükleme göstergesi göster
         try {
             // Önce mevcut şifreyi doğrula
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email,
                 password: currentPassword,
             });
-            if (signInError) { // Mevcut şifre yanlışsa
-                throw new Error("Mevcut şifre yanlış."); // Türkçe hata
+            if (signInError) {
+                throw new Error("Mevcut şifre yanlış.");
             }
             // Mevcut şifre doğruysa, yeni şifreyle güncelle
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword,
             });
-            if (updateError) { // Güncelleme hatası olursa
-                throw new Error("Şifre güncellenirken hata: " + updateError.message); // Türkçe hata
+            if (updateError) {
+                throw new Error("Şifre güncellenirken hata oluştu: " + updateError.message);
             }
-            toast.success("Şifre başarıyla güncellendi!", { id: toastId }); // Türkçe başarı mesajı
+            toast.success("Şifre başarıyla güncellendi!", { id: toastId });
             return true; // Başarıyı belirt
         } catch (error) {
-            toast.error(error.message, { id: toastId }); // Hata mesajını göster
+            toast.error(error.message, { id: toastId });
             return false; // Başarısızlığı belirt
         }
     };
 
-    // Kullanıcı meta verilerini (örn: tam ad, telefon) güncelle
+    // Kullanıcı meta verilerini (tam ad, telefon gibi) güncelle
     const updateUserData = async (data) => {
-        const toastId = toast.loading("Bilgileriniz güncelleniyor..."); // Türkçe yükleme mesajı
-        const { error } = await supabase.auth.updateUser({ data }); // Meta verileri güncelle
+        const toastId = toast.loading("Bilgileriniz güncelleniyor...");
+        const { error } = await supabase.auth.updateUser({ data });
         if (error) {
-            toast.error("Bilgi güncellenirken hata: " + error.message, { id: toastId }); // Türkçe hata
-            return false; // Başarısızlığı belirt
+            toast.error("Bilgi güncellenirken hata oluştu: " + error.message, { id: toastId });
+            return false;
         }
-        toast.success("Bilgiler başarıyla güncellendi!", { id: toastId }); // Türkçe başarı mesajı
-        return true; // Başarıyı belirt
+        toast.success("Bilgiler başarıyla güncellendi!", { id: toastId });
+        return true;
     };
 
-    // Tüm ürünleri getiren fonksiyon
-    const fetchProducts = useCallback(async () => {
-        setLoading(true); setError(null); // Yükleme ve hata durumunu sıfırla
-        // Ürünleri ve ilişkili kategori adını seç
+    // Tüm ürünleri getir
+    const fetchProducts = async () => {
+        setLoading(true); setError(null);
+        // Ürünleri seç ve ilişki üzerinden kategori adını dahil et
         const { data, error: fetchError } = await supabase.from('products').select('*, categories(name)');
         if (fetchError) {
-            setError(fetchError.message); setProducts([]); // Hata varsa state'i ayarla
+            setError(fetchError.message); setProducts([]);
         } else {
-            // image_urls'ün her zaman bir dizi olmasını sağla
+            // image_urls'in her zaman bir dizi olmasını sağla
             const formattedProducts = (data || []).map(p => ({
                 ...p,
                 image_urls: Array.isArray(p.image_urls) ? p.image_urls : [],
             }));
-            setProducts(formattedProducts); // Ürün state'ini güncelle
+            setProducts(formattedProducts);
         }
-        setLoading(false); // Yüklemeyi bitir
-    }, []); // Bağımlılık yok, sadece ilk renderda çalışır
+        setLoading(false);
+    };
 
-    // Kullanıcının kayıtlı adreslerini getiren fonksiyon
-    const fetchAddresses = useCallback(async (userId) => {
+    // Kullanıcının kayıtlı adreslerini getir
+    const fetchAddresses = async (userId) => {
         if (!userId) return; // Kullanıcı ID'si yoksa getirme
         const { data, error } = await supabase
             .from('addresses')
             .select('*')
-            .eq('user_id', userId) // Kullanıcı ID'sine göre filtrele
-            .order('created_at', { ascending: false }); // En yeniden eskiye sırala
-        if (!error) setAddresses(data || []); // Adres state'ini güncelle
-        // Hata yönetimi (isteğe bağlı): else console.error("Adresleri getirirken hata:", error);
-    }, []);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // En yeniler önce
+        if (!error) setAddresses(data || []);
+         // Gerekirse hatayı işle: else console.error("Adresler getirilirken hata:", error);
+    };
 
-    // Kullanıcının siparişlerini (ürün detayları ile birlikte) getiren fonksiyon
-    const fetchMyOrders = useCallback(async (userId) => {
+    // Kullanıcının siparişlerini, öğeleri ve ürün detaylarıyla birlikte getir
+    const fetchMyOrders = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('orders')
             .select(`*, order_items(*, products(*, categories(name)))`) // Derinlemesine getirme
-            .eq('user_id', userId) // Kullanıcı ID'sine göre filtrele
-            .order('created_at', { ascending: false }); // En yeniden eskiye sırala
-        if (!error) setMyOrders(data || []); // Sipariş state'ini güncelle
-        // Hata yönetimi (isteğe bağlı): else console.error("Siparişleri getirirken hata:", error);
-    }, []);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // En yeniler önce
+        if (!error) setMyOrders(data || []);
+         // Gerekirse hatayı işle: else console.error("Siparişler getirilirken hata:", error);
+    };
 
-    // Kullanıcının favori listesini (ürün detayları ile birlikte) getiren fonksiyon
-    const fetchWishlist = useCallback(async (userId) => {
+    // Kullanıcının istek listesini ürün detaylarıyla birlikte getir
+    const fetchWishlist = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('wishlist')
             .select('*, product:products(*)') // İlişkili ürün detaylarını getir
-            .eq('user_id', userId); // Kullanıcı ID'sine göre filtrele
-        if (!error) setWishlist(data || []); // Favori listesi state'ini güncelle
-        // Hata yönetimi (isteğe bağlı): else console.error("Favori listesini getirirken hata:", error);
-    }, []);
+            .eq('user_id', userId);
+        if (!error) setWishlist(data || []);
+         // Gerekirse hatayı işle: else console.error("İstek listesi getirilirken hata:", error);
+    };
 
-    // Kullanıcının yorumlarını (ürün detayları ile birlikte) getiren fonksiyon
-    const fetchMyReviews = useCallback(async (userId) => {
+    // Kullanıcının yorumlarını ürün detaylarıyla birlikte getir
+    const fetchMyReviews = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('reviews')
             .select(`*, products (id, name, image_urls)`) // İlişkili ürün detaylarını getir
-            .eq('user_id', userId) // Kullanıcı ID'sine göre filtrele
-            .order('created_at', { ascending: false }); // En yeniden eskiye sırala
-        if (!error) setMyReviews(data || []); // Yorum state'ini güncelle
-        // Hata yönetimi (isteğe bağlı): else console.error("Yorumları getirirken hata:", error);
-    }, []);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // En yeniler önce
+        if (!error) setMyReviews(data || []);
+         // Gerekirse hatayı işle: else console.error("Yorumlar getirilirken hata:", error);
+    };
 
-    // Kullanıcının kayıtlı ödeme kartlarını getiren fonksiyon
-    const fetchSavedCards = useCallback(async (userId) => {
+    // Kullanıcının kayıtlı ödeme kartlarını getir
+    const fetchSavedCards = async (userId) => {
         if (!userId) return;
         const { data, error } = await supabase
             .from('saved_cards')
             .select('*')
-            .eq('user_id', userId) // Kullanıcı ID'sine göre filtrele
-            .order('created_at', { ascending: false }); // En yeniden eskiye sırala
-        if (!error) setSavedCards(data || []); // Kayıtlı kartlar state'ini güncelle
-        // Hata yönetimi (isteğe bağlı): else console.error("Kayıtlı kartları getirirken hata:", error);
-    }, []);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // En yeniler önce
+        if (!error) setSavedCards(data || []);
+        // Gerekirse hatayı işle: else console.error("Kayıtlı kartlar getirilirken hata:", error);
+    };
 
-    // Kullanıcının iade taleplerini getiren fonksiyon (YENİ EKLENDİ)
-    const fetchMyReturnRequests = useCallback(async (userId) => {
-        if (!userId) return; // Kullanıcı ID'si yoksa getirme
-        const { data, error } = await supabase
-            .from('return_requests') // İade talepleri tablosu
-            .select(`
-                *,
-                order_item:order_items(
-                    id, quantity, price,
-                    product:products(id, name, image_urls)
-                )
-            `) // İlişkili sipariş öğesi ve ürün detaylarını getir
-            .eq('user_id', userId) // Kullanıcı ID'sine göre filtrele
-            .order('created_at', { ascending: false }); // En yeniden eskiye sırala
-
-        if (!error) {
-            setMyReturnRequests(data || []); // İade talepleri state'ini güncelle
-        } else {
-            console.error("İade taleplerini getirirken hata:", error);
-            // toast.error('İade talepleri alınamadı.'); // İsteğe bağlı bildirim
-        }
-    }, []); // Bağımlılık yok
-
-    // Yeni bir kayıtlı kart ekle (şu anki haliyle yer tutucu token mantığı kullanır)
+    // Yeni bir kayıtlı kart ekle (şu anda yer tutucu token mantığı kullanıyor)
     const addSavedCard = async (cardData) => {
-        if (!user) return toast.error("Kart eklemek için giriş yapmalısınız."); // Türkçe hata
+        if (!user) return toast.error("Kart eklemek için giriş yapmalısınız.");
 
-        // Yer tutucu token mantığı - Gerçek Stripe/ödeme sağlayıcı entegrasyonu ile değiştirilmelidir
+        // Tokenizasyon için yer tutucu mantık - gerçek Stripe/ödeme sağlayıcı entegrasyonu ile değiştirin
         const fakeToken = `tok_${Math.random().toString(36).substr(2, 14)}`;
         const last4 = cardData.cardNumber.slice(-4);
-        const cardBrand = "visa"; // Gerçekte temel marka tespiti gerekir
+        const cardBrand = "visa"; // Gerçekte burada temel marka tespiti gerekli
 
         const { error } = await supabase.from('saved_cards').insert({
             user_id: user.id,
@@ -324,162 +292,141 @@ export const AppContextProvider = (props) => {
         });
 
         if (error) {
-            toast.error("Kart eklenirken hata: " + error.message); // Türkçe hata
-            return false; // Başarısızlığı belirt
+            toast.error("Kart eklenirken hata oluştu: " + error.message);
+            return false;
         } else {
-            toast.success("Kart başarıyla eklendi!"); // Türkçe başarı mesajı
+            toast.success("Kart başarıyla eklendi!");
             fetchSavedCards(user.id); // Kayıtlı kart listesini yenile
-            return true; // Başarıyı belirt
+            return true;
         }
     };
 
     // Kayıtlı bir kartı sil
     const deleteSavedCard = async (cardId) => {
-        if (!user) return toast.error("Bu işlem için giriş yapmalısınız."); // Türkçe hata
+        if (!user) return toast.error("Bu işlem için giriş yapmalısınız.");
 
         const { error } = await supabase.from('saved_cards').delete().eq('id', cardId);
 
         if (error) {
-            toast.error("Kart silinirken hata: " + error.message); // Türkçe hata
+            toast.error("Kart silinirken hata oluştu: " + error.message);
         } else {
-            toast.success("Kart başarıyla silindi."); // Türkçe başarı mesajı
-            // Daha iyi kullanıcı deneyimi için yerel state'i hemen güncelle
+            toast.success("Kart başarıyla silindi.");
+            // Daha iyi UX için yerel state'i hemen güncelle
             setSavedCards(prev => prev.filter(card => card.id !== cardId));
         }
     };
 
-    // Bir ürünü favori listesine ekle
+    // İstek listesine ürün ekle
     const addToWishlist = async (productId) => {
-        if (!user) return toast.error("Favorilere eklemek için lütfen giriş yapın."); // Türkçe hata
-        // Favori listesi tablosuna ekle
+        if (!user) return toast.error("İstek listenize öğe eklemek için lütfen giriş yapın.");
+        // Wishlist tablosuna ekle
         const { error } = await supabase.from('wishlist').insert({ user_id: user.id, product_id: productId });
         if (error) {
-            // Potansiyel çift kayıt hatasını ele al (kod 23505)
+            // Olası çift kayıt hatasını işle (kod 23505)
             if (error.code === '23505') {
-                 toast.error("Bu ürün zaten favorilerinizde."); // Türkçe hata
+                 toast.error("Bu öğe zaten istek listenizde.");
             } else {
-                 toast.error("Favorilere eklenirken hata: " + error.message); // Türkçe hata
+                 toast.error("İstek listesine eklenirken hata oluştu: " + error.message);
             }
         } else {
-            toast.success("Ürün favorilere eklendi!"); // Türkçe başarı mesajı
-            fetchWishlist(user.id); // Favori listesini yenile
+            toast.success("Öğe istek listesine eklendi!");
+            fetchWishlist(user.id); // İstek listesini yenile
         }
     };
 
-    // Bir ürünü favori listesinden çıkar
+    // İstek listesinden ürün kaldır
     const removeFromWishlist = async (productId) => {
-        if (!user) return; // Giriş yapmış kullanıcılar için gösterilen butonda olmamalı
-        // Kullanıcı ve ürün ID'sine göre favori listesi tablosundan sil
+        if (!user) return; // Buton sadece giriş yapmış kullanıcılara gösteriliyorsa bu olmamalı
+        // Kullanıcı ve ürün ID'sine göre wishlist tablosundan sil
         const { error } = await supabase.from('wishlist').delete().match({ user_id: user.id, product_id: productId });
         if (error) {
-            toast.error("Favorilerden çıkarılırken hata oluştu."); // Türkçe hata
+            toast.error("İstek listesinden kaldırılırken hata oluştu.");
         } else {
-            toast.success("Ürün favorilerden çıkarıldı!"); // Türkçe başarı mesajı
-            fetchWishlist(user.id); // Favori listesini yenile
+            toast.success("Öğe istek listesinden kaldırıldı!");
+            fetchWishlist(user.id); // İstek listesini yenile
         }
     };
 
-    // Kullanıcı nesnesi değiştiğinde kullanıcıya özel verileri getirmek için Effect
-    useEffect(() => {
-        if (user) {
-            fetchAddresses(user.id);
-            fetchMyOrders(user.id);
-            fetchWishlist(user.id);
-            fetchMyReviews(user.id);
-            fetchSavedCards(user.id);
-            fetchMyReturnRequests(user.id); // Kullanıcının iade taleplerini getir (YENİ EKLENDİ)
-        } else {
-            // Kullanıcı çıkış yapınca state'leri temizle
-            setAddresses([]);
-            setMyOrders([]);
-            setWishlist([]);
-            setMyReviews([]);
-            setSavedCards([]);
-            setMyReturnRequests([]); // (YENİ EKLENDİ)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]); // Kullanıcı nesnesi değiştiğinde çalıştır (fetch fonksiyonlarını bağımlılıklara eklemek sonsuz döngüye neden olabilir, bu yüzden eslint-disable kullanıldı)
-
-
-    // Yeni bir adres ekle
+    // Yeni adres ekle
     const addAddress = async (addressData) => {
-        if (!user) return toast.error("Adres eklemek için giriş yapmalısınız."); // Türkçe hata
-        const toastId = toast.loading("Adres ekleniyor..."); // Türkçe yükleme mesajı
+        if (!user) return toast.error("Adres eklemek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adres ekleniyor...");
         try {
             // Kullanıcıya bağlı yeni adresi ekle
             const { error } = await supabase.from('addresses').insert({ ...addressData, user_id: user.id });
-            if (error) throw error; // Hata varsa fırlat
+            if (error) throw error;
             await fetchAddresses(user.id); // Adres listesini yenile
-            toast.success("Adres başarıyla eklendi!", { id: toastId }); // Türkçe başarı mesajı
-            return true; // Başarıyı belirt
+            toast.success("Adres başarıyla eklendi!", { id: toastId });
+            return true;
         } catch (error) {
-            toast.error("Adres eklenirken hata: " + error.message, { id: toastId }); // Türkçe hata
-            return false; // Başarısızlığı belirt
+            toast.error("Adres eklenirken hata oluştu: " + error.message, { id: toastId });
+            return false;
         }
     };
 
     // Mevcut bir adresi güncelle
     const updateAddress = async (addressId, addressData) => {
-        if (!user) return toast.error("Adres güncellemek için giriş yapmalısınız."); // Türkçe hata
-        const toastId = toast.loading("Adres güncelleniyor..."); // Türkçe yükleme mesajı
+        if (!user) return toast.error("Adresi güncellemek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adres güncelleniyor...");
         try {
-            // Doğrudan güncellenmemesi gereken alanları çıkar
+            // Doğrudan güncellenmemesi gereken alanları hariç tut
             const { id, user_id, created_at, ...updateData } = addressData;
             const { error } = await supabase.from('addresses').update(updateData).eq('id', addressId);
-            if (error) throw error; // Hata varsa fırlat
+            if (error) throw error;
             await fetchAddresses(user.id); // Adres listesini yenile
-            toast.success("Adres başarıyla güncellendi!", { id: toastId }); // Türkçe başarı mesajı
-            return true; // Başarıyı belirt
+            toast.success("Adres başarıyla güncellendi!", { id: toastId });
+            return true;
         } catch (error) {
-            toast.error("Adres güncellenirken hata: " + error.message, { id: toastId }); // Türkçe hata
-            return false; // Başarısızlığı belirt
+            toast.error("Adres güncellenirken hata oluştu: " + error.message, { id: toastId });
+            return false;
         }
     };
 
-    // Bir adresi sil
+    // Adresi sil
     const deleteAddress = async (addressId) => {
-        if (!user) return toast.error("Adres silmek için giriş yapmalısınız."); // Türkçe hata
-        const toastId = toast.loading("Adres siliniyor..."); // Türkçe yükleme mesajı
+        if (!user) return toast.error("Adresi silmek için giriş yapmalısınız.");
+        const toastId = toast.loading("Adres siliniyor...");
         try {
             const { error } = await supabase.from('addresses').delete().eq('id', addressId);
-            if (error) throw error; // Hata varsa fırlat
+            if (error) throw error;
             // Anında UI geri bildirimi için yerel state'i güncelle
             setAddresses(prev => prev.filter(addr => addr.id !== addressId));
-            toast.success("Adres başarıyla silindi!", { id: toastId }); // Türkçe başarı mesajı
+            toast.success("Adres başarıyla silindi!", { id: toastId });
         } catch (error) {
-            toast.error("Adres silinirken hata: " + error.message, { id: toastId }); // Türkçe hata
+            toast.error("Adres silinirken hata oluştu: " + error.message, { id: toastId });
         }
     };
 
-    // İlk mount işleminde localStorage'dan sepet öğelerini yüklemek için Effect
+    // İlk yüklemede localStorage'dan sepet öğelerini yüklemek için effect
     useEffect(() => {
         try {
-             const storedCart = localStorage.getItem("cartItems"); // localStorage'dan al
-             if (storedCart) { // Eğer veri varsa
-                setCartItems(JSON.parse(storedCart)); // State'i güncelle
+             const storedCart = localStorage.getItem("cartItems");
+             if (storedCart) {
+                setCartItems(JSON.parse(storedCart));
              }
         } catch (e) {
-             console.error("localStorage'dan sepet yüklenemedi:", e); // Türkçe hata logu
+             console.error("localStorage'dan sepet yüklenemedi:", e);
              // İsteğe bağlı olarak bozuk veriyi temizle: localStorage.removeItem("cartItems");
         }
-    }, []); // Boş bağımlılık dizisi sadece ilk mount'ta çalıştırır
+    }, []); // Boş bağımlılık dizisi, sadece ilk yüklemede çalıştır anlamına gelir
 
-    // cartItems state'i her değiştiğinde localStorage'a kaydetmek için Effect
+    // cartItems state'i her değiştiğinde localStorage'a kaydetmek için effect
     useEffect(() => {
         try {
-            if (Object.keys(cartItems).length > 0) { // Sepet boş değilse
-                localStorage.setItem("cartItems", JSON.stringify(cartItems)); // localStorage'a kaydet
-            } else { // Sepet boşsa
-                localStorage.removeItem("cartItems"); // localStorage'dan kaldır
+            if (Object.keys(cartItems).length > 0) {
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
+            } else {
+                // Sepet boşsa, öğeyi localStorage'dan kaldır
+                localStorage.removeItem("cartItems");
             }
         } catch(e) {
-            console.error("Sepet localStorage'a kaydedilemedi:", e); // Türkçe hata logu
+            console.error("localStorage'a sepet kaydedilemedi:", e);
         }
     }, [cartItems]); // cartItems değiştiğinde çalıştır
 
-    // Bir ürünü sepete ekle (miktar ve stok kontrolü yapar)
+    // Sepete ürün ekle (miktar ve stok kontrolünü yapar)
     const addToCart = (product, quantity = 1, priceOverride = null) => {
-        // Eğer varsa fiyat geçersiz kılmayı kullan (toplu fiyatlandırma için), yoksa ürünün standart fiyatını kullan
+        // Varsa priceOverride'ı kullan (toplu fiyatlandırma için), yoksa ürünün standart fiyatını kullan
         const priceToAdd = priceOverride !== null ? priceOverride : product.price;
         // Eklenecek miktarı belirle (toplu eklemeler için 1'den fazla olabilir)
         const effectiveQuantity = quantity;
@@ -488,15 +435,15 @@ export const AppContextProvider = (props) => {
         const currentItem = cartItems[product.id];
         const currentQuantityInCart = currentItem ? currentItem.quantity : 0;
 
-        // İstenen miktarı eklemenin mevcut stoğu aşıp aşmadığını kontrol et
+        // İstenen miktarın eklenmesinin mevcut stoğu aşıp aşmadığını kontrol et
         if (product.stock < currentQuantityInCart + effectiveQuantity) {
-            toast.error(`Üzgünüz, stokta sadece ${product.stock} adet var. Sepetinizde zaten ${currentQuantityInCart} adet bulunuyor.`); // Türkçe hata
+            toast.error(`Üzgünüz, sadece ${product.stock} adet mevcut. Sepetinizde zaten ${currentQuantityInCart} adet var.`);
             return; // Yeterli stok yoksa fonksiyonu durdur
         }
 
         // cartItems state'ini güncelle
         setCartItems(prev => {
-            const existingItem = prev[product.id]; // Mevcut öğeyi al
+            const existingItem = prev[product.id];
             // Bu ürün için yeni toplam miktarı hesapla
             const newQuantity = (existingItem ? existingItem.quantity : 0) + effectiveQuantity;
 
@@ -505,16 +452,14 @@ export const AppContextProvider = (props) => {
                 ...prev, // Mevcut öğeleri koru
                 [product.id]: { // Öğeyi ekle veya güncelle
                     // Ürün detaylarını, yeni miktarı ve bu ekleme için kullanılan *birim başına* fiyatı sakla
-                    product: { ...product, price: priceToAdd / effectiveQuantity }, // Tek bir ürünün fiyatını sakla
+                    product: { ...product, price: priceToAdd / effectiveQuantity }, // Birim başına fiyatı sakla
                     quantity: newQuantity,
-                    // İsteğe bağlı: Fiyatın nasıl belirlendiğini sakla (örn: 'standard', '2_pack')
-                    // priceSource: priceOverride ? 'bulk' : 'standard'
                 }
             };
         });
 
-        // Başarı mesajını göster
-        toast.success(`${effectiveQuantity} x ${product.name} sepete eklendi!`); // Türkçe başarı mesajı
+        // Başarı mesajı göster
+        toast.success(`${effectiveQuantity} x ${product.name} sepete eklendi!`);
     };
 
     // Sepetteki bir öğenin miktarını güncelle
@@ -530,15 +475,15 @@ export const AppContextProvider = (props) => {
 
             // Miktarı artırırken stok sınırını kontrol et
             if (quantity > product.stock) {
-                toast.error(`Maksimum ${product.stock} adet izin veriliyor.`); // Türkçe hata
+                toast.error(`Maksimum ${product.stock} adet izin verilir.`);
                 newItems[productId].quantity = product.stock; // Miktarı maksimum stoğa ayarla
                 return newItems; // Güncellenmiş state'i döndür
             }
 
             // Miktar 0 veya daha az ise, öğeyi sepetten kaldır
             if (quantity <= 0) {
-                delete newItems[productId]; // Öğeyi sil
-                 toast.success(`${product.name} sepetten çıkarıldı.`); // Türkçe onay mesajı (isteğe bağlı)
+                delete newItems[productId];
+                 toast.success(`${product.name} sepetten kaldırıldı.`); // İsteğe bağlı onay
             }
             // Aksi takdirde, mevcut öğenin miktarını güncelle
             else {
@@ -548,15 +493,15 @@ export const AppContextProvider = (props) => {
         });
     };
 
-    // Sepetteki toplam ürün sayısını hesapla
-    const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + (item?.quantity || 0), 0); // Miktarları güvenli bir şekilde topla
+    // Sepetteki toplam öğe sayısını hesapla
+    const getCartCount = () => Object.values(cartItems).reduce((sum, item) => sum + (item.quantity || 0), 0); // Miktarları güvenli bir şekilde topla
 
-    // Sepetin ara toplamını, vergi tutarını ve toplam tutarını hesapla
+    // Sepet için ara toplam, vergi ve toplam tutarı hesapla
     const getCartAmount = (taxRate = CALIFORNIA_TAX_RATE) => { // Vergi oranı geçersiz kılmayı kabul et, varsayılan olarak sabiti kullan
         // Ara toplamı güvenli bir şekilde hesapla, fiyat ve miktarın sayı olduğundan emin ol
         const subtotal = Object.values(cartItems).reduce((sum, item) => {
-            const price = item?.product?.price ?? 0; // Fiyat eksikse 0 olarak varsay
-            const quantity = item?.quantity ?? 0;   // Miktar eksikse 0 olarak varsay
+            const price = item?.product?.price ?? 0; // Fiyat eksikse varsayılan olarak 0 kullan
+            const quantity = item?.quantity ?? 0;   // Miktar eksikse varsayılan olarak 0 kullan
             return sum + (price * quantity);
         }, 0); // Toplamı 0'dan başlat
 
@@ -565,7 +510,7 @@ export const AppContextProvider = (props) => {
         // Toplam tutarı hesapla
         const totalAmount = subtotal + taxAmount;
 
-        // Her zaman sayı değerleri içeren bir nesne döndür, varsayılan olarak 0
+        // Her zaman sayı değerleri olan bir nesne döndür, varsayılan olarak 0
         return {
             subtotal: subtotal || 0,
             taxAmount: taxAmount || 0,
@@ -573,28 +518,116 @@ export const AppContextProvider = (props) => {
         };
     };
 
-    // İlk mount'ta ürünleri getirmek için Effect
-    useEffect(() => { fetchProducts(); }, [fetchProducts]); // fetchProducts useCallback ile tanımlandığı için bağımlılıklara eklendi
+    // İade talebini veritabanına gönderen fonksiyon
+    const submitReturnRequest = async (orderId, reasons) => {
+        if (!user) {
+            toast.error("İade talebi oluşturmak için giriş yapmalısınız.");
+            return false; // Başarısız
+        }
+        if (!orderId || !reasons || reasons.length === 0) {
+            toast.error("Geçersiz talep bilgileri.");
+            return false; // Başarısız
+        }
 
-    // İlk mount'ta yorum izni ayarını getirmek için Effect
+        const toastId = toast.loading("İade talebiniz gönderiliyor...");
+
+        try {
+            const { error } = await supabase
+                .from('return_requests')
+                .insert({
+                    order_id: orderId,
+                    user_id: user.id,
+                    reasons: reasons, // Nedenleri dizi olarak gönder
+                    status: 'pending' // Başlangıç durumu
+                });
+
+            if (error) {
+                if (error.code === '23505') { // PostgreSQL unique violation
+                     toast.error('Bu sipariş için zaten bir iade talebiniz mevcut.', { id: toastId });
+                } else {
+                     throw error; // Diğer hataları fırlat
+                }
+                return false; // Başarısız
+            }
+
+            toast.success("İade talebiniz başarıyla gönderildi!", { id: toastId });
+            // İsteğe bağlı: Kullanıcının iade talepleri listesini yeniden çekebilirsiniz.
+            fetchMyReturnRequests(user.id);
+            return true; // Başarılı
+
+        } catch (error) {
+            console.error("İade talebi gönderme hatası:", error);
+            toast.error(`Bir hata oluştu: ${error.message}`, { id: toastId });
+            return false; // Başarısız
+        }
+    };
+
+    // ✨ YENİ: Kullanıcının iade taleplerini getir
+    const fetchMyReturnRequests = async (userId) => {
+        if (!userId) return; // Kullanıcı ID'si yoksa getirme
+        // Sipariş ID'si ile birlikte talepleri getir
+        const { data, error: returnError } = await supabase
+            .from('return_requests')
+            .select(`
+                *,
+                order:orders ( id )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // En yeniler önce
+
+        if (!returnError) {
+            setMyReturnRequests(data || []);
+        } else {
+            console.error("İade talepleri getirilirken hata:", returnError);
+            setMyReturnRequests([]); // Hata durumunda boş dizi ata
+        }
+    };
+
+
+    // Kullanıcı nesnesi değiştiğinde kullanıcıya özel verileri getirmek için effect
+    useEffect(() => {
+        if (user) {
+            fetchAddresses(user.id);
+            fetchMyOrders(user.id);
+            fetchWishlist(user.id);
+            fetchMyReviews(user.id);
+            fetchSavedCards(user.id);
+            fetchMyReturnRequests(user.id); // İade taleplerini de getir
+        } else {
+            // Kullanıcı çıkış yaptığında state'leri sıfırla
+            setAddresses([]);
+            setMyOrders([]);
+            setWishlist([]);
+            setMyReviews([]);
+            setSavedCards([]);
+            setMyReturnRequests([]); // İade taleplerini de sıfırla
+            setCartItems({}); // Sepeti de sıfırlayalım
+        }
+    }, [user]); // Kullanıcı nesnesi değiştiğinde çalıştır
+
+
+    // İlk yüklemede ürünleri getirmek için effect
+    useEffect(() => { fetchProducts(); }, []); // Boş dizi, bir kez çalıştır anlamına gelir
+
+    // ⭐️ İlk yüklemede yorum izni ayarını getirmek için effect
     const fetchReviewPermissionSetting = useCallback(async () => {
         const { data, error } = await supabase
             .from('store_settings')
             .select('setting_value')
-            .eq('setting_key', REVIEW_PERMISSION_KEY) // Ayar anahtarına göre filtrele
-            .single(); // Tek bir sonuç bekle
+            .eq('setting_key', REVIEW_PERMISSION_KEY)
+            .single();
 
         if (!error && data) {
-            setReviewPermissionSetting(data.setting_value); // State'i getirilen değerle güncelle
-        } else if (error && error.code !== 'PGRST116') { // 'Bulunamadı' hatasını yoksay
-             console.error("Yorum ayarı getirilemedi:", error.message); // Türkçe log
+            setReviewPermissionSetting(data.setting_value); // Getirilen değerle state'i güncelle
+        } else if (error && error.code !== 'PGRST116') { // 'Not Found' hatasını yoksay
+             console.error("Yorum ayarı getirilemedi:", error.message);
         }
         // Hata veya ayar bulunamazsa, varsayılan 'purchasers_only' kalır
-    }, []); // Bu fonksiyon için bağımlılık gerekmez
+    }, []); // Bu fonksiyonun kendisi için bağımlılık gerekmez
 
     useEffect(() => {
-        fetchReviewPermissionSetting(); // Ayar getirme fonksiyonunu çağır
-    }, [fetchReviewPermissionSetting]); // fetch fonksiyonu kullanılabilir olduğunda çalıştır
+        fetchReviewPermissionSetting(); // Getirme fonksiyonunu çağır
+    }, [fetchReviewPermissionSetting]); // Getirme fonksiyon tanımı mevcut olduğunda çalıştır
 
     // ---- CONTEXT DEĞERİ ----
     // Context tarafından sağlanan değeri tanımla
@@ -611,10 +644,11 @@ export const AppContextProvider = (props) => {
         wishlist, addToWishlist, removeFromWishlist,
         savedCards, addSavedCard, deleteSavedCard,
         reviewPermissionSetting, // Yorum izni ayarını context değerine ekle
-        myReturnRequests, // Kullanıcının iade taleplerini dışa aktar (YENİ EKLENDİ)
-        fetchMyReturnRequests, // Kullanıcı iade taleplerini getirme fonksiyonunu dışa aktar (YENİ EKLENDİ)
+        submitReturnRequest, // İade talebi fonksiyonunu context değerine ekle
+        myReturnRequests, // İade talepleri state'ini context'e ekle
+        fetchMyReturnRequests, // İade taleplerini getirme fonksiyonunu context'e ekle
     };
 
-    // Provider'ı, children bileşenlerini sararak döndür
+    // Sağlayıcıyı, alt bileşenleri sararak döndür
     return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
 };

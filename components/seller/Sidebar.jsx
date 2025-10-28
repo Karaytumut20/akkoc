@@ -23,8 +23,7 @@ const SideBar = ({ isOpen, toggleSidebar }) => {
     { name: 'Hero Video', path: '/seller/hero-video', icon: <FiFilm className="w-6 h-6" /> },
     { name: 'Settings', path: '/seller/settings', icon: <FiSettings className="w-6 h-6" /> }, // Yeni link eklendi
     { name: 'Coupon Management', path: '/seller/coupons', icon: <FiGift className="w-6 h-6" /> }, // FiGift ikonunu react-icons/fi'dan import etmeyi unutma
-    { name: 'İade Talepleri', path: '/seller/returns', icon: <FiArchive className="w-6 h-6" /> }, // <-- YENİ LİNK
-  ];
+{ name: 'Return Requests', path: '/seller/return-requests', icon: <FiArchive className="w-6 h-6" /> },  ];
 
   return (
     <>
