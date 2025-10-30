@@ -29,7 +29,7 @@ const Home = () => {
         <Services/>
         <ShopNow/>
         <DoubleBigCardText/>
-        <NewsLetter />
+       {/*  <NewsLetter />*/}
                 <Footer />
       </div>
     </>
