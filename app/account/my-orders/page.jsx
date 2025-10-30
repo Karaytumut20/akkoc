@@ -1,31 +1,51 @@
 // app/account/my-orders/page.jsx
 
 'use client';
-import React, { useEffect, useState, useCallback } from "react"; // useState eklendi
+import React, { useEffect, useState, useCallback } from "react";
 import { useAppContext } from "@/context/AppContext";
 import Loading from "@/components/Loading";
 import Image from "next/image";
 import { getSafeImageUrl } from "@/lib/utils";
 import toast from 'react-hot-toast';
 import { supabase } from "@/lib/supabaseClient";
-import ReturnReasonModal from "@/components/ReturnReasonModal"; // Yeni modal import edildi
+import ReturnReasonModal from "@/components/ReturnReasonModal";
 
 const MyOrdersPage = () => {
-    // Context'ten gerekli değerleri ve fonksiyonları al
-    const { currency, myOrders, fetchMyOrders, user, authLoading } = useAppContext();
+    const { currency, myOrders, fetchMyOrders, user, authLoading, getTrackingInfo } = useAppContext();
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+    const [itemToReturn, setItemToReturn] = useState(null);
+    const [trackingData, setTrackingData] = useState({}); // Takip bilgilerini saklamak için
 
-    // Modal state'leri
-    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false); // Modalın açık/kapalı durumu
-    const [itemToReturn, setItemToReturn] = useState(null); // İade edilecek ürün bilgilerini tutar
-
-    // Kullanıcı değiştiğinde siparişleri getir
     useEffect(() => {
         if (user) {
             fetchMyOrders(user.id);
         }
     }, [user, fetchMyOrders]);
 
-    // Sipariş durumuna göre renk döndüren yardımcı fonksiyon (değişiklik yok)
+    // Takip bilgilerini getirme fonksiyonu
+    const handleTrackPackage = async (trackingNumber, orderId) => {
+        if (!trackingNumber) {
+            toast.error("No tracking number available.");
+            return;
+        }
+
+        const toastId = toast.loading("Getting tracking information...");
+        try {
+            const trackingInfo = await getTrackingInfo(trackingNumber);
+            
+            if (trackingInfo) {
+                setTrackingData(prev => ({
+                    ...prev,
+                    [orderId]: trackingInfo
+                }));
+            }
+        } catch (error) {
+            console.error("Tracking error:", error);
+        } finally {
+            toast.dismiss(toastId);
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Teslim Edildi': case 'Delivered': return 'bg-green-100 text-green-800';
@@ -35,27 +55,23 @@ const MyOrdersPage = () => {
         }
     };
 
-    // İade Et butonuna tıklandığında modalı açan fonksiyon
     const openReturnModal = (order, item) => {
-        setItemToReturn({ // İade edilecek ürünün bilgilerini state'e kaydet
+        setItemToReturn({
             orderId: order.id,
             orderItemId: item.id,
             productId: item.products.id,
             productName: item.products.name,
-            itemData: item // Modal içinde ürün detayını göstermek için tüm item bilgisi
+            itemData: item
         });
-        setIsReturnModalOpen(true); // Modalı aç
+        setIsReturnModalOpen(true);
     };
 
-    // Modalı kapatan fonksiyon
     const closeReturnModal = () => {
         setIsReturnModalOpen(false);
-        setItemToReturn(null); // Seçili ürünü sıfırla
+        setItemToReturn(null);
     };
 
-    // İade talebini veritabanına gönderen fonksiyon (artık 'reason' parametresi alıyor)
     const submitReturnRequest = useCallback(async (reason) => {
-        // Eğer iade edilecek ürün bilgisi yoksa işlemi durdur (güvenlik kontrolü)
         if (!itemToReturn) {
             toast.error('İade edilecek ürün bilgisi bulunamadı.');
             return;
@@ -73,7 +89,7 @@ const MyOrdersPage = () => {
                     product_id: productId,
                     user_id: user.id,
                     status: 'Pending',
-                    reason: reason // Seçilen iade nedenini 'reason' sütununa kaydet
+                    reason: reason
                 });
 
             if (error) {
@@ -84,30 +100,25 @@ const MyOrdersPage = () => {
                 }
             } else {
                 toast.success(`'${productName}' için iade talebi alındı.`, { id: toastId });
-                closeReturnModal(); // Başarılı olunca modalı kapat
-                // İsteğe bağlı: İade edilen ürünün butonunu gizlemek için myOrders state'ini güncelleyebilirsin
-                // Veya fetchMyOrders(user.id) ile listeyi yenileyebilirsin
+                closeReturnModal();
             }
         } catch (err) {
             console.error("İade talebi hatası:", err);
             toast.error('İade talebi oluşturulurken bir hata oluştu: ' + err.message, { id: toastId });
         }
-    }, [user, itemToReturn]); // user ve itemToReturn bağımlılıkları
+    }, [user, itemToReturn]);
 
-    // Kimlik doğrulama yükleniyorsa Loading component'ini göster
     if (authLoading) return <Loading />;
 
     return (
         <div>
-            {/* Sayfa başlığı */}
             <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">My Orders</h1>
-            {/* Sipariş yoksa mesaj göster */}
+            
             {myOrders.length === 0 ? (
                 <div className="text-center py-16 text-gray-500">
                     <p>You haven't placed any orders yet.</p>
                 </div>
             ) : (
-                // Siparişleri listele
                 <div className="space-y-6">
                     {myOrders.map(order => (
                         <div key={order.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
@@ -124,6 +135,84 @@ const MyOrdersPage = () => {
                                     </span>
                                 </div>
                             </div>
+
+                            {/* TAKİP NUMARASI BÖLÜMÜ - BURASI YENİ */}
+                            {order.tracking_number && (
+                                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-blue-800 mb-1">📦 Shipping Information</h4>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-gray-600">Tracking Number:</span>
+                                                <code className="text-blue-600 font-mono text-sm bg-blue-100 px-2 py-1 rounded">
+                                                    {order.tracking_number}
+                                                </code>
+                                            </div>
+                                            {order.shipping_cost && (
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    Shipping Cost: <span className="font-semibold">{currency}{order.shipping_cost}</span>
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleTrackPackage(order.tracking_number, order.id)}
+                                                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                                            >
+                                                Track Package
+                                            </button>
+                                            <a
+                                                href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 border border-blue-600 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-50 transition-colors"
+                                            >
+                                                View on USPS
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Takip Detayları */}
+                                    {trackingData[order.id] && (
+                                        <div className="mt-4 p-3 bg-white rounded border">
+                                            <div className="flex items-center mb-2">
+                                                <div className={`w-2 h-2 rounded-full mr-2 ${
+                                                    trackingData[order.id].status === 'Delivered' ? 'bg-green-500' : 
+                                                    trackingData[order.id].status === 'In Transit' ? 'bg-blue-500' : 'bg-yellow-500'
+                                                }`}></div>
+                                                <span className="font-medium text-sm">
+                                                    Status: {trackingData[order.id].status}
+                                                </span>
+                                            </div>
+                                            
+                                            {trackingData[order.id].estimatedDelivery && (
+                                                <p className="text-xs text-gray-600 mb-2">
+                                                    Estimated Delivery: {new Date(trackingData[order.id].estimatedDelivery).toLocaleDateString()}
+                                                </p>
+                                            )}
+
+                                            {trackingData[order.id].details && trackingData[order.id].details.length > 0 && (
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-medium text-gray-700">Latest Updates:</p>
+                                                    {trackingData[order.id].details.slice(0, 3).map((detail, index) => (
+                                                        <div key={index} className="flex text-xs">
+                                                            <div className="w-1 bg-blue-200 rounded-full mr-2 mt-1"></div>
+                                                            <p className="text-gray-600">{detail}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {trackingData[order.id].isReal === false && (
+                                                <p className="text-xs text-yellow-600 mt-2">
+                                                    ⚠️ Demo tracking data - Configure real USPS API for live updates
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Sipariş kalemleri */}
                             <div className="border-t pt-4 mt-4">
                                 {order.order_items.map(item => (
@@ -141,10 +230,9 @@ const MyOrdersPage = () => {
                                                 <p className="text-sm text-gray-600">{item.quantity} x {currency}{item.price.toFixed(2)}</p>
                                             </div>
                                         </div>
-                                        {/* İade Et Butonu - Artık modalı açıyor */}
                                         {(order.status === 'Teslim Edildi' || order.status === 'Delivered') && (
                                             <button
-                                                onClick={() => openReturnModal(order, item)} // Modalı açan fonksiyonu çağır
+                                                onClick={() => openReturnModal(order, item)}
                                                 className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-semibold rounded-md hover:bg-red-200 transition mt-2 sm:mt-0"
                                             >
                                                 Return Item
@@ -158,12 +246,11 @@ const MyOrdersPage = () => {
                 </div>
             )}
 
-            {/* İade Nedeni Modalı */}
             <ReturnReasonModal
                 isOpen={isReturnModalOpen}
                 onClose={closeReturnModal}
-                orderItem={itemToReturn?.itemData} // Modal'a ürün bilgisini props olarak geç
-                onSubmitReturn={submitReturnRequest} // Modaldan çağrılacak submit fonksiyonu
+                orderItem={itemToReturn?.itemData}
+                onSubmitReturn={submitReturnRequest}
             />
         </div>
     );
