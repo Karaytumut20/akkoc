@@ -28,12 +28,12 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* === COOKIE YÖNETİMİ === */
+/* === COOKIE YÖNETİMİ - BASİT VE GÜVENLİ === */
 function getBaseDomain() {
   if (typeof window === 'undefined') return '';
   const host = window.location.hostname;
   
-  // Localhost ve IP adresleri için çerez domain'i kullanma
+  // Localhost ve geliştirme ortamları için çerez domain'i kullanma
   if (host === 'localhost' || host.startsWith('192.168.') || host.startsWith('10.0.') || host === '127.0.0.1') {
     return '';
   }
@@ -43,93 +43,200 @@ function getBaseDomain() {
 
 function readGoogTrans() {
   if (typeof document === "undefined") return null;
-  const m = document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
-  return m ? decodeURIComponent(m[1]) : null;
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch (error) {
+    console.error('Çerez okuma hatası:', error);
+    return null;
+  }
 }
 
 function setGoogTransCookie(from, to) {
   if (typeof document === 'undefined') return;
-  const v = encodeURIComponent(`/${from}/${to}`);
-  const baseDomain = getBaseDomain();
-  
-  let cookieString = `googtrans=${v}; path=/; max-age=31536000; SameSite=Lax`;
-  
-  // Sadece production domain'inde Secure flag ekle
-  if (baseDomain && !baseDomain.includes('localhost')) {
-    cookieString += `; domain=${baseDomain}; Secure`;
+  try {
+    const v = encodeURIComponent(`/${from}/${to}`);
+    const baseDomain = getBaseDomain();
+    
+    let cookieString = `googtrans=${v}; path=/; max-age=31536000; SameSite=Lax`;
+    
+    if (baseDomain && !baseDomain.includes('localhost')) {
+      cookieString += `; domain=${baseDomain}`;
+    }
+    
+    document.cookie = cookieString;
+    console.log('Çerez ayarlandı:', v);
+  } catch (error) {
+    console.error('Çerez yazma hatası:', error);
   }
-  
-  document.cookie = cookieString;
 }
 
 function clearGoogTransCookie() {
   if (typeof document === 'undefined') return;
-  const baseDomain = getBaseDomain();
-  const past = "expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-  
-  document.cookie = `googtrans=; ${past}`;
-  if (baseDomain) {
-    document.cookie = `googtrans=; ${past}; domain=${baseDomain}`;
+  try {
+    const baseDomain = getBaseDomain();
+    const past = "expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    
+    document.cookie = `googtrans=; ${past}`;
+    if (baseDomain) {
+      document.cookie = `googtrans=; ${past}; domain=${baseDomain}`;
+    }
+    console.log('Çerez temizlendi');
+  } catch (error) {
+    console.error('Çerez temizleme hatası:', error);
   }
 }
 
-/* === DİL HOOK === */
+/* === GOOGLE TRANSLATE YÖNETİMİ - GÜVENLİ === */
+function useGoogleTranslate() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Google Translate'in yüklendiğini kontrol et
+    const checkGoogleTranslate = () => {
+      if (typeof window !== 'undefined' && window.google && window.google.translate && window.google.translate.TranslateElement) {
+        setIsLoaded(true);
+        return true;
+      }
+      return false;
+    };
+
+    // Hemen kontrol et
+    if (checkGoogleTranslate()) {
+      return;
+    }
+
+    // 2 saniye boyunca her 100ms'de bir kontrol et
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    const interval = setInterval(() => {
+      attempts++;
+      if (checkGoogleTranslate() || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (attempts >= maxAttempts) {
+          console.warn('Google Translate yüklenemedi');
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return { isLoaded };
+}
+
+/* === DİL HOOK - SORUNSUZ === */
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
   const [mounted, setMounted] = useState(false);
+  const { isLoaded: googleLoaded } = useGoogleTranslate();
 
-  // Client-side mount kontrolü
+  // Client-side mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Çerezi oku ve dili ayarla
+  // Çerezi oku ve state'i güncelle - SADECE CLIENT TARAFINDA
   const checkCookieAndSetLang = useCallback(() => {
     if (typeof window === 'undefined') return defaultLang;
     
-    const c = readGoogTrans();
-    let currentLangInCookie = defaultLang;
-    
-    if (c) {
-      const parts = c.split("/");
-      if (parts.length === 3 && parts[2]) {
-        currentLangInCookie = parts[2];
+    try {
+      const c = readGoogTrans();
+      let currentLangInCookie = defaultLang;
+      
+      if (c) {
+        const parts = c.split("/");
+        if (parts.length === 3 && parts[2]) {
+          currentLangInCookie = parts[2];
+        }
       }
+      
+      console.log('Çerezden okunan dil:', currentLangInCookie);
+      setCurrent(currentLangInCookie);
+      return currentLangInCookie;
+    } catch (error) {
+      console.error('Dil kontrol hatası:', error);
+      return defaultLang;
     }
-    
-    setCurrent(currentLangInCookie);
-    return currentLangInCookie;
   }, [defaultLang]);
 
-  // Başlangıçta ve mounted olduğunda çerezi kontrol et
+  // Mount olduğunda çerezi kontrol et
   useEffect(() => {
     if (mounted) {
       checkCookieAndSetLang();
     }
   }, [mounted, checkCookieAndSetLang]);
 
-  // Dili değiştiren fonksiyon
+  // Google Translate yüklendiğinde de kontrol et
+  useEffect(() => {
+    if (mounted && googleLoaded) {
+      setTimeout(() => {
+        checkCookieAndSetLang();
+      }, 500);
+    }
+  }, [mounted, googleLoaded, checkCookieAndSetLang]);
+
+  // Dili değiştiren fonksiyon - KESİN ÇÖZÜM
   const setLang = useCallback((lang) => {
     if (typeof window === 'undefined') return;
 
+    console.log('Dil değiştiriliyor:', lang);
+
     if (lang === "en") {
+      // İngilizce için çerezi temizle
       clearGoogTransCookie();
       setCurrent("en");
     } else {
+      // Diğer diller için çerezi ayarla
       setGoogTransCookie("en", lang);
       setCurrent(lang);
     }
 
-    // Sayfayı yenile - en güvenli yöntem
+    // Google Translate widget'ını manuel olarak tetikle
+    const triggerManualTranslation = () => {
+      try {
+        // Widget'ın yüklenmesini bekle
+        setTimeout(() => {
+          const combo = document.querySelector('select.goog-te-combo');
+          if (combo) {
+            const value = lang === 'en' ? '' : lang;
+            if (combo.value !== value) {
+              combo.value = value;
+              
+              // Değişiklik event'ini tetikle
+              const event = new Event('change', { bubbles: true });
+              combo.dispatchEvent(event);
+              
+              console.log('Google Translate manuel tetiklendi:', lang);
+            }
+          } else {
+            console.warn('Google Translate widget bulunamadı');
+          }
+        }, 300);
+        
+        return true;
+      } catch (error) {
+        console.error('Google Translate tetikleme hatası:', error);
+        return false;
+      }
+    };
+
+    // Widget'ı tetiklemeyi dene
+    triggerManualTranslation();
+
+    // Sayfayı yenile - EN GARANTİ ÇÖZÜM
+    // 1 saniye bekle ki çerez ve widget senkronize olsun
     setTimeout(() => {
+      console.log('Sayfa yenileniyor...');
       window.location.reload();
-    }, 150);
+    }, 1000);
   }, []);
 
   return [current, setLang, mounted];
 }
 
-/* === DİL SEÇİCİ === */
+/* === DİL SEÇİCİ - MOBİL UYUMLU === */
 function LanguageSwitcher({ dark = false }) {
   const [current, setLang, mounted] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -145,7 +252,6 @@ function LanguageSwitcher({ dark = false }) {
 
     const handleEsc = (e) => e.key === "Escape" && setOpen(false);
 
-    // Hem click hem touch event'leri ekle
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
     document.addEventListener("keydown", handleEsc);
@@ -161,7 +267,10 @@ function LanguageSwitcher({ dark = false }) {
   if (!mounted) {
     return (
       <div className="relative">
-        <button className="flex items-center gap-2 p-2 rounded-lg opacity-50">
+        <button 
+          className="flex items-center gap-2 p-2 rounded-lg opacity-50"
+          style={{ minHeight: '44px', minWidth: '44px' }}
+        >
           <span className="inline-block rounded px-2 py-0.5 text-[10px] tracking-wide uppercase border">
             EN
           </span>
@@ -169,6 +278,8 @@ function LanguageSwitcher({ dark = false }) {
       </div>
     );
   }
+
+  const currentLang = current || 'en';
 
   return (
     <div className="relative" ref={ref}>
@@ -184,22 +295,23 @@ function LanguageSwitcher({ dark = false }) {
           "flex items-center gap-1 sm:gap-2 rounded-lg transition-all duration-200",
           "p-2 sm:px-3 sm:py-2",
           "text-xs sm:text-sm",
-          "select-none", // Mobilde text selection'ı önle
+          "select-none touch-manipulation",
           dark
             ? "text-white hover:bg-white/10 active:bg-white/20"
             : "text-gray-800 hover:bg-gray-100 active:bg-gray-200",
         ].join(" ")}
+        style={{ minHeight: '44px', minWidth: '44px' }}
       >
         <span className={[
             "inline-block rounded px-0 py-0 text-[11px] sm:text-[10px] tracking-wide uppercase font-semibold",
             "sm:px-2 sm:py-0.5 sm:border sm:font-medium",
             dark ? "sm:border-white/50" : "sm:border-gray-400"
         ].join(" ")}>
-          {(current || "en").toUpperCase()}
+          {currentLang.toUpperCase()}
         </span>
 
         <span className="hidden md:inline-block">
-          {LANGS.find((l) => l.code === current)?.label || "Language"}
+          {LANGS.find((l) => l.code === currentLang)?.label || "Language"}
         </span>
         
         <svg 
@@ -217,7 +329,7 @@ function LanguageSwitcher({ dark = false }) {
           role="listbox" 
           className={[
             "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[110]",
-            "backdrop-blur-sm", // Blur efekti
+            "backdrop-blur-sm",
             dark ? "bg-neutral-900/95 text-white" : "bg-white/95 text-gray-800"
           ].join(" ")}
         >
@@ -229,17 +341,19 @@ function LanguageSwitcher({ dark = false }) {
                     setLang(l.code); 
                     setOpen(false); 
                   }}
-                  onTouchEnd={() => {
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
                     setLang(l.code);
                     setOpen(false);
                   }}
                   className={[
-                    "w-full text-left px-3 py-2 text-sm hover:bg-black/5 active:bg-black/10 transition-colors",
-                    "touch-manipulation", // Mobilde touch davranışını iyileştir
-                    l.code === current ? "font-semibold bg-black/10" : "",
+                    "w-full text-left px-3 py-3 text-sm hover:bg-black/5 active:bg-black/10 transition-colors",
+                    "touch-manipulation",
+                    l.code === currentLang ? "font-semibold bg-black/10" : "",
                   ].join(" ")}
+                  style={{ minHeight: '44px' }}
                   role="option" 
-                  aria-selected={l.code === current}
+                  aria-selected={l.code === currentLang}
                 >
                   <span className="mr-2 inline-block w-7 text-[11px] text-center rounded border">
                     {l.code.toUpperCase()}
@@ -255,7 +369,7 @@ function LanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === ANA NAVBAR === */
+/* === ANA NAVBAR - TAM ÇALIŞAN === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -271,7 +385,6 @@ export default function MainNavbar() {
 
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
-  const headerRef = useRef(null);
 
   const cartCount = getCartCount();
   const isHomePage = pathname === "/";
@@ -362,43 +475,70 @@ export default function MainNavbar() {
 
   return (
     <>
-      {/* Basitleştirilmiş Google Translate Script'i */}
+      {/* GOOGLE TRANSLATE SCRIPT'LERİ - GÜVENLİ */}
       <Script 
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" 
-        strategy="lazyOnload" 
+        strategy="afterInteractive"
+        onLoad={() => console.log('Google Translate script yüklendi')}
+        onError={() => console.log('Google Translate script yüklenemedi')}
       />
-      <Script id="google-translate-init" strategy="lazyOnload">
+      
+      <Script id="google-translate-init" strategy="afterInteractive">
         {`
-          function googleTranslateElementInit() {
-            if (typeof google !== 'undefined' && google.translate) {
-              new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'tr,en,de,fr,it,es,ar,ru',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-              }, 'google_translate_element');
-            }
-          }
-          
-          // Sayfa yüklendiğinde translate element'i gizle
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-              const translateElement = document.getElementById('google_translate_element');
-              if (translateElement) {
-                translateElement.style.display = 'none';
+          // Google Translate init fonksiyonu - GÜVENLİ
+          window.googleTranslateElementInit = function() {
+            console.log('Google Translate Init başlatılıyor...');
+            
+            // Google Translate kütüphanesinin yüklenmesini bekle
+            if (typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
+              try {
+                new google.translate.TranslateElement({
+                  pageLanguage: 'en',
+                  includedLanguages: 'tr,en,de,fr,it,es,ar,ru',
+                  layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
+                  autoDisplay: false
+                }, 'google_translate_element');
+                
+                console.log('Google Translate widget başarıyla oluşturuldu');
+                
+                // Mevcut çerezi kontrol et ve widget'ı senkronize et
+                setTimeout(function() {
+                  var currentCookie = document.cookie.match(/(?:^|;\\s*)googtrans=([^;]*)/);
+                  if (currentCookie) {
+                    var decoded = decodeURIComponent(currentCookie[1]);
+                    var parts = decoded.split('/');
+                    if (parts.length >= 3 && parts[2]) {
+                      var currentLang = parts[2];
+                      var combo = document.querySelector('select.goog-te-combo');
+                      if (combo) {
+                        var valueToSet = currentLang === 'en' ? '' : currentLang;
+                        combo.value = valueToSet;
+                        console.log('Widget mevcut dile ayarlandı:', currentLang);
+                      }
+                    }
+                  }
+                }, 1000);
+                
+              } catch (error) {
+                console.error('Google Translate başlatma hatası:', error);
               }
-            });
-          } else {
-            const translateElement = document.getElementById('google_translate_element');
-            if (translateElement) {
-              translateElement.style.display = 'none';
+            } else {
+              console.error('Google Translate kütüphanesi mevcut değil');
+              // 2 saniye sonra tekrar dene
+              setTimeout(window.googleTranslateElementInit, 2000);
             }
+          };
+
+          // Sayfa yüklendiğinde init fonksiyonunu çağır
+          if (document.readyState === 'complete') {
+            window.googleTranslateElementInit();
+          } else {
+            window.addEventListener('load', window.googleTranslateElementInit);
           }
         `}
       </Script>
 
       <header
-        ref={headerRef}
         className={`w-full pt-4 pb-2 px-4 sm:px-8 lg:px-16 ${headerClasses}`}
       >
         <div className="flex items-center justify-between relative">
@@ -407,8 +547,12 @@ export default function MainNavbar() {
             <button
               aria-label="Menu"
               className="p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition lg:hidden touch-manipulation"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               onClick={() => setMenuOpen(!menuOpen)}
-              onTouchEnd={() => setMenuOpen(!menuOpen)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                setMenuOpen(!menuOpen);
+              }}
             >
               {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
             </button>
@@ -416,8 +560,12 @@ export default function MainNavbar() {
             <button
               aria-label="Search"
               className="p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition touch-manipulation"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               onClick={() => setIsSearchVisible(!isSearchVisible)}
-              onTouchEnd={() => setIsSearchVisible(!isSearchVisible)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                setIsSearchVisible(!isSearchVisible);
+              }}
             >
               <icons.Search className="w-5 h-5" />
             </button>
@@ -447,15 +595,29 @@ export default function MainNavbar() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             <LanguageSwitcher dark={!isSticky} />
             
-            <div id="google_translate_element" className="hidden" />
+            {/* Google Translate Element - Gizli ama çalışır */}
+            <div id="google_translate_element" style={{ 
+              position: 'absolute', 
+              top: '-1000px', 
+              left: '-1000px',
+              opacity: 0,
+              pointerEvents: 'none',
+              width: '1px',
+              height: '1px',
+              overflow: 'hidden'
+            }} />
 
             {/* Kullanıcı Menüsü */}
             {user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  onTouchEnd={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    setIsUserMenuOpen(!isUserMenuOpen);
+                  }}
                   className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition touch-manipulation"
+                  style={{ minHeight: '44px', minWidth: '44px' }}
                 >
                   <Image
                     className="w-5 h-5"
@@ -478,13 +640,15 @@ export default function MainNavbar() {
                     <Link 
                       href="/account" 
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                      className="block px-4 py-3 text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                      style={{ minHeight: '44px', display: 'flex', alignItems: 'center' }}
                     >
                       My Account
                     </Link>
                     <button 
                       onClick={() => { signOut(); setIsUserMenuOpen(false); }} 
-                      className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                      className="w-full text-left block px-4 py-3 text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                      style={{ minHeight: '44px', display: 'flex', alignItems: 'center' }}
                     >
                       Log Out
                     </button>
@@ -494,8 +658,12 @@ export default function MainNavbar() {
             ) : (
               <button 
                 onClick={() => router.push("/auth")}
-                onTouchEnd={() => router.push("/auth")}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  router.push("/auth");
+                }}
                 className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition touch-manipulation"
+                style={{ minHeight: '44px', minWidth: '44px' }}
               >
                 <Image
                   className="w-5 h-5"
@@ -516,8 +684,12 @@ export default function MainNavbar() {
             <button
               aria-label="Shopping Bag"
               className="p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition relative touch-manipulation"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               onClick={() => router.push("/cart")}
-              onTouchEnd={() => router.push("/cart")}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                router.push("/cart");
+              }}
             >
               <icons.ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
@@ -556,6 +728,7 @@ export default function MainNavbar() {
                         onClick={() => handleProductClick(product.id)}
                         onTouchEnd={() => handleProductClick(product.id)}
                         className="flex items-center p-3 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors touch-manipulation"
+                        style={{ minHeight: '60px' }}
                       >
                         <div className="relative w-12 h-12 mr-4 flex-shrink-0">
                           <Image 
@@ -586,7 +759,7 @@ export default function MainNavbar() {
             <Link 
               key={item.name} 
               href={item.href} 
-              className="relative group py-2 transition-all duration-300"
+              className="relative group py-2 transition-all duration-300 hover:opacity-80"
             >
               <span className="relative z-10">{item.name}</span>
               <span className="absolute left-1/2 -bottom-1 w-0 h-0.5 bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
@@ -600,8 +773,12 @@ export default function MainNavbar() {
             <button 
               aria-label="Close menu" 
               className="absolute top-6 right-6 p-3 rounded-full hover:bg-white/20 active:bg-white/30 transition touch-manipulation"
+              style={{ minHeight: '44px', minWidth: '44px' }}
               onClick={() => setMenuOpen(false)}
-              onTouchEnd={() => setMenuOpen(false)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+              }}
             >
               <icons.Close className="w-7 h-7" />
             </button>
@@ -611,8 +788,13 @@ export default function MainNavbar() {
                 key={item.name} 
                 href={item.href} 
                 onClick={() => setMenuOpen(false)}
-                onTouchEnd={() => setMenuOpen(false)}
-                className="py-3 px-6 hover:text-orange-300 active:text-orange-400 transition-colors touch-manipulation text-2xl"
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  router.push(item.href);
+                  setMenuOpen(false);
+                }}
+                className="py-4 px-8 hover:text-orange-300 active:text-orange-400 transition-colors touch-manipulation text-2xl"
+                style={{ minHeight: '60px', display: 'flex', alignItems: 'center' }}
               >
                 {item.name}
               </Link>
@@ -633,6 +815,10 @@ export default function MainNavbar() {
             overflow: hidden !important;
           }
           
+          .goog-te-banner-frame.skiptranslate {
+            display: none !important;
+          }
+          
           .goog-logo-link { 
             display: none !important; 
           }
@@ -640,6 +826,7 @@ export default function MainNavbar() {
           .goog-te-gadget { 
             font-size: 0 !important; 
             color: transparent !important;
+            display: none !important;
           }
           
           .goog-te-combo {
@@ -652,21 +839,16 @@ export default function MainNavbar() {
             position: static !important;
           }
           
-          /* Mobil dokunmatik iyileştirmeleri */
+          /* Safari ve mobil optimizasyonları */
           @media (max-width: 768px) {
             * {
               -webkit-tap-highlight-color: transparent;
             }
             
-            button, a {
+            button, a, [role="button"] {
               touch-action: manipulation;
+              cursor: pointer;
             }
-          }
-          
-          /* Dil seçici için mobil optimizasyon */
-          .language-selector-mobile {
-            min-height: 44px;
-            min-width: 44px;
           }
         `}</style>
       )}
