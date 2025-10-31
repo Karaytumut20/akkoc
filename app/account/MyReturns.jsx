@@ -91,7 +91,8 @@ const MyReturns = () => {
                         const productImageUrl = getSafeImageUrl(ret.product?.image_urls); 
                         const itemQuantity = ret.order_item?.quantity || '?'; 
                         const itemPrice = ret.order_item?.price ?? 0; 
-                        const returnCode = ret.id.slice(0, 8).toUpperCase(); // First 8 digits of Return ID as "Return Code"
+                        // DEĞİŞİKLİK: tracking_number sütunundaki veriyi kullan
+                        const returnCode = ret.tracking_number || 'Not Assigned';
 
                         return (
                             // Card structure for each return request

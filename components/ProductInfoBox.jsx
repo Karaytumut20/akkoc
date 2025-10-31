@@ -24,36 +24,36 @@ const ProductInfoBox = ({
   const router = useRouter();
 
   const increaseQuantity = () => {
-    // Miktarı artırır, ancak stoktan fazla olamaz
+    // Increases quantity, but cannot exceed stock
     if (quantity < product.stock) {
       setQuantity((prev) => prev + 1);
     } else {
-      // Yeterli stok yoksa hata mesajı gösterir
+      // Shows error message if insufficient stock
       toast.error('There is not enough stock for this product.');
     }
   };
 
   const decreaseQuantity = () => {
-    // Miktarı azaltır, ancak 1'den az olamaz
+    // Decreases quantity, but cannot be less than 1
     setQuantity((prev) => Math.max(1, prev - 1));
   };
 
   const getStockStatus = (stock) => {
-    // Stok 4'ten büyükse 'In Stock' yazısını göster (Yeşil, Pulse efektli)
+    // If stock is greater than 4, show 'In Stock' text (Green, Pulse effect)
     if (stock > 4) {
       return { text: 'In Stock', color: 'text-green-600', pulse: true };
     }
-    // Stok 1 ile 4 arasında ise kalan adedi göster (Turuncu, Pulse yok)
+    // If stock is between 1 and 4, show remaining quantity (Orange, No pulse)
     if (stock >= 1) {
-      return { text: `${stock} Adet Kaldı`, color: 'text-orange-600', pulse: false };
+      return { text: `${stock} Left`, color: 'text-orange-600', pulse: false };
     }
-    // Stok 0 ise 'Tükendi' yazısını göster (Kırmızı, Pulse yok)
-    return { text: 'Tükendi', color: 'text-red-600', pulse: false };
+    // If stock is 0, show 'Out of Stock' text (Red, No pulse)
+    return { text: 'Out of Stock', color: 'text-red-600', pulse: false };
   };
 
   const { text, color, pulse } = getStockStatus(product.stock);
 
-  // 📌 Kategoriye tıklanınca yönlendirme
+  // 📌 Redirect when category is clicked
   const handleCategoryClick = () => {
     if (product.category_id) {
       router.push(`/all-products?category_id=${product.category_id}`);
@@ -61,13 +61,13 @@ const ProductInfoBox = ({
       router.push(`/all-products`);
     }
   };
-    // Onaylı yorum sayısını hesapla
+    // Calculate approved review count
     const approvedReviewCount = reviews.filter((r) => r.is_approved).length;
 
 
   return (
     <div className="bg-[#ECE4DC] p-4 sm:p-6 rounded-xl border border-[#ECE4DC]">
-      {/* Başlık + Favori */}
+      {/* Title + Favorite */}
       <div className="flex justify-between items-start">
         <div className="flex-1 pr-4">
           <h1 className="text-3xl font-serif tracking-wide text-gray-900 leading-tight">
@@ -78,7 +78,7 @@ const ProductInfoBox = ({
             {product.price.toFixed(2)}
           </p>
 
-          {/* 🧡 Kategori butonu */}
+          {/* 🧡 Category button */}
           {product.categories?.name && (
             <button
               onClick={handleCategoryClick}
@@ -89,7 +89,7 @@ const ProductInfoBox = ({
           )}
         </div>
 
-        {/* Favori ikonu */}
+        {/* Favorite icon */}
         <button
           onClick={handleFavoriteClick}
           className="flex-shrink-0 p-3 bg-[#ECE4DC] rounded-full border border-[#ECE4DC] hover:scale-110 transition"
@@ -103,19 +103,19 @@ aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         </button>
       </div>
 
-      {/* Yosrum puanı */}
+      {/* Review rating */}
       <div className="inline-flex items-center gap-3 mt-4 group pb-4 border-b border-[#ECE4DC]">
         {reviews.length > 0 && (
           <span className="font-bold text-xl text-gray-800">{averageRating.toFixed(1)}</span>
         )}
         <StarRating rating={averageRating} size={24} />
-        {/* ⭐ REVİZYON: Yorum sayısı gösterimi sadece (sayı) olarak değiştirildi. */}
+        {/* ⭐ REVISION: Review count display changed to just (number) */}
         <span className="text-gray-500 text-sm">
           ({approvedReviewCount})
         </span>
       </div>
 
-      {/* Miktar seçici */}
+      {/* Quantity selector */}
       <div className="mt-6 flex items-center justify-between p-2 bg-[#ECE4DC] rounded-lg border border-[#ECE4DC]">
         <label htmlFor="quantity" className="text-lg font-medium text-gray-700">
          Quantity
@@ -169,7 +169,7 @@ aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         </div>
       </div>
 
-      {/* Sepete ekle butonu */}
+      {/* Add to cart button */}
       <div className="mt-4 hidden lg:block">
         <button
           onClick={handleAddToCart}
@@ -180,16 +180,16 @@ aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               : 'bg-[#be531c] hover:bg-[#a64919]'
           }`}
         >
-          {product.stock < 1 ? 'Stokta Yok' : 'Sepete Ekle'}
+          {product.stock < 1 ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
 
-      {/* Güven rozetleri */}
+      {/* Trust badges */}
       <div className="hidden lg:block">
         <TrustBadges />
       </div>
 
-      {/* Stok durumu */}
+      {/* Stock status */}
       <div className="mt-6 pt-4 border-t border-[#ECE4DC]">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <span className="font-medium">Stock Status:</span>
