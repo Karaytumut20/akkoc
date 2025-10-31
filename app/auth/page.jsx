@@ -1,18 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react'; // useEffect'i ekleyin
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import logo from '@/assets/logos.png';
 import { supabase } from '@/lib/supabaseClient';
-// PolicyModal'ı merkezi bileşenden içe aktarıyoruz
-import { PolicyModal } from '@/components/PolicyModal'; 
+import { PolicyModal } from '@/components/PolicyModal';
 
-// === INPUT ===
-/**
- * A reusable input component with a floating label.
- */
+// FloatingLabelInput bileşeni aynı kalıyor...
 const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, autoComplete }) => (
   <div className="relative">
     <input
@@ -35,18 +31,7 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
   </div>
 );
 
-// === POLICY MODAL ===
-/**
- * Modal to display Privacy Policy or Terms of Service.
- * Artık merkezi bileşenden içe aktarılmaktadır.
- */
-// const PolicyModal = ({ isOpen, onClose, type }) => { ... ESKİ KOD ... };
-
-
-// --- FORGOT PASSWORD MODAL ---
-/**
- * Modal for initiating the Forgot Password process.
- */
+// ForgotPasswordModal bileşeni aynı kalıyor...
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,9 +43,9 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-const { error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: `${window.location.origin}/auth/reset-password`,
-});
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
 
       if (error) throw error;
 
@@ -125,7 +110,6 @@ const { error } = await supabase.auth.resetPasswordForEmail(email, {
     </div>
   );
 };
-// --- END FORGOT PASSWORD MODAL ---
 
 // === AUTH PAGE ===
 export default function AuthPage() {
@@ -141,7 +125,28 @@ export default function AuthPage() {
   // Modals state
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [modalContentType, setModalContentType] = useState(null);
-  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false); 
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+
+  // Oturum durumunu kontrol etmek için useEffect ekleyin
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/');
+      }
+    };
+    
+    checkUser();
+
+    // Auth state değişikliklerini dinle
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   // Policy Modal handlers
   const openPolicyModal = useCallback((type) => {
@@ -162,7 +167,6 @@ export default function AuthPage() {
   const closeForgotModal = useCallback(() => {
     setIsForgotModalOpen(false);
   }, []);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -197,7 +201,7 @@ export default function AuthPage() {
 
         if (data?.user) {
           toast.success('✅ Login successful!');
-          router.push('/');
+          // Router push'u kaldırdık çünkü useEffect otomatik yönlendirecek
         }
 
       } else {
@@ -221,6 +225,7 @@ export default function AuthPage() {
         setFullName('');
         setPhone('');
         setPassword('');
+        setTermsAccepted(false);
       }
     } catch (error) {
       toast.error(error.message);
