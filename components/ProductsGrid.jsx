@@ -45,7 +45,7 @@ export default function ProductsGrid() {
   return (
     <div className="text-gray-800 p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 border-b pb-4">
-        Tüm Ürünler
+        Tüm Ürünlers
       </h1>
 
       {products.length === 0 ? (
