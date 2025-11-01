@@ -280,48 +280,57 @@ export default function MainNavbar() {
     (user && user.email && user.email.split("@")[0]) ||
     "My Account";
 
-  useEffect(() => setMounted(true), []);
+ useEffect(() => setMounted(true), []);
 
-  // Dış tıklama: arama ve kullanıcı menüsü
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchVisible(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
-
-  // Arama filtresi
-  useEffect(() => {
-    if (searchQuery.trim() !== "") {
-      const filtered = products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      setSearchResults(filtered.slice(0, 5));
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchQuery, products]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/all-products?q=${encodeURIComponent(searchQuery.trim())}`);
+// 🔧 Dış tıklama (mobil fix’li)
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (searchRef.current && !searchRef.current.contains(event.target)) {
       setIsSearchVisible(false);
-      setSearchQuery("");
+    }
+    if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+      setIsUserMenuOpen(false);
     }
   };
 
-  const handleProductClick = (productId) => {
-    router.push(`/product/${productId}`);
+  // Mobilde çalışması için hem click hem touchstart dinliyoruz
+  document.addEventListener("click", handleClickOutside, true);
+  document.addEventListener("touchstart", handleClickOutside, true);
+
+  return () => {
+    document.removeEventListener("click", handleClickOutside, true);
+    document.removeEventListener("touchstart", handleClickOutside, true);
+  };
+}, []);
+
+// 🔍 Arama filtresi
+useEffect(() => {
+  if (searchQuery.trim() !== "") {
+    const filtered = products.filter((p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setSearchResults(filtered.slice(0, 5));
+  } else {
+    setSearchResults([]);
+  }
+}, [searchQuery, products]);
+
+// 🔍 Arama formu submit
+const handleSearchSubmit = (e) => {
+  e.preventDefault();
+  if (searchQuery.trim()) {
+    router.push(`/all-products?q=${encodeURIComponent(searchQuery.trim())}`);
     setIsSearchVisible(false);
     setSearchQuery("");
-  };
+  }
+};
+
+// 🔗 Ürün tıklaması
+const handleProductClick = (productId) => {
+  router.push(`/product/${productId}`);
+  setIsSearchVisible(false);
+  setSearchQuery("");
+};
 
   const navLinks = [
     { name: "HOME", href: "/" },
