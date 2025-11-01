@@ -46,7 +46,7 @@ const AccountDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Latest Order */}
-        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+        <div className="bg-[#ffffff] p-5 rounded-lg border border-gray-200">
           <h3 className="font-semibold text-gray-700 mb-3">Latest Order</h3>
           {latestOrder ? (
             <div>
@@ -84,7 +84,7 @@ const AccountDashboard = () => {
         </div>
 
         {/* Quick Access */}
-        <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+        <div className="bg-[#ffffff] p-5 rounded-lg border border-gray-200">
           <h3 className="font-semibold text-gray-700 mb-3">Quick Access</h3>
           <div className="space-y-2">
             <Link
@@ -229,7 +229,10 @@ const AddCardModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-2xl">
+      <div 
+        className="rounded-lg w-full max-w-md shadow-2xl"
+        style={{ backgroundColor: '#ffffff' }}
+      >
         <form onSubmit={handleSubmit} className="p-6">
           <div className="flex justify-between items-center border-b pb-3 mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Add New Card</h2>
@@ -463,7 +466,7 @@ const NotificationPreferences = () => {
       </h2>
       <div className="space-y-4 max-w-lg">
         {/* Campaign Emails */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between p-4 bg-[#ffffff] rounded-lg border">
           <label className="font-medium text-gray-700">
             Promotional and Discount Emails
           </label>
@@ -482,7 +485,7 @@ const NotificationPreferences = () => {
         </div>
 
         {/* Order Status Notifications */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between p-4 bg-[#ffffff]rounded-lg border">
           <label className="font-medium text-gray-700">
             Order Status Notifications
           </label>
@@ -501,7 +504,7 @@ const NotificationPreferences = () => {
         </div>
 
         {/* Personalized Offers */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between p-4 bg-[#ffffff] rounded-lg border">
           <label className="font-medium text-gray-700">
             Personalized Offers
           </label>

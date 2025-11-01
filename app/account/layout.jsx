@@ -31,14 +31,14 @@ export default function AccountLayout({ children }) {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Sol Menü */}
                     <div className="md:col-span-1">
-                        <Suspense fallback={<div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 h-[400px] animate-pulse"></div>}>
+                        <Suspense fallback={<div className="bg-[#ffffff] p-4 rounded-lg shadow-sm border border-gray-200 h-[400px] animate-pulse"></div>}>
                             <AccountSidebar />
                         </Suspense>
                     </div>
 
                     {/* Sağ İçerik Alanı (Değişken içerik buraya gelecek) */}
                     <div className="md:col-span-3">
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
+                        <div className="bg-[#ffffff] p-6 rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
                             {children}
                         </div>
                     </div>

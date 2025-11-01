@@ -122,7 +122,7 @@ const MyOrdersPage = () => {
     // Render orders
     const ordersList = useMemo(() => {
         return myOrders.map(order => (
-            <div key={order.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
+            <div key={order.id} className="bg-[#ffffff] border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6">
                 {/* Order header */}
                 <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                     <div>
@@ -185,7 +185,7 @@ const MyOrdersPage = () => {
     if (authLoading || localLoading) return <Loading />;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="min-h-screen bg-[#ffffff] p-4 sm:p-6">
             <h1 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-800">My Orders</h1>
 
             {myOrders.length === 0 ? (

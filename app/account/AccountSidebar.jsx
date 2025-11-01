@@ -37,7 +37,6 @@ export default function AccountSidebar() {
         // Kayıtlı Kartlarım sekmesi (isteğe bağlı)
         // { name: "Saved Cards", href: "/account?tab=saved-cards", activeIdentifier: "saved-cards", isTab: true, icon: <FiCreditCard /> },
         // Bildirim Tercihleri sekmesi
-        { name: "Notification Preferences", href: "/account?tab=notifications", activeIdentifier: "notifications", isTab: true, icon: <FiBell /> },
     ];
 
     // Aktif sekme adını URL'den al

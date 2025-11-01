@@ -96,7 +96,7 @@ const MyReturns = () => {
 
                         return (
                             // Card structure for each return request
-                            <div key={ret.id} className="border rounded-lg bg-white shadow-lg overflow-hidden">
+                            <div key={ret.id} className="border rounded-lg bg-[#ffffff] shadow-lg overflow-hidden">
                                 {/* Top Section: Status and Request Date */}
                                 <div className="flex flex-wrap justify-between items-center p-3 sm:p-4 border-b gap-2 bg-gray-50/70">
                                     {/* Status tag */}
@@ -111,7 +111,7 @@ const MyReturns = () => {
                                 <div className="p-4 sm:p-6 space-y-4">
                                     
                                     {/* Return Code and Shipping Info */}
-                                    <div className="border border-dashed border-gray-300 p-3 rounded-lg bg-white">
+                                    <div className="border border-dashed border-gray-300 p-3 rounded-lg bg-[#ffffff]">
                                         <p className="text-sm font-bold text-gray-800 mb-2">Return Code (Reference): <span className="text-red-600">{returnCode}</span></p>
                                         <div className={`p-2 rounded-md ${color.split(' ')[1]}`}>
                                             <p className={`text-sm font-medium ${color.split(' ')[0]}`}>{statusDetail}</p>
