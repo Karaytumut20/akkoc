@@ -309,7 +309,7 @@ function LanguageSwitcher({ dark = false }) {
         <div 
           role="listbox" 
           className={[
-            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[9999]",
+            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[99999999]",
             "backdrop-blur-sm",
             dark ? "bg-neutral-900/95 text-white" : "bg-white/95 text-gray-800"
           ].join(" ")}
