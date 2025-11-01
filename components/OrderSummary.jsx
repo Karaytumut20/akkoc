@@ -3,7 +3,7 @@
 'use client';
 import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import toast from 'react-hot-toast';
 import { supabase } from "@/lib/supabaseClient";
 import { FiMapPin, FiPlus, FiEdit, FiChevronRight, FiShoppingBag, FiTag, FiCreditCard, FiX, FiUser, FiPhone, FiHome, FiLogIn, FiUserPlus } from "react-icons/fi";
@@ -32,7 +32,7 @@ const US_STATES = [
   { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
 ];
 
-// Address Modal Component
+// Address Modal Component - GELİŞTİRİLMİŞ VERSİYON
 const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
   const { addAddress } = useAppContext();
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,45 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
     city: '',
     state: '',
   });
+  
+  const modalRef = useRef(null);
+  const backdropRef = useRef(null);
+
+  // Modal dışına tıklama ile kapatma
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (backdropRef.current && backdropRef.current === event.target) {
+        onClose();
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      // Modal açıldığında body'ye scroll'u engelle
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+      // Modal kapandığında body scroll'u geri getir
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  // Modal açıldığında içeriği kaydırılabilir yap
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
 
   const onChangeHandler = (e) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
@@ -118,10 +157,16 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#ffffff] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto mx-4">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-[#ffffff]">
+    <div 
+      ref={backdropRef}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto pt-20 pb-10"
+    >
+      <div 
+        ref={modalRef}
+        className="bg-[#ffffff] rounded-2xl shadow-2xl w-full max-w-md mx-4 my-auto min-h-[200px] max-h-[85vh] overflow-hidden flex flex-col"
+      >
+        {/* Header - Sticky */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-[#ffffff] z-10">
           <div className="flex items-center gap-3">
             <FiMapPin className="w-5 h-5 md:w-6 md:h-6 text-[#be531c]" />
             <h2 className="text-lg md:text-xl font-bold text-gray-900">Add New Address</h2>
@@ -134,146 +179,148 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={onSubmitHandler} className="p-4 md:p-6 space-y-4">
-          {/* Full Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiUser className="w-4 h-4 text-gray-400" />
-              Full Name *
-            </label>
-            <input
-              name="full_name"
-              className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
-              type="text"
-              placeholder="Enter your full name"
-              onChange={onChangeHandler}
-              value={address.full_name}
-              required
-            />
-          </div>
-
-          {/* Phone Number */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiPhone className="w-4 h-4 text-gray-400" />
-              Phone Number *
-            </label>
-            <input
-              name="phone_number"
-              className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
-              type="tel"
-              placeholder="Enter your phone number"
-              onChange={onChangeHandler}
-              value={address.phone_number}
-              required
-            />
-          </div>
-
-          {/* Zip Code */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiMapPin className="w-4 h-4 text-gray-400" />
-              Zip Code *
-            </label>
-            <input
-              name="pincode"
-              className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
-              type="text"
-              placeholder="Enter zip code"
-              onChange={onChangeHandler}
-              value={address.pincode}
-              required
-            />
-          </div>
-
-          {/* Area and Street */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FiHome className="w-4 h-4 text-gray-400" />
-              Address (Area and Street) *
-            </label>
-            <textarea
-              name="area"
-              className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] resize-none text-sm md:text-base"
-              rows={3}
-              placeholder="Enter your street address, apartment number, etc."
-              onChange={onChangeHandler}
-              value={address.area}
-              required
-            />
-          </div>
-
-          {/* City and State */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        {/* Form - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={onSubmitHandler} className="p-4 md:p-6 space-y-4">
+            {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                City *
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FiUser className="w-4 h-4 text-gray-400" />
+                Full Name *
               </label>
               <input
-                name="city"
+                name="full_name"
                 className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
                 type="text"
-                placeholder="Enter city"
+                placeholder="Enter your full name"
                 onChange={onChangeHandler}
-                value={address.city}
+                value={address.full_name}
                 required
               />
             </div>
 
+            {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                State *
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FiPhone className="w-4 h-4 text-gray-400" />
+                Phone Number *
               </label>
-              <select
-                name="state"
+              <input
+                name="phone_number"
                 className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
+                type="tel"
+                placeholder="Enter your phone number"
                 onChange={onChangeHandler}
-                value={address.state}
+                value={address.phone_number}
                 required
-              >
-                <option value="" disabled>Select State</option>
-                {US_STATES.map((state) => (
-                  <option key={state.code} value={state.code}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
-          </div>
 
-          {/* Required Fields Note */}
-          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <p className="text-blue-700 text-xs md:text-sm">
-              * All fields are required
-            </p>
-          </div>
+            {/* Zip Code */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FiMapPin className="w-4 h-4 text-gray-400" />
+                Zip Code *
+              </label>
+              <input
+                name="pincode"
+                className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
+                type="text"
+                placeholder="Enter zip code"
+                onChange={onChangeHandler}
+                value={address.pincode}
+                required
+              />
+            </div>
 
-          {/* Buttons */}
-          <div className="flex flex-col md:flex-row gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm md:text-base"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-3 bg-[#be531c] text-white rounded-lg hover:bg-[#a64919] transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </>
-              ) : (
-                'Save Address'
-              )}
-            </button>
-          </div>
-        </form>
+            {/* Area and Street */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FiHome className="w-4 h-4 text-gray-400" />
+                Address (Area and Street) *
+              </label>
+              <textarea
+                name="area"
+                className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] resize-none text-sm md:text-base"
+                rows={3}
+                placeholder="Enter your street address, apartment number, etc."
+                onChange={onChangeHandler}
+                value={address.area}
+                required
+              />
+            </div>
+
+            {/* City and State */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <input
+                  name="city"
+                  className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
+                  type="text"
+                  placeholder="Enter city"
+                  onChange={onChangeHandler}
+                  value={address.city}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State *
+                </label>
+                <select
+                  name="state"
+                  className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#be531c] focus:border-[#be531c] transition bg-[#ffffff] text-sm md:text-base"
+                  onChange={onChangeHandler}
+                  value={address.state}
+                  required
+                >
+                  <option value="" disabled>Select State</option>
+                  {US_STATES.map((state) => (
+                    <option key={state.code} value={state.code}>
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Required Fields Note */}
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <p className="text-blue-700 text-xs md:text-sm">
+                * All fields are required
+              </p>
+            </div>
+
+            {/* Buttons - Sticky */}
+            <div className="flex flex-col md:flex-row gap-3 pt-4 pb-2 bg-[#ffffff] sticky bottom-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm md:text-base"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-[#be531c] text-white rounded-lg hover:bg-[#a64919] transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Address'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -294,7 +341,6 @@ const LoginPrompt = ({ onLogin, onSignup }) => {
           <FiLogIn className="w-4 h-4" />
           Sign In
         </button>
-       
       </div>
     </div>
   );
