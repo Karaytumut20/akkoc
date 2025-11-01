@@ -178,10 +178,7 @@ export default function AuthPage() {
           }
           return;
         }
-        if (data?.user) {
-          toast.success('✅ Login successful!', { duration: 1000 });
-          // onAuthStateChange yönlendirir
-        }
+
       } else {
         const { error } = await supabase.auth.signUp({
           email,
