@@ -265,7 +265,7 @@ export default function MainNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
+  // isSticky state'i ve scroll effect'i kaldırıldı
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -283,30 +283,26 @@ export default function MainNavbar() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) setIsSearchVisible(false);
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setIsUserMenuOpen(false);
+      // Arama Kontrolü
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchVisible(false);
+      }
+      
+      // Kullanıcı Menüsü Kontrolü
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    
+    // Mobil/Masaüstü tutarlılığı için sadece 'click' olayını dinliyoruz
+    document.addEventListener("click", handleClickOutside);
+    
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
   }, []);
 
-  // TÜM SAYFALARDA sticky olacak şekilde değiştirildi
-  useEffect(() => {
-    const handleScroll = () => {
-      // Anasayfada 50px'den sonra sticky ol, diğer sayfalarda her zaman sticky
-      if (isHomePage) {
-        setIsSticky(window.scrollY > 50);
-      } else {
-        setIsSticky(true);
-      }
-    };
-
-    // Sayfa yüklendiğinde sticky durumunu kontrol et
-    handleScroll();
-    
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
+  // SCROLL EFFECTİ TAMAMEN KALDIRILDI
 
   useEffect(() => {
     if (searchQuery.trim() !== "") {
@@ -339,7 +335,7 @@ export default function MainNavbar() {
     { name: "CONTACT", href: "/contact" },
   ];
 
-  // TÜM SAYFALARDA fixed pozisyon kullan
+  // TÜM SAYFALARDA fixed pozisyon kullanılıyor
   const headerClasses = "fixed top-0 left-0 right-0 z-[1000] bg-[#ECE4DC] text-gray-800 shadow-md transition-all duration-300";
 
   const logoSrc = assets.logo;
@@ -392,7 +388,17 @@ export default function MainNavbar() {
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-gray-800">
                     <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">My Account</Link>
-                    <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100">Log Out</button>
+                    {/* ✅ KRİTİK DÜZELTME: e.stopPropagation() eklendi */}
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); // Olayın menüyü kapatan dinleyiciye yayılmasını engeller
+                        signOut(); 
+                        setIsUserMenuOpen(false); 
+                      }} 
+                      className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Log Out
+                    </button>
                   </div>
                 )}
               </div>
