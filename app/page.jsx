@@ -20,7 +20,7 @@ const Home = () => {
     // Navbar ve Footer buradan tamamen kaldırıldı!
     <>
       <div className="px-6 md:px-16 lg:px-32">
-  {/*<HomeCarousel />*/}
+<HomeCarousel />
       <CategoryPicture/>
         <HomeProducts />
         {/* <DoubleBigCard/> Kullanımı kaldırıldı */}
