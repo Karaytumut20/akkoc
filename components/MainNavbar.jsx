@@ -28,7 +28,7 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* === COOKIE YÖNETİMİ - BASİT VE GÜVENLİ === */
+/* === COOKIE YÖNETİMİ === */
 function getBaseDomain() {
   if (typeof window === 'undefined') return '';
   const host = window.location.hostname;
@@ -64,7 +64,6 @@ function setGoogTransCookie(from, to) {
     }
     
     document.cookie = cookieString;
-    console.log('Çerez ayarlandı:', v);
   } catch (error) {
     console.error('Çerez yazma hatası:', error);
   }
@@ -80,13 +79,12 @@ function clearGoogTransCookie() {
     if (baseDomain) {
       document.cookie = `googtrans=; ${past}; domain=${baseDomain}`;
     }
-    console.log('Çerez temizlendi');
   } catch (error) {
     console.error('Çerez temizleme hatası:', error);
   }
 }
 
-/* === GOOGLE TRANSLATE YÖNETİMİ - GÜVENLİ === */
+/* === GOOGLE TRANSLATE YÖNETİMİ === */
 function useGoogleTranslate() {
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -110,9 +108,6 @@ function useGoogleTranslate() {
       attempts++;
       if (checkGoogleTranslate() || attempts >= maxAttempts) {
         clearInterval(interval);
-        if (attempts >= maxAttempts) {
-          console.warn('Google Translate yüklenemedi');
-        }
       }
     }, 100);
 
@@ -122,7 +117,7 @@ function useGoogleTranslate() {
   return { isLoaded };
 }
 
-/* === DİL HOOK - SORUNSUZ === */
+/* === DİL HOOK === */
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
   const [mounted, setMounted] = useState(false);
@@ -146,11 +141,9 @@ function useCurrentLang(defaultLang = "en") {
         }
       }
       
-      console.log('Çerezden okunan dil:', currentLangInCookie);
       setCurrent(currentLangInCookie);
       return currentLangInCookie;
     } catch (error) {
-      console.error('Dil kontrol hatası:', error);
       return defaultLang;
     }
   }, [defaultLang]);
@@ -172,8 +165,6 @@ function useCurrentLang(defaultLang = "en") {
   const setLang = useCallback((lang) => {
     if (typeof window === 'undefined') return;
 
-    console.log('Dil değiştiriliyor:', lang);
-
     if (lang === "en") {
       clearGoogTransCookie();
       setCurrent("en");
@@ -190,20 +181,13 @@ function useCurrentLang(defaultLang = "en") {
             const value = lang === 'en' ? '' : lang;
             if (combo.value !== value) {
               combo.value = value;
-              
               const event = new Event('change', { bubbles: true });
               combo.dispatchEvent(event);
-              
-              console.log('Google Translate manuel tetiklendi:', lang);
             }
-          } else {
-            console.warn('Google Translate widget bulunamadı');
           }
         }, 300);
-        
         return true;
       } catch (error) {
-        console.error('Google Translate tetikleme hatası:', error);
         return false;
       }
     };
@@ -211,7 +195,6 @@ function useCurrentLang(defaultLang = "en") {
     triggerManualTranslation();
 
     setTimeout(() => {
-      console.log('Sayfa yenileniyor...');
       window.location.reload();
     }, 1000);
   }, []);
@@ -219,7 +202,7 @@ function useCurrentLang(defaultLang = "en") {
   return [current, setLang, mounted];
 }
 
-/* === DİL SEÇİCİ - MOBİL UYUMLU === */
+/* === DİL SEÇİCİ === */
 function LanguageSwitcher({ dark = false }) {
   const [current, setLang, mounted] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -309,7 +292,7 @@ function LanguageSwitcher({ dark = false }) {
         <div 
           role="listbox" 
           className={[
-            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[99999999]",
+            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[10000]",
             "backdrop-blur-sm",
             dark ? "bg-neutral-900/95 text-white" : "bg-white/95 text-gray-800"
           ].join(" ")}
@@ -350,32 +333,36 @@ function LanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === YENİ SIDEBAR/MOBİL MENÜ COMPONENT'I === */
-function MobileMenu({ isOpen, onClose, navLinks, router }) {
+/* === SAFARİ İÇİN ÖZEL SIDEBAR COMPONENT'I === */
+function SafariMobileMenu({ isOpen, onClose, navLinks, router }) {
   const menuRef = useRef(null);
 
-  // Safari için özel stiller
+  // Safari için body scroll kontrolü
   useEffect(() => {
     if (isOpen) {
-      // Safari'de body scroll'unu engelle
+      // Safari için özel scroll kapatma
+      document.body.classList.add('safari-modal-open');
+      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
       document.body.style.height = '100%';
+      document.body.style.width = '100%';
+      document.body.style.position = 'fixed';
     } else {
-      // Scroll'u geri aç
+      document.body.classList.remove('safari-modal-open');
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
       document.body.style.height = '';
+      document.body.style.width = '';
+      document.body.style.position = '';
     }
 
     return () => {
-      // Cleanup
+      document.body.classList.remove('safari-modal-open');
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
       document.body.style.height = '';
+      document.body.style.width = '';
+      document.body.style.position = '';
     };
   }, [isOpen]);
 
@@ -388,7 +375,7 @@ function MobileMenu({ isOpen, onClose, navLinks, router }) {
     return () => document.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
-  // Safari için overlay click
+  // Overlay click
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -399,42 +386,46 @@ function MobileMenu({ isOpen, onClose, navLinks, router }) {
 
   return (
     <>
-      {/* Overlay - Safari için optimize edilmiş */}
+      {/* SAFARİ İÇİN ÖZEL OVERLAY - EN ÜST KATMAN */}
       <div 
-        className="fixed inset-0 bg-black/95 z-[9998] lg:hidden"
+        className="fixed inset-0 bg-black/95 z-[2147483646] lg:hidden safari-overlay"
         onClick={handleOverlayClick}
         onTouchEnd={handleOverlayClick}
         style={{
-          // Safari için hardware acceleration
+          // Safari için maximum z-index ve hardware acceleration
+          zIndex: 2147483646,
           transform: 'translateZ(0)',
           WebkitTransform: 'translateZ(0)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)'
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
         }}
       />
       
-      {/* Mobil Menü Container - Safari için optimize edilmiş */}
+      {/* SAFARİ İÇİN ÖZEL MENÜ - EN ÜST KATMAN + 1 */}
       <div 
         ref={menuRef}
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center text-center space-y-6 text-white lg:hidden"
+        className="fixed inset-0 z-[2147483647] flex flex-col items-center justify-center text-center space-y-6 text-white lg:hidden safari-mobile-menu"
         style={{
-          // Safari için hardware acceleration
+          // Safari için maximum z-index ve hardware acceleration
+          zIndex: 2147483647,
           transform: 'translateZ(0)',
           WebkitTransform: 'translateZ(0)',
-          // Safari için overflow hidden
-          overflow: 'hidden'
+          // Safari için diğer özellikler
+          WebkitOverflowScrolling: 'touch',
+          overflow: 'auto'
         }}
       >
-        {/* Kapatma Butonu - Üst Sağ Köşede */}
+        {/* Kapatma Butonu */}
         <button 
           aria-label="Close menu" 
-          className="absolute top-8 right-6 p-4 rounded-full hover:bg-white/20 active:bg-white/30 transition-all duration-300 touch-manipulation"
+          className="absolute top-8 right-6 p-4 rounded-full hover:bg-white/20 active:bg-white/30 transition-all duration-300 touch-manipulation z-[2147483647]"
           style={{ 
             minHeight: '48px', 
             minWidth: '48px',
-            // Safari için shadow
+            // Safari için shadow ve stiller
             WebkitAppearance: 'none',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            zIndex: 2147483647
           }}
           onClick={onClose}
           onTouchEnd={(e) => {
@@ -446,42 +437,47 @@ function MobileMenu({ isOpen, onClose, navLinks, router }) {
         </button>
         
         {/* Navigasyon Linkleri */}
-        <div className="flex flex-col items-center justify-center space-y-8 w-full px-8">
+        <div className="flex flex-col items-center justify-center space-y-6 w-full px-8 relative z-[2147483647]">
           {navLinks.map((item, index) => (
             <div 
               key={item.name} 
-              className="w-full max-w-xs transform transition-all duration-500"
+              className="w-full max-w-xs transform transition-all duration-500 relative z-[2147483647]"
               style={{
                 animationDelay: `${index * 100}ms`,
-                // Safari için animation
-                WebkitAnimation: `fadeInUp 0.5s ease-out ${index * 100}ms both`
+                WebkitAnimation: `safariFadeInUp 0.6s ease-out ${index * 100}ms both`
               }}
             >
               <Link 
                 href={item.href} 
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   onClose();
+                  setTimeout(() => {
+                    router.push(item.href);
+                  }, 300);
                 }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
-                  router.push(item.href);
                   onClose();
+                  setTimeout(() => {
+                    router.push(item.href);
+                  }, 300);
                 }}
-                className="block w-full py-5 px-6 text-2xl font-medium hover:text-orange-300 active:text-orange-400 transition-all duration-300 touch-manipulation rounded-2xl hover:bg-white/10 active:bg-white/20 border border-transparent hover:border-white/20"
+                className="block w-full py-5 px-6 text-2xl font-medium hover:text-orange-300 active:text-orange-400 transition-all duration-300 touch-manipulation rounded-2xl hover:bg-white/10 active:bg-white/20 border border-white/10 group relative z-[2147483647]"
                 style={{ 
                   minHeight: '64px', 
                   display: 'flex', 
                   alignItems: 'center',
                   justifyContent: 'center',
-                  // Safari için stiller
+                  // Safari için özel stiller
                   WebkitTapHighlightColor: 'transparent',
                   WebkitUserSelect: 'none',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  zIndex: 2147483647
                 }}
               >
                 <span className="relative">
                   {item.name}
-                  {/* Hover underline effect */}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-300 transition-all duration-300 group-hover:w-full"></span>
                 </span>
               </Link>
@@ -489,57 +485,81 @@ function MobileMenu({ isOpen, onClose, navLinks, router }) {
           ))}
         </div>
 
-        {/* Alt Bilgi - Sosyal Medya veya Telif Hakkı */}
-        <div className="absolute bottom-8 left-0 right-0 px-8">
+        {/* Alt Bilgi */}
+        <div className="absolute bottom-8 left-0 right-0 px-8 relative z-[2147483647]">
           <div className="text-white/60 text-sm font-light">
             <p>© 2024 Tüm Hakları Saklıdır</p>
           </div>
         </div>
       </div>
 
-      {/* Safari için Animasyon Stilleri */}
+      {/* Safari için Global Stiller */}
       <style jsx global>{`
-        @keyframes fadeInUp {
+        /* Safari için Özel Animasyon */
+        @keyframes safariFadeInUp {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(40px) translateZ(0);
+            -webkit-transform: translateY(40px) translateZ(0);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @-webkit-keyframes fadeInUp {
-          from {
-            opacity: 0;
-            -webkit-transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            -webkit-transform: translateY(0);
+            transform: translateY(0) translateZ(0);
+            -webkit-transform: translateY(0) translateZ(0);
           }
         }
 
-        /* Safari için scroll bar gizleme */
-        .no-scroll {
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          height: 100%;
+        /* Safari Modal Açıkken */
+        .safari-modal-open {
+          overflow: hidden !important;
+          position: fixed !important;
+          width: 100% !important;
+          height: 100% !important;
         }
 
-        /* Safari için touch optimizasyonu */
-        .safari-fix {
-          -webkit-overflow-scrolling: touch;
-          overflow-scrolling: touch;
+        /* Safari için overlay düzeltmesi */
+        .safari-overlay {
+          -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* Safari için mobile menu düzeltmesi */
+        .safari-mobile-menu {
+          -webkit-overflow-scrolling: touch !important;
+          overflow-y: auto !important;
+        }
+
+        /* Tüm diğer elementleri sidebar'ın arkasına it */
+        body > *:not(.safari-overlay):not(.safari-mobile-menu) {
+          z-index: auto !important;
+        }
+
+        /* Özellikle header'ı düzelt */
+        header {
+          z-index: 9999 !important;
+        }
+
+        /* Safari için z-index sıfırlama */
+        @media not all and (min-resolution:.001dpcm) { 
+          @supports (-webkit-appearance:none) {
+            body > * {
+              z-index: auto !important;
+            }
+            
+            .safari-overlay {
+              z-index: 2147483646 !important;
+            }
+            
+            .safari-mobile-menu {
+              z-index: 2147483647 !important;
+            }
+          }
         }
       `}</style>
     </>
   );
 }
 
-/* === ANA NAVBAR - GÜNCELLENMİŞ === */
+/* === ANA NAVBAR === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -634,8 +654,8 @@ export default function MainNavbar() {
   ];
 
   const headerClasses = isSticky
-    ? "fixed top-0 left-0 right-0 z-50 bg-[#ECE4DC] text-gray-800 shadow-md transition-all duration-300"
-    : "absolute top-0 left-0 right-0 z-20 text-white transition-all duration-300";
+    ? "fixed top-0 left-0 right-0 z-[9999] bg-[#ECE4DC] text-gray-800 shadow-md transition-all duration-300"
+    : "absolute top-0 left-0 right-0 z-[9999] text-white transition-all duration-300";
 
   const logoSrc = assets.logo;
 
@@ -645,15 +665,11 @@ export default function MainNavbar() {
       <Script 
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" 
         strategy="afterInteractive"
-        onLoad={() => console.log('Google Translate script yüklendi')}
-        onError={() => console.log('Google Translate script yüklenemedi')}
       />
       
       <Script id="google-translate-init" strategy="afterInteractive">
         {`
           window.googleTranslateElementInit = function() {
-            console.log('Google Translate Init başlatılıyor...');
-            
             if (typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
               try {
                 new google.translate.TranslateElement({
@@ -662,8 +678,6 @@ export default function MainNavbar() {
                   layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
                   autoDisplay: false
                 }, 'google_translate_element');
-                
-                console.log('Google Translate widget başarıyla oluşturuldu');
                 
                 setTimeout(function() {
                   var currentCookie = document.cookie.match(/(?:^|;\\s*)googtrans=([^;]*)/);
@@ -676,7 +690,6 @@ export default function MainNavbar() {
                       if (combo) {
                         var valueToSet = currentLang === 'en' ? '' : currentLang;
                         combo.value = valueToSet;
-                        console.log('Widget mevcut dile ayarlandı:', currentLang);
                       }
                     }
                   }
@@ -686,7 +699,6 @@ export default function MainNavbar() {
                 console.error('Google Translate başlatma hatası:', error);
               }
             } else {
-              console.error('Google Translate kütüphanesi mevcut değil');
               setTimeout(window.googleTranslateElementInit, 2000);
             }
           };
@@ -699,9 +711,7 @@ export default function MainNavbar() {
         `}
       </Script>
 
-      <header
-        className={`w-full pt-4 pb-2 px-4 sm:px-8 lg:px-16 ${headerClasses}`}
-      >
+      <header className={`w-full pt-4 pb-2 px-4 sm:px-8 lg:px-16 ${headerClasses}`}>
         <div className="flex items-center justify-between relative">
           {/* Sol taraf */}
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -756,7 +766,7 @@ export default function MainNavbar() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             <LanguageSwitcher dark={!isSticky} />
             
-            {/* Google Translate Element - Gizli ama çalışır */}
+            {/* Google Translate Element */}
             <div id="google_translate_element" style={{ 
               position: 'absolute', 
               top: '-1000px', 
@@ -797,7 +807,7 @@ export default function MainNavbar() {
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-md shadow-lg py-1 z-[9999] text-gray-800 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-md shadow-lg py-1 z-[10000] text-gray-800 border border-gray-200">
                     <Link 
                       href="/account" 
                       onClick={() => setIsUserMenuOpen(false)}
@@ -929,8 +939,8 @@ export default function MainNavbar() {
         </nav>
       </header>
 
-      {/* YENİ MOBİL MENÜ COMPONENT'I */}
-      <MobileMenu 
+      {/* SAFARİ İÇİN ÖZEL MOBİL MENÜ */}
+      <SafariMobileMenu 
         isOpen={menuOpen} 
         onClose={() => setMenuOpen(false)} 
         navLinks={navLinks}
@@ -973,15 +983,20 @@ export default function MainNavbar() {
             position: static !important;
           }
           
-          /* Safari ve mobil optimizasyonları */
-          @media (max-width: 768px) {
-            * {
-              -webkit-tap-highlight-color: transparent;
-            }
-            
-            button, a, [role="button"] {
-              touch-action: manipulation;
-              cursor: pointer;
+          /* Safari için z-index war'ı */
+          @media not all and (min-resolution:.001dpcm) { 
+            @supports (-webkit-appearance:none) {
+              /* Safari'de sidebar'ın her şeyin üstünde olmasını sağla */
+              .safari-overlay,
+              .safari-mobile-menu {
+                position: fixed !important;
+              }
+              
+              /* Diğer tüm elementleri resetle */
+              body > * {
+                position: relative !important;
+                z-index: auto !important;
+              }
             }
           }
         `}</style>
