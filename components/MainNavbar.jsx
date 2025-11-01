@@ -265,14 +265,15 @@ export default function MainNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // isSticky kaldırıldı
+  const [isSticky, setIsSticky] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
 
   const cartCount = getCartCount();
-  const isHomePage = pathname === "/"; // isHomePage hala kullanılabilir ancak artık scroll etkileşimini kontrol etmiyor.
+  const isHomePage = pathname === "/";
   const displayUserName =
     (user && user.user_metadata && user.user_metadata.full_name) ||
     (user && user.email && user.email.split("@")[0]) ||
@@ -289,8 +290,23 @@ export default function MainNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // SCROLL İLE İLGİLİ EFFECT KALDIRILDI.
-  // Navbar, `headerClasses` sayesinde her zaman en üste sabitlenmiş olacak.
+  // TÜM SAYFALARDA sticky olacak şekilde değiştirildi
+  useEffect(() => {
+    const handleScroll = () => {
+      // Anasayfada 50px'den sonra sticky ol, diğer sayfalarda her zaman sticky
+      if (isHomePage) {
+        setIsSticky(window.scrollY > 50);
+      } else {
+        setIsSticky(true);
+      }
+    };
+
+    // Sayfa yüklendiğinde sticky durumunu kontrol et
+    handleScroll();
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHomePage]);
 
   useEffect(() => {
     if (searchQuery.trim() !== "") {
@@ -323,7 +339,7 @@ export default function MainNavbar() {
     { name: "CONTACT", href: "/contact" },
   ];
 
-  // TÜM SAYFALARDA FIXED POZİSYON KULLANILACAK ŞEKİLDE DÜZENLENDİ
+  // TÜM SAYFALARDA fixed pozisyon kullan
   const headerClasses = "fixed top-0 left-0 right-0 z-[1000] bg-[#ECE4DC] text-gray-800 shadow-md transition-all duration-300";
 
   const logoSrc = assets.logo;
