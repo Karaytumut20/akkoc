@@ -33,7 +33,6 @@ function getBaseDomain() {
   if (typeof window === 'undefined') return '';
   const host = window.location.hostname;
   
-  // Localhost ve geliştirme ortamları için çerez domain'i kullanma
   if (host === 'localhost' || host.startsWith('192.168.') || host.startsWith('10.0.') || host === '127.0.0.1') {
     return '';
   }
@@ -92,7 +91,6 @@ function useGoogleTranslate() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Google Translate'in yüklendiğini kontrol et
     const checkGoogleTranslate = () => {
       if (typeof window !== 'undefined' && window.google && window.google.translate && window.google.translate.TranslateElement) {
         setIsLoaded(true);
@@ -101,12 +99,10 @@ function useGoogleTranslate() {
       return false;
     };
 
-    // Hemen kontrol et
     if (checkGoogleTranslate()) {
       return;
     }
 
-    // 2 saniye boyunca her 100ms'de bir kontrol et
     let attempts = 0;
     const maxAttempts = 20;
     
@@ -132,12 +128,10 @@ function useCurrentLang(defaultLang = "en") {
   const [mounted, setMounted] = useState(false);
   const { isLoaded: googleLoaded } = useGoogleTranslate();
 
-  // Client-side mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Çerezi oku ve state'i güncelle - SADECE CLIENT TARAFINDA
   const checkCookieAndSetLang = useCallback(() => {
     if (typeof window === 'undefined') return defaultLang;
     
@@ -161,14 +155,12 @@ function useCurrentLang(defaultLang = "en") {
     }
   }, [defaultLang]);
 
-  // Mount olduğunda çerezi kontrol et
   useEffect(() => {
     if (mounted) {
       checkCookieAndSetLang();
     }
   }, [mounted, checkCookieAndSetLang]);
 
-  // Google Translate yüklendiğinde de kontrol et
   useEffect(() => {
     if (mounted && googleLoaded) {
       setTimeout(() => {
@@ -177,26 +169,21 @@ function useCurrentLang(defaultLang = "en") {
     }
   }, [mounted, googleLoaded, checkCookieAndSetLang]);
 
-  // Dili değiştiren fonksiyon - KESİN ÇÖZÜM
   const setLang = useCallback((lang) => {
     if (typeof window === 'undefined') return;
 
     console.log('Dil değiştiriliyor:', lang);
 
     if (lang === "en") {
-      // İngilizce için çerezi temizle
       clearGoogTransCookie();
       setCurrent("en");
     } else {
-      // Diğer diller için çerezi ayarla
       setGoogTransCookie("en", lang);
       setCurrent(lang);
     }
 
-    // Google Translate widget'ını manuel olarak tetikle
     const triggerManualTranslation = () => {
       try {
-        // Widget'ın yüklenmesini bekle
         setTimeout(() => {
           const combo = document.querySelector('select.goog-te-combo');
           if (combo) {
@@ -204,7 +191,6 @@ function useCurrentLang(defaultLang = "en") {
             if (combo.value !== value) {
               combo.value = value;
               
-              // Değişiklik event'ini tetikle
               const event = new Event('change', { bubbles: true });
               combo.dispatchEvent(event);
               
@@ -222,11 +208,8 @@ function useCurrentLang(defaultLang = "en") {
       }
     };
 
-    // Widget'ı tetiklemeyi dene
     triggerManualTranslation();
 
-    // Sayfayı yenile - EN GARANTİ ÇÖZÜM
-    // 1 saniye bekle ki çerez ve widget senkronize olsun
     setTimeout(() => {
       console.log('Sayfa yenileniyor...');
       window.location.reload();
@@ -242,7 +225,6 @@ function LanguageSwitcher({ dark = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Dışarı tıklama ve touch event'leri
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -263,7 +245,6 @@ function LanguageSwitcher({ dark = false }) {
     };
   }, []);
 
-  // Client-side render için
   if (!mounted) {
     return (
       <div className="relative">
@@ -328,7 +309,7 @@ function LanguageSwitcher({ dark = false }) {
         <div 
           role="listbox" 
           className={[
-            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[110]",
+            "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[9999]",
             "backdrop-blur-sm",
             dark ? "bg-neutral-900/95 text-white" : "bg-white/95 text-gray-800"
           ].join(" ")}
@@ -369,7 +350,196 @@ function LanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === ANA NAVBAR - TAM ÇALIŞAN === */
+/* === YENİ SIDEBAR/MOBİL MENÜ COMPONENT'I === */
+function MobileMenu({ isOpen, onClose, navLinks, router }) {
+  const menuRef = useRef(null);
+
+  // Safari için özel stiller
+  useEffect(() => {
+    if (isOpen) {
+      // Safari'de body scroll'unu engelle
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+    } else {
+      // Scroll'u geri aç
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    }
+
+    return () => {
+      // Cleanup
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, [isOpen]);
+
+  // ESC tuşu ile kapatma
+  useEffect(() => {
+    const handleEsc = (e) => e.key === "Escape" && onClose();
+    if (isOpen) {
+      document.addEventListener("keydown", handleEsc);
+    }
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
+  // Safari için overlay click
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Overlay - Safari için optimize edilmiş */}
+      <div 
+        className="fixed inset-0 bg-black/95 z-[9998] lg:hidden"
+        onClick={handleOverlayClick}
+        onTouchEnd={handleOverlayClick}
+        style={{
+          // Safari için hardware acceleration
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)'
+        }}
+      />
+      
+      {/* Mobil Menü Container - Safari için optimize edilmiş */}
+      <div 
+        ref={menuRef}
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center text-center space-y-6 text-white lg:hidden"
+        style={{
+          // Safari için hardware acceleration
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          // Safari için overflow hidden
+          overflow: 'hidden'
+        }}
+      >
+        {/* Kapatma Butonu - Üst Sağ Köşede */}
+        <button 
+          aria-label="Close menu" 
+          className="absolute top-8 right-6 p-4 rounded-full hover:bg-white/20 active:bg-white/30 transition-all duration-300 touch-manipulation"
+          style={{ 
+            minHeight: '48px', 
+            minWidth: '48px',
+            // Safari için shadow
+            WebkitAppearance: 'none',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }}
+          onClick={onClose}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            onClose();
+          }}
+        >
+          <icons.Close className="w-7 h-7" />
+        </button>
+        
+        {/* Navigasyon Linkleri */}
+        <div className="flex flex-col items-center justify-center space-y-8 w-full px-8">
+          {navLinks.map((item, index) => (
+            <div 
+              key={item.name} 
+              className="w-full max-w-xs transform transition-all duration-500"
+              style={{
+                animationDelay: `${index * 100}ms`,
+                // Safari için animation
+                WebkitAnimation: `fadeInUp 0.5s ease-out ${index * 100}ms both`
+              }}
+            >
+              <Link 
+                href={item.href} 
+                onClick={() => {
+                  onClose();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  router.push(item.href);
+                  onClose();
+                }}
+                className="block w-full py-5 px-6 text-2xl font-medium hover:text-orange-300 active:text-orange-400 transition-all duration-300 touch-manipulation rounded-2xl hover:bg-white/10 active:bg-white/20 border border-transparent hover:border-white/20"
+                style={{ 
+                  minHeight: '64px', 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  // Safari için stiller
+                  WebkitTapHighlightColor: 'transparent',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none'
+                }}
+              >
+                <span className="relative">
+                  {item.name}
+                  {/* Hover underline effect */}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-300 transition-all duration-300 group-hover:w-full"></span>
+                </span>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Alt Bilgi - Sosyal Medya veya Telif Hakkı */}
+        <div className="absolute bottom-8 left-0 right-0 px-8">
+          <div className="text-white/60 text-sm font-light">
+            <p>© 2024 Tüm Hakları Saklıdır</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Safari için Animasyon Stilleri */}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @-webkit-keyframes fadeInUp {
+          from {
+            opacity: 0;
+            -webkit-transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            -webkit-transform: translateY(0);
+          }
+        }
+
+        /* Safari için scroll bar gizleme */
+        .no-scroll {
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100%;
+        }
+
+        /* Safari için touch optimizasyonu */
+        .safari-fix {
+          -webkit-overflow-scrolling: touch;
+          overflow-scrolling: touch;
+        }
+      `}</style>
+    </>
+  );
+}
+
+/* === ANA NAVBAR - GÜNCELLENMİŞ === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -393,12 +563,10 @@ export default function MainNavbar() {
     (user && user.email && user.email.split("@")[0]) ||
     "My Account";
 
-  // Client-side mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Dışarı tıklama/touch için
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -418,7 +586,6 @@ export default function MainNavbar() {
     };
   }, []);
 
-  // Scroll efekti
   useEffect(() => {
     if (!isHomePage) {
       setIsSticky(true);
@@ -433,7 +600,6 @@ export default function MainNavbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
 
-  // Arama işlevselliği
   useEffect(() => {
     if (searchQuery.trim() !== "") {
       const filtered = products.filter((product) =>
@@ -475,7 +641,7 @@ export default function MainNavbar() {
 
   return (
     <>
-      {/* GOOGLE TRANSLATE SCRIPT'LERİ - GÜVENLİ */}
+      {/* GOOGLE TRANSLATE SCRIPT'LERİ */}
       <Script 
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" 
         strategy="afterInteractive"
@@ -485,11 +651,9 @@ export default function MainNavbar() {
       
       <Script id="google-translate-init" strategy="afterInteractive">
         {`
-          // Google Translate init fonksiyonu - GÜVENLİ
           window.googleTranslateElementInit = function() {
             console.log('Google Translate Init başlatılıyor...');
             
-            // Google Translate kütüphanesinin yüklenmesini bekle
             if (typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
               try {
                 new google.translate.TranslateElement({
@@ -501,7 +665,6 @@ export default function MainNavbar() {
                 
                 console.log('Google Translate widget başarıyla oluşturuldu');
                 
-                // Mevcut çerezi kontrol et ve widget'ı senkronize et
                 setTimeout(function() {
                   var currentCookie = document.cookie.match(/(?:^|;\\s*)googtrans=([^;]*)/);
                   if (currentCookie) {
@@ -524,12 +687,10 @@ export default function MainNavbar() {
               }
             } else {
               console.error('Google Translate kütüphanesi mevcut değil');
-              // 2 saniye sonra tekrar dene
               setTimeout(window.googleTranslateElementInit, 2000);
             }
           };
 
-          // Sayfa yüklendiğinde init fonksiyonunu çağır
           if (document.readyState === 'complete') {
             window.googleTranslateElementInit();
           } else {
@@ -548,13 +709,13 @@ export default function MainNavbar() {
               aria-label="Menu"
               className="p-2 rounded-full hover:bg-black/10 active:bg-black/20 transition lg:hidden touch-manipulation"
               style={{ minHeight: '44px', minWidth: '44px' }}
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => setMenuOpen(true)}
               onTouchEnd={(e) => {
                 e.preventDefault();
-                setMenuOpen(!menuOpen);
+                setMenuOpen(true);
               }}
             >
-              {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
+              <icons.Menu className="w-6 h-6" />
             </button>
             
             <button
@@ -636,7 +797,7 @@ export default function MainNavbar() {
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-md shadow-lg py-1 z-20 text-gray-800 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-md shadow-lg py-1 z-[9999] text-gray-800 border border-gray-200">
                     <Link 
                       href="/account" 
                       onClick={() => setIsUserMenuOpen(false)}
@@ -766,42 +927,15 @@ export default function MainNavbar() {
             </Link>
           ))}
         </nav>
-
-        {/* Mobil Menü */}
-        {menuOpen && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center text-center space-y-8 text-white text-xl font-light uppercase tracking-widest lg:hidden">
-            <button 
-              aria-label="Close menu" 
-              className="absolute top-6 right-6 p-3 rounded-full hover:bg-white/20 active:bg-white/30 transition touch-manipulation"
-              style={{ minHeight: '44px', minWidth: '44px' }}
-              onClick={() => setMenuOpen(false)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                setMenuOpen(false);
-              }}
-            >
-              <icons.Close className="w-7 h-7" />
-            </button>
-            
-            {navLinks.map((item) => (
-              <Link 
-                key={item.name} 
-                href={item.href} 
-                onClick={() => setMenuOpen(false)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  router.push(item.href);
-                  setMenuOpen(false);
-                }}
-                className="py-4 px-8 hover:text-orange-300 active:text-orange-400 transition-colors touch-manipulation text-2xl"
-                style={{ minHeight: '60px', display: 'flex', alignItems: 'center' }}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        )}
       </header>
+
+      {/* YENİ MOBİL MENÜ COMPONENT'I */}
+      <MobileMenu 
+        isOpen={menuOpen} 
+        onClose={() => setMenuOpen(false)} 
+        navLinks={navLinks}
+        router={router}
+      />
 
       {/* Global Stiller */}
       {mounted && (
