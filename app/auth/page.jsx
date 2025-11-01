@@ -8,7 +8,7 @@ import logo from '@/assets/logos.png';
 import { supabase } from '@/lib/supabaseClient';
 import { PolicyModal } from '@/components/PolicyModal';
 
-// FloatingLabelInput bileşeni aynı kalıyor...
+// FloatingLabelInput bileşeni
 const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, autoComplete }) => (
   <div className="relative">
     <input
@@ -31,7 +31,7 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
   </div>
 );
 
-// ForgotPasswordModal bileşeni - toast duration eklendi
+// ForgotPasswordModal bileşeni
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,15 +41,12 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
-
       if (error) throw error;
-
-      toast.success('📧 Password reset email sent! Check your inbox.', { duration: 1000 });
+      toast.success('📧 Password reset email sent!', { duration: 1000 });
       onClose();
     } catch (error) {
       toast.error(error.message, { duration: 1000 });
@@ -74,7 +71,6 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
           <Image src={logo} alt="Logo" width={40} height={40} />
           <h3 className="text-2xl font-semibold text-[#be531c]">Forgot Password</h3>
         </div>
-        
         <form className="space-y-6" onSubmit={handleResetPassword}>
           <p className="text-sm text-gray-700">
             Enter your email address and we'll send you a link to reset your password.
@@ -97,7 +93,6 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
-
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
@@ -114,6 +109,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
 // === ANA AUTH PAGE ===
 export default function AuthPage() {
   const router = useRouter();
+
   const [isLogin, setIsLogin] = useState(true);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -121,34 +117,33 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  // Modals state
+
+  // Modals
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [modalContentType, setModalContentType] = useState(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  // Oturum durumunu kontrol etmek için useEffect
+  // Oturum kontrolü ve yönlendirme
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push('/');
+        router.push('/'); // Oturum varsa ana sayfaya yönlendir
       }
     };
-    
     checkUser();
 
-    // Auth state değişikliklerini dinle
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        router.push('/');
+      if (session) {
+        router.push('/'); // Oturum açıldığında ana sayfaya yönlendir
       }
     });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
-  // Policy Modal handlers
+  // Policy modal fonksiyonları
   const openPolicyModal = useCallback((type) => {
     setModalContentType(type);
     setIsPolicyModalOpen(true);
@@ -158,8 +153,8 @@ export default function AuthPage() {
     setIsPolicyModalOpen(false);
     setModalContentType(null);
   }, []);
-  
-  // Forgot Password Modal handlers
+
+  // Forgot modal fonksiyonları
   const openForgotModal = useCallback(() => {
     setIsForgotModalOpen(true);
   }, []);
@@ -168,28 +163,22 @@ export default function AuthPage() {
     setIsForgotModalOpen(false);
   }, []);
 
+  // Form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (password.length < 6) {
       toast.error('⚠️ Password must be at least 6 characters long.', { duration: 1000 });
       return;
     }
-
     if (!isLogin && !termsAccepted) {
       toast.error('Please accept the Terms of Service and Privacy Policy.', { duration: 1000 });
       return;
     }
-
     setLoading(true);
     try {
       if (isLogin) {
-        // --- LOGIN LOGIC ---
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
+        // Giriş
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           if (error.message.includes('Email not confirmed')) {
             toast.error('⚠️ Please verify your email address before logging in.', { duration: 1000 });
@@ -198,28 +187,24 @@ export default function AuthPage() {
           }
           return;
         }
-
         if (data?.user) {
           toast.success('✅ Login successful!', { duration: 1000 });
-          // Router push'u kaldırdık çünkü useEffect otomatik yönlendirecek
+          // Oturum açıldığında yönlendirme otomatik yapılacak
         }
-
       } else {
-        // --- SIGN UP LOGIC ---
+        // Kayıt
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { 
-              full_name: fullName, 
-              phone: phone || null 
+            data: {
+              full_name: fullName,
+              phone: phone || null,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
-
         if (error) throw error;
-
         toast.success('📩 Check your email and verify your account.', { duration: 1000 });
         setIsLogin(true);
         setFullName('');
@@ -236,40 +221,32 @@ export default function AuthPage() {
 
   return (
     <>
-      {/* Toaster component'ine default duration eklendi */}
-      <Toaster 
-        position="top-center" 
+      {/* Toasts */}
+      <Toaster
+        position="top-center"
         reverseOrder={false}
-        toastOptions={{
-          duration: 1000,
-        }}
-      />
-      
-      {/* Policy Modal */}
-      {isPolicyModalOpen && (
-        <PolicyModal 
-          isOpen={isPolicyModalOpen} 
-          onClose={closePolicyModal} 
-          type={modalContentType} 
-        />
-      )}
-      
-      {/* Forgot Password Modal */}
-      <ForgotPasswordModal 
-        isOpen={isForgotModalOpen} 
-        onClose={closeForgotModal} 
+        toastOptions={{ duration: 1000 }}
       />
 
+      {/* Modals */}
+      {isPolicyModalOpen && (
+        <PolicyModal
+          isOpen={isPolicyModalOpen}
+          onClose={closePolicyModal}
+          type={modalContentType}
+        />
+      )}
+      <ForgotPasswordModal isOpen={isForgotModalOpen} onClose={closeForgotModal} />
+
+      {/* Giriş/kayıt ekranı */}
       <div className="flex items-center justify-center min-h-screen bg-[#ECE4DC] p-4">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl relative">
           <div className="flex justify-center mb-4">
             <Image src={logo} alt="Logo" width={80} height={80} />
           </div>
-
           <h2 className="text-3xl font-extrabold text-center text-[#be531c]">
             {isLogin ? 'Sign In' : 'Register Now'}
           </h2>
-
           <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
@@ -367,7 +344,6 @@ export default function AuthPage() {
               {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
-
           <p className="text-sm text-center text-gray-600">
             {isLogin ? "Don't have an account?" : 'Already have an account?'}
             <button
