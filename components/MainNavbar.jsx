@@ -1,3 +1,4 @@
+// components/MainNavbar.jsx
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -8,15 +9,31 @@ import Link from "next/link";
 import Script from "next/script";
 import { assets } from "@/assets/assets";
 
-/* === ICONLAR === */
+/* === ICONS === */
 const icons = {
-  Menu: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>),
-  Close: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>),
-  Search: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>),
-  ShoppingBag: (p) => (<svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>),
+  Menu: (p) => (
+    <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" />
+    </svg>
+  ),
+  Close: (p) => (
+    <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  Search: (p) => (
+    <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+    </svg>
+  ),
+  ShoppingBag: (p) => (
+    <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  ),
 };
 
-/* === DİL LİSTESİ === */
+/* === LANGUAGES === */
 const LANGS = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
@@ -28,189 +45,60 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* === YENİ MOBİL MENÜ KOMPONENTİ === */
-function MobileMenu({ isOpen, onClose, navLinks, isSticky }) {
-  if (!isOpen) return null;
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.9)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      animation: 'fadeIn 0.3s ease-in-out'
-    }}>
-      {/* Kapatma Butonu */}
-      <button
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          background: 'none',
-          border: 'none',
-          color: 'white',
-          padding: '10px',
-          cursor: 'pointer'
-        }}
-      >
-        <icons.Close style={{ width: '24px', height: '24px' }} />
-      </button>
-
-      {/* Menü Linkleri */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '30px'
-      }}>
-        {navLinks.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            onClick={onClose}
-            style={{
-              color: 'white',
-              textDecoration: 'none',
-              fontSize: '18px',
-              fontWeight: '300',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#f97316'}
-            onMouseLeave={(e) => e.target.style.color = 'white'}
-          >
-            {item.name}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* === DİL SEÇİCİ === */
+/* === LANGUAGE SWITCHER === */
 function LanguageSwitcher({ dark = false }) {
-  const [current, setCurrent] = useState("en");
+  const [current, setLang] = useState("en");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const click = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", click);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", click); document.removeEventListener("keydown", esc); };
   }, []);
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: dark ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(0,0,0,0.2)',
-          background: 'transparent',
-          color: dark ? 'white' : 'black',
-          fontSize: '14px',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}
+        onClick={() => setOpen(v => !v)}
+        className={[
+          "flex items-center gap-2 rounded-lg transition p-2 sm:px-3 sm:py-2 text-xs sm:text-sm",
+          dark ? "text-white sm:border sm:border-white/30 sm:hover:bg-white/10" : "text-gray-800 sm:border sm:border-gray-300 sm:hover:bg-gray-100"
+        ].join(" ")}
       >
-        <span style={{
-          padding: '2px 6px',
-          fontSize: '12px',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          border: dark ? '1px solid rgba(255,255,255,0.5)' : '1px solid rgba(0,0,0,0.3)',
-          borderRadius: '4px'
-        }}>
-          {current.toUpperCase()}
-        </span>
-        <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 20 20" fill="currentColor">
-          <path d="M5.25 7.5l4.5 4.5 4.5-4.5"/>
-        </svg>
+        <span className="inline-block rounded text-[11px] sm:text-[10px] uppercase font-semibold sm:border sm:px-2 sm:py-0.5">{(current || "en").toUpperCase()}</span>
+        <span className="hidden md:inline-block">{LANGS.find(l => l.code === current)?.label || "Language"}</span>
+        <svg className="w-4 h-4 flex-shrink-0 hidden sm:block" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5l4.5 4.5 4.5-4.5" /></svg>
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '100%',
-          marginTop: '8px',
-          width: '200px',
-          backgroundColor: dark ? '#1a1a1a' : 'white',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-          zIndex: 110,
-          overflow: 'hidden'
-        }}>
-          {LANGS.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => {
-                setCurrent(lang.code);
-                setOpen(false);
-              }}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '12px 16px',
-                background: 'none',
-                border: 'none',
-                color: dark ? 'white' : 'black',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-              }}
-            >
-              <span style={{
-                fontSize: '11px',
-                fontWeight: '600',
-                padding: '2px 6px',
-                border: dark ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(0,0,0,0.3)',
-                borderRadius: '4px'
-              }}>
-                {lang.code.toUpperCase()}
-              </span>
-              {lang.label}
-            </button>
-          ))}
+        <div className={[
+          "absolute right-0 mt-2 w-48 rounded-xl shadow-xl ring-1 ring-black/5 focus:outline-none z-[110]",
+          dark ? "bg-neutral-900 text-white" : "bg-white text-gray-800"
+        ].join(" ")}>
+          <ul className="py-1 max-h-64 overflow-auto">
+            {LANGS.map((l) => (
+              <li key={l.code}>
+                <button onClick={() => { setLang(l.code); setOpen(false); }} className="w-full text-left px-3 py-2 text-sm hover:bg-black/5">
+                  <span className="mr-2 inline-block w-7 text-[11px] text-center rounded border">{l.code.toUpperCase()}</span>
+                  {l.label}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
 }
 
-/* === ANA NAVBAR === */
+/* === MAIN NAVBAR === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
   const pathname = usePathname();
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -218,57 +106,47 @@ export default function MainNavbar() {
   const [isSticky, setIsSticky] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
+
   const cartCount = getCartCount();
   const isHomePage = pathname === "/";
-
-  const displayUserName = user?.user_metadata?.full_name || 
-                         user?.email?.split("@")[0] || 
-                         "My Account";
-
-  const navLinks = [
-    { name: "HOME", href: "/" },
-    { name: "ALL PRODUCT", href: "/all-products" },
-    { name: "COLLECTION", href: "/collection" },
-    { name: "CONTACT", href: "/contact" },
-  ];
+  const displayUserName =
+    (user && user.user_metadata?.full_name) ||
+    (user && user.email?.split("@")[0]) ||
+    "My Account";
 
   useEffect(() => setMounted(true), []);
 
+  // reset body top (translate banner bug fix)
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setIsSearchVisible(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    if (typeof document !== "undefined") {
+      document.body.style.top = "0px";
+      document.documentElement.style.top = "0px";
+    }
   }, []);
 
   useEffect(() => {
-    if (!isHomePage) {
-      setIsSticky(true);
-      return;
-    }
-    const handleScroll = () => setIsSticky(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setIsSearchVisible(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setIsUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!isHomePage) { setIsSticky(true); return; }
+    const onScroll = () => setIsSticky(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, [isHomePage]);
 
   useEffect(() => {
-    if (searchQuery.trim()) {
-      const filtered = products.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    if (searchQuery.trim() !== "") {
+      const filtered = products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
       setSearchResults(filtered.slice(0, 5));
-    } else {
-      setSearchResults([]);
-    }
+    } else setSearchResults([]);
   }, [searchQuery, products]);
 
   const handleSearchSubmit = (e) => {
@@ -280,37 +158,28 @@ export default function MainNavbar() {
     }
   };
 
-  const handleProductClick = (productId) => {
-    router.push(`/product/${productId}`);
+  const handleProductClick = (id) => {
+    router.push(`/product/${id}`);
     setIsSearchVisible(false);
     setSearchQuery("");
   };
 
-  const headerStyle = {
-    width: '100%',
-    padding: '16px 20px 8px 20px',
-    transition: 'all 0.3s ease',
-    ...(isSticky ? {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 50,
-      backgroundColor: '#ECE4DC',
-      color: '#1f2937',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    } : {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 20,
-      color: 'white'
-    })
-  };
+  const navLinks = [
+    { name: "HOME", href: "/" },
+    { name: "ALL PRODUCT", href: "/all-products" },
+    { name: "COLLECTION", href: "/collection" },
+    { name: "CONTACT", href: "/contact" },
+  ];
+
+  const headerClasses = isSticky
+    ? "fixed top-0 left-0 right-0 z-[1000] bg-[#ECE4DC] text-gray-800 shadow-md animate-fadeInDown"
+    : "absolute top-0 left-0 right-0 z-[1000] text-white";
+
+  const logoSrc = assets.logo;
 
   return (
     <>
+      {/* Google Translate */}
       <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
       <Script id="google-translate-init" strategy="afterInteractive">
         {`
@@ -324,380 +193,128 @@ export default function MainNavbar() {
         `}
       </Script>
 
-      <header style={headerStyle}>
-        {/* Ana İçerik */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'relative'
-        }}>
-          {/* Sol Taraf - Menü ve Arama */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <button
-              onClick={() => setMenuOpen(true)}
-              style={{
-                padding: '8px',
-                background: 'none',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <icons.Menu style={{
-                width: '24px',
-                height: '24px',
-                color: isSticky ? 'black' : 'white'
-              }} />
+      <header className={`w-full pt-4 pb-2 px-5 sm:px-10 lg:px-16 transition-all duration-300 ${headerClasses}`}>
+        <div className="flex items-center justify-between relative">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <button aria-label="Menu" className="p-2 rounded-full hover:bg-black/10 transition lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <icons.Close className="w-6 h-6" /> : <icons.Menu className="w-6 h-6" />}
             </button>
-
-            <button
-              onClick={() => setIsSearchVisible(!isSearchVisible)}
-              style={{
-                padding: '8px',
-                background: 'none',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <icons.Search style={{
-                width: '20px',
-                height: '20px',
-                color: isSticky ? 'black' : 'white'
-              }} />
+            <button aria-label="Search" className="p-2 rounded-full hover:bg-black/10 transition" onClick={(e) => { e.stopPropagation(); setIsSearchVisible(!isSearchVisible); }}>
+              <icons.Search className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Logo */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              cursor: 'pointer'
-            }}
-            onClick={() => router.push("/")}
-          >
-            <Image
-              src={assets.logo}
-              alt="logo"
-              width={120}
-              height={40}
-              style={{
-                filter: isSticky ? 'none' : 'brightness(0) invert(1)'
-              }}
-            />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer" onClick={() => router.push("/")}>
+            <Image className="w-28 md:w-32" src={logoSrc} alt="logo" style={{ filter: isSticky ? "none" : "brightness(0) invert(1)" }} />
           </div>
 
-          {/* Sağ Taraf - Dil, Kullanıcı, Sepet */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            {mounted && <LanguageSwitcher dark={!isSticky} />}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {mounted && (
+              <>
+                <LanguageSwitcher dark={!isSticky} />
+                <div id="google_translate_element" className="pointer-events-none absolute opacity-0 -z-[9999]" />
+              </>
+            )}
 
-            {/* Kullanıcı Menüsü */}
             {user ? (
-              <div ref={userMenuRef} style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px',
-                    background: 'none',
-                    border: 'none',
-                    borderRadius: '50%',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.3s ease'
-                  }}
-                >
-                  <Image
-                    src={assets.user_icon}
-                    alt="user icon"
-                    width={20}
-                    height={20}
-                    style={{
-                      filter: isSticky ? 'none' : 'brightness(0) invert(1)'
-                    }}
-                  />
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition">
+                  <Image className="w-5 h-5" src={assets.user_icon} alt="user icon" style={{ filter: isSticky ? "none" : "brightness(0) invert(1)" }} />
+                  <span className="hidden md:block truncate max-w-[100px]">{displayUserName}</span>
                 </button>
-
                 {isUserMenuOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '100%',
-                    marginTop: '8px',
-                    width: '160px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                    zIndex: 20,
-                    overflow: 'hidden'
-                  }}>
-                    <Link 
-                      href="/account" 
-                      onClick={() => setIsUserMenuOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '12px 16px',
-                        color: '#1f2937',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        transition: 'background-color 0.2s ease',
-                        borderBottom: '1px solid #f3f4f6'
-                      }}
-                    >
-                      My Account
-                    </Link>
-                    <button 
-                      onClick={() => { signOut(); setIsUserMenuOpen(false); }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '12px 16px',
-                        background: 'none',
-                        border: 'none',
-                        color: '#1f2937',
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s ease'
-                      }}
-                    >
-                      Log Out
-                    </button>
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[1100] text-gray-800">
+                    <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">My Account</Link>
+                    <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100">Log Out</button>
                   </div>
                 )}
               </div>
             ) : (
-              <button 
-                onClick={() => router.push("/auth")}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px',
-                  background: 'none',
-                  border: 'none',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease'
-                }}
-              >
-                <Image
-                  src={assets.user_icon}
-                  alt="user icon"
-                  width={20}
-                  height={20}
-                  style={{
-                    filter: isSticky ? 'none' : 'brightness(0) invert(1)'
-                  }}
-                />
+              <button onClick={() => router.push("/auth")} className="flex items-center gap-2 p-2 rounded-full hover:bg-black/10 transition">
+                <Image className="w-5 h-5" src={assets.user_icon} alt="user icon" style={{ filter: isSticky ? "none" : "brightness(0) invert(1)" }} />
+                <span className="hidden md:block">Log In</span>
               </button>
             )}
 
-            {/* Sepet */}
-            <button
-              onClick={() => router.push("/cart")}
-              style={{
-                padding: '8px',
-                background: 'none',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                position: 'relative'
-              }}
-            >
-              <icons.ShoppingBag style={{
-                width: '20px',
-                height: '20px',
-                color: isSticky ? 'black' : 'white'
-              }} />
+            <button aria-label="Shopping Bag" className="p-2 rounded-full hover:bg-black/10 transition relative" onClick={() => router.push("/cart")}>
+              <icons.ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '16px',
-                  height: '16px',
-                  backgroundColor: '#dc2626',
-                  color: 'white',
-                  borderRadius: '50%',
-                  fontSize: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold'
-                }}>
-                  {cartCount}
-                </span>
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-600 text-white text-xs">{cartCount}</span>
               )}
             </button>
           </div>
         </div>
 
-        {/* Arama Alanı */}
         {isSearchVisible && (
-          <div ref={searchRef} style={{
-            position: 'relative',
-            marginTop: '16px',
-            maxWidth: '500px',
-            marginLeft: 'auto',
-            marginRight: 'auto'
-          }}>
-            <form onSubmit={handleSearchSubmit} style={{ display: 'flex' }}>
+          <div ref={searchRef} className="relative mt-4 max-w-md mx-auto">
+            <form onSubmit={handleSearchSubmit} className="flex">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search Products..."
                 autoFocus
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '14px',
-                  backgroundColor: isSticky ? '#f3f4f6' : 'rgba(255,255,255,0.2)',
-                  color: isSticky ? '#1f2937' : 'white'
-                }}
+                className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
+                  isSticky ? "bg-gray-100 text-gray-800 placeholder-gray-500 focus:ring-orange-500" : "bg-white/20 text-white placeholder-white/70 focus:ring-white/50"
+                }`}
               />
             </form>
-
             {searchResults.length > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                width: '100%',
-                backgroundColor: 'white',
-                marginTop: '8px',
-                borderRadius: '8px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                zIndex: 50,
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }}>
-                {searchResults.map((product) => (
-                  <div
-                    key={product.id}
-                    onClick={() => handleProductClick(product.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '12px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease',
-                      borderBottom: '1px solid #f3f4f6'
-                    }}
-                  >
-                    <div style={{
-                      position: 'relative',
-                      width: '40px',
-                      height: '40px',
-                      marginRight: '12px',
-                      flexShrink: 0
-                    }}>
-                      <Image
-                        src={getSafeImageUrl(product.image_urls)}
-                        alt={product.name}
-                        fill
-                        style={{ objectFit: 'cover', borderRadius: '4px' }}
-                      />
-                    </div>
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#1f2937'
-                    }}>
-                      {product.name}
-                    </span>
-                  </div>
-                ))}
+              <div className="absolute top-full left-0 w-full bg-white text-black mt-2 rounded-md shadow-lg z-[1200] max-h-80 overflow-y-auto">
+                <ul>
+                  {searchResults.map((p) => (
+                    <li key={p.id}>
+                      <div onClick={() => handleProductClick(p.id)} className="flex items-center p-3 hover:bg-gray-100 cursor-pointer">
+                        <div className="relative w-12 h-12 mr-4 flex-shrink-0">
+                          <Image src={getSafeImageUrl(p.image_urls)} alt={p.name} fill className="object-cover rounded-md" />
+                        </div>
+                        <span className="font-medium text-gray-800">{p.name}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
         )}
 
-        {/* Masaüstü Navigasyon */}
-        <nav style={{
-          marginTop: '16px',
-          display: 'none',
-          justifyContent: 'center',
-          gap: '40px',
-          fontSize: '14px',
-          fontWeight: '300',
-          textTransform: 'uppercase',
-          letterSpacing: '2px',
-          color: isSticky ? '#374151' : '#e5e7eb'
-        }}>
+        <nav className={`mt-6 hidden lg:flex justify-center space-x-10 text-sm font-light tracking-[0.25em] uppercase ${isSticky ? "text-gray-700" : "text-gray-200"}`}>
           {navLinks.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              style={{
-                color: 'inherit',
-                textDecoration: 'none',
-                position: 'relative',
-                transition: 'color 0.3s ease'
-              }}
-            >
+            <Link key={item.name} href={item.href} className="relative group hover:text-current transition">
               {item.name}
+              <span className="absolute left-1/2 -bottom-1 w-0 h-[1.5px] bg-current group-hover:w-6 group-hover:-translate-x-1/2 transition-all duration-300"></span>
             </Link>
           ))}
         </nav>
 
-        {/* Yeni Mobil Menü */}
-        <MobileMenu
-          isOpen={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          navLinks={navLinks}
-          isSticky={isSticky}
-        />
+        {menuOpen && (
+          <div data-sidebar className="fixed top-0 left-0 w-full h-full bg-black/90 z-[9999] flex flex-col items-center justify-center text-center space-y-8 text-white text-lg font-light uppercase tracking-widest animate-fadeIn">
+            <button aria-label="Close menu" className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/20 transition" onClick={() => setMenuOpen(false)}>
+              <icons.Close className="w-7 h-7" />
+            </button>
+            {navLinks.map((item) => (
+              <Link key={item.name} href={item.href} onClick={() => setMenuOpen(false)} className="hover:text-orange-300 transition">
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        )}
       </header>
 
-      {/* Global Stiller */}
       {mounted && (
         <style jsx global>{`
           .goog-te-banner-frame { display: none !important; }
           .goog-logo-link { display: none !important; }
           #google_translate_element .goog-te-gadget { font-size: 0 !important; }
-          #google_translate_element .goog-te-gadget-simple { 
-            background: transparent !important; 
-            border: none !important; 
-            padding: 0 !important; 
-          }
+          #google_translate_element .goog-te-gadget-simple { background-color: transparent !important; border: none !important; }
           #google_translate_element .goog-te-menu-value span { display: none !important; }
           #google_translate_element .goog-te-gadget-icon { display: none !important; }
           body { top: 0 !important; }
-
-          @media (min-width: 1024px) {
-            nav { display: flex !important; }
+          @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
+          .animate-fadeInDown { animation: fadeInDown 0.3s ease-out; }
         `}</style>
       )}
     </>
