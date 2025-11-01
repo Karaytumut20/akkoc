@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react'; // useEffect'i ekleyin
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
@@ -31,7 +31,7 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
   </div>
 );
 
-// ForgotPasswordModal bileşeni aynı kalıyor...
+// ForgotPasswordModal bileşeni - toast duration eklendi
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,10 +49,10 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
 
       if (error) throw error;
 
-      toast.success('📧 Password reset email sent! Check your inbox.');
+      toast.success('📧 Password reset email sent! Check your inbox.', { duration: 1000 });
       onClose();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message, { duration: 1000 });
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
   );
 };
 
-// === AUTH PAGE ===
+// === ANA AUTH PAGE ===
 export default function AuthPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -127,7 +127,7 @@ export default function AuthPage() {
   const [modalContentType, setModalContentType] = useState(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  // Oturum durumunu kontrol etmek için useEffect ekleyin
+  // Oturum durumunu kontrol etmek için useEffect
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -172,12 +172,12 @@ export default function AuthPage() {
     e.preventDefault();
 
     if (password.length < 6) {
-      toast.error('⚠️ Password must be at least 6 characters long.');
+      toast.error('⚠️ Password must be at least 6 characters long.', { duration: 1000 });
       return;
     }
 
     if (!isLogin && !termsAccepted) {
-      toast.error('Please accept the Terms of Service and Privacy Policy.');
+      toast.error('Please accept the Terms of Service and Privacy Policy.', { duration: 1000 });
       return;
     }
 
@@ -192,15 +192,15 @@ export default function AuthPage() {
 
         if (error) {
           if (error.message.includes('Email not confirmed')) {
-            toast.error('⚠️ Please verify your email address before logging in.');
+            toast.error('⚠️ Please verify your email address before logging in.', { duration: 1000 });
           } else {
-            toast.error(error.message);
+            toast.error(error.message, { duration: 1000 });
           }
           return;
         }
 
         if (data?.user) {
-          toast.success('✅ Login successful!');
+          toast.success('✅ Login successful!', { duration: 1000 });
           // Router push'u kaldırdık çünkü useEffect otomatik yönlendirecek
         }
 
@@ -220,7 +220,7 @@ export default function AuthPage() {
 
         if (error) throw error;
 
-        toast.success('📩 Check your email and verify your account.');
+        toast.success('📩 Check your email and verify your account.', { duration: 1000 });
         setIsLogin(true);
         setFullName('');
         setPhone('');
@@ -228,7 +228,7 @@ export default function AuthPage() {
         setTermsAccepted(false);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message, { duration: 1000 });
     } finally {
       setLoading(false);
     }
@@ -236,7 +236,14 @@ export default function AuthPage() {
 
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} />
+      {/* Toaster component'ine default duration eklendi */}
+      <Toaster 
+        position="top-center" 
+        reverseOrder={false}
+        toastOptions={{
+          duration: 1000,
+        }}
+      />
       
       {/* Policy Modal */}
       {isPolicyModalOpen && (
