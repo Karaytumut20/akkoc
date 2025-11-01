@@ -1,3 +1,4 @@
+// app/auth/page.jsx
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -6,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import logo from '@/assets/logos.png';
 import { supabase } from '@/lib/supabaseClient';
-import { PolicyModal } from '@/components/PolicyModal';
+import { PolicyModal } from '@/components/PolicyModal'; // Gizlilik/Şartlar modalı
 
-// FloatingLabelInput bileşeni
+// ---- Floating label input (Türkçe açıklamalı) ----
 const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, autoComplete }) => (
   <div className="relative">
     <input
@@ -31,11 +32,10 @@ const FloatingLabelInput = ({ id, name, type, label, value, onChange, required, 
   </div>
 );
 
-// ForgotPasswordModal bileşeni
+// ---- Şifremi unuttum modalı ----
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-
   if (!isOpen) return null;
 
   const handleResetPassword = async (e) => {
@@ -106,7 +106,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
   );
 };
 
-// === ANA AUTH PAGE ===
+// ---- AUTH SAYFASI ----
 export default function AuthPage() {
   const router = useRouter();
 
@@ -118,7 +118,7 @@ export default function AuthPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Modals
+  // Modallar
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
   const [modalContentType, setModalContentType] = useState(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
@@ -133,7 +133,7 @@ export default function AuthPage() {
     };
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         router.push('/'); // Oturum açıldığında ana sayfaya yönlendir
       }
@@ -143,27 +143,18 @@ export default function AuthPage() {
     };
   }, [router]);
 
-  // Policy modal fonksiyonları
   const openPolicyModal = useCallback((type) => {
     setModalContentType(type);
     setIsPolicyModalOpen(true);
   }, []);
-
   const closePolicyModal = useCallback(() => {
     setIsPolicyModalOpen(false);
     setModalContentType(null);
   }, []);
+  const openForgotModal = useCallback(() => setIsForgotModalOpen(true), []);
+  const closeForgotModal = useCallback(() => setIsForgotModalOpen(false), []);
 
-  // Forgot modal fonksiyonları
-  const openForgotModal = useCallback(() => {
-    setIsForgotModalOpen(true);
-  }, []);
-
-  const closeForgotModal = useCallback(() => {
-    setIsForgotModalOpen(false);
-  }, []);
-
-  // Form submit
+  // Form gönderimi
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
@@ -174,10 +165,10 @@ export default function AuthPage() {
       toast.error('Please accept the Terms of Service and Privacy Policy.', { duration: 1000 });
       return;
     }
+
     setLoading(true);
     try {
       if (isLogin) {
-        // Giriş
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           if (error.message.includes('Email not confirmed')) {
@@ -189,18 +180,14 @@ export default function AuthPage() {
         }
         if (data?.user) {
           toast.success('✅ Login successful!', { duration: 1000 });
-          // Oturum açıldığında yönlendirme otomatik yapılacak
+          // onAuthStateChange yönlendirir
         }
       } else {
-        // Kayıt
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: {
-              full_name: fullName,
-              phone: phone || null,
-            },
+            data: { full_name: fullName, phone: phone || null },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
@@ -222,23 +209,17 @@ export default function AuthPage() {
   return (
     <>
       {/* Toasts */}
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        toastOptions={{ duration: 1000 }}
-      />
+      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 1000 }} />
 
-      {/* Modals */}
+      {/* Policy Modal */}
       {isPolicyModalOpen && (
-        <PolicyModal
-          isOpen={isPolicyModalOpen}
-          onClose={closePolicyModal}
-          type={modalContentType}
-        />
+        <PolicyModal isOpen={isPolicyModalOpen} onClose={closePolicyModal} type={modalContentType} />
       )}
+
+      {/* Forgot Password Modal */}
       <ForgotPasswordModal isOpen={isForgotModalOpen} onClose={closeForgotModal} />
 
-      {/* Giriş/kayıt ekranı */}
+      {/* Auth UI */}
       <div className="flex items-center justify-center min-h-screen bg-[#ECE4DC] p-4">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl relative">
           <div className="flex justify-center mb-4">
@@ -247,6 +228,7 @@ export default function AuthPage() {
           <h2 className="text-3xl font-extrabold text-center text-[#be531c]">
             {isLogin ? 'Sign In' : 'Register Now'}
           </h2>
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
@@ -271,6 +253,7 @@ export default function AuthPage() {
                 />
               </>
             )}
+
             <FloatingLabelInput
               id="email"
               name="email"
@@ -344,6 +327,7 @@ export default function AuthPage() {
               {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
+
           <p className="text-sm text-center text-gray-600">
             {isLogin ? "Don't have an account?" : 'Already have an account?'}
             <button

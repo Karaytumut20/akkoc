@@ -8,9 +8,10 @@ import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
-import { assets } from "@/assets/assets";
+import { assets } from "@/assets/assets"; // logo, user_icon vs. buradan geliyor
 
-/* === ICONS (JSX, no TS types) === */
+/* === ICONS (JSX) === */
+// (Açıklama: Basit SVG ikonlar — projeye ek bağımlılık yok)
 const icons = {
   Menu: (p) => (
     <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,7 +35,7 @@ const icons = {
   ),
 };
 
-/* === LANGS === */
+/* === DİL LİSTESİ === */
 const LANGS = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
@@ -46,7 +47,8 @@ const LANGS = [
   { code: "ru", label: "Русский" },
 ];
 
-/* === COOKIE HELPERS === */
+/* === GOOGLE TRANSLATE COOKIE YARDIMCILARI === */
+// (Açıklama: Google Translate dropdown'u ile senkron kalmak için cookie yönetimi)
 function getBaseDomain() {
   const host = typeof window !== "undefined" ? window.location.hostname : "";
   if (!host) return "";
@@ -84,7 +86,7 @@ function triggerComboChange(lang) {
   return true;
 }
 
-/* === LANGUAGE HOOK === */
+/* === DİL HOOK'U === */
 function useCurrentLang(defaultLang = "en") {
   const [current, setCurrent] = useState(defaultLang);
   const pollIntervalRef = useRef(null);
@@ -149,7 +151,7 @@ function useCurrentLang(defaultLang = "en") {
   return [current, setLang];
 }
 
-/* === LANGUAGE SWITCHER === */
+/* === DİL DEĞİŞTİRİCİ === */
 function LanguageSwitcher({ dark = false }) {
   const [current, setLang] = useCurrentLang("en");
   const [open, setOpen] = useState(false);
@@ -221,7 +223,7 @@ function LanguageSwitcher({ dark = false }) {
   );
 }
 
-/* === MOBILE MENU (PORTAL) === */
+/* === MOBİL MENÜ (PORTAL) — Her zaman en üstte === */
 function MobileMenuPortal({ open, onClose, navLinks }) {
   const [mounted, setMounted] = useState(false);
 
@@ -255,7 +257,7 @@ function MobileMenuPortal({ open, onClose, navLinks }) {
   );
 }
 
-/* === MAIN NAVBAR === */
+/* === ANA NAVBAR === */
 export default function MainNavbar() {
   const { products, getSafeImageUrl, user, signOut, getCartCount } = useAppContext();
   const router = useRouter();
@@ -265,7 +267,6 @@ export default function MainNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  // isSticky state'i ve scroll effect'i kaldırıldı
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -281,29 +282,23 @@ export default function MainNavbar() {
 
   useEffect(() => setMounted(true), []);
 
+  // Dış tıklama: arama ve kullanıcı menüsü
   useEffect(() => {
     function handleClickOutside(event) {
-      // Arama Kontrolü
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchVisible(false);
       }
-      
-      // Kullanıcı Menüsü Kontrolü
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     }
-    
-    // Mobil/Masaüstü tutarlılığı için sadece 'click' olayını dinliyoruz
     document.addEventListener("click", handleClickOutside);
-    
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
-  // SCROLL EFFECTİ TAMAMEN KALDIRILDI
-
+  // Arama filtresi
   useEffect(() => {
     if (searchQuery.trim() !== "") {
       const filtered = products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -335,9 +330,7 @@ export default function MainNavbar() {
     { name: "CONTACT", href: "/contact" },
   ];
 
-  // TÜM SAYFALARDA fixed pozisyon kullanılıyor
   const headerClasses = "fixed top-0 left-0 right-0 z-[1000] bg-[#ECE4DC] text-gray-800 shadow-md transition-all duration-300";
-
   const logoSrc = assets.logo;
 
   return (
@@ -388,13 +381,13 @@ export default function MainNavbar() {
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 text-gray-800">
                     <Link href="/account" onClick={() => setIsUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-100">My Account</Link>
-                    {/* ✅ KRİTİK DÜZELTME: e.stopPropagation() eklendi */}
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); // Olayın menüyü kapatan dinleyiciye yayılmasını engeller
-                        signOut(); 
-                        setIsUserMenuOpen(false); 
-                      }} 
+                    {/* Çıkış: mobilde garanti çalışır */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // dış tıklama kapatma dinleyicisine yayılmasın
+                        setIsUserMenuOpen(false);
+                        signOut();
+                      }}
                       className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100"
                     >
                       Log Out
@@ -461,10 +454,10 @@ export default function MainNavbar() {
         </nav>
       </header>
 
-      {/* Mobile menu via portal (always on top) */}
+      {/* Mobil menü (Portal) */}
       <MobileMenuPortal open={menuOpen} onClose={() => setMenuOpen(false)} navLinks={navLinks} />
 
-      {/* Google Translate CSS fixes */}
+      {/* Google Translate CSS düzeltmeleri */}
       {mounted && (
         <style jsx global>{`
           .goog-te-banner-frame { display: none !important; }
