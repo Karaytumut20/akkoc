@@ -32,7 +32,7 @@ const US_STATES = [
   { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
 ];
 
-// Address Modal Component - GELİŞTİRİLMİŞ VERSİYON
+// Address Modal Component
 const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
   const { addAddress } = useAppContext();
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
   const modalRef = useRef(null);
   const backdropRef = useRef(null);
 
-  // Modal dışına tıklama ile kapatma
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (backdropRef.current && backdropRef.current === event.target) {
@@ -65,19 +64,16 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
-      // Modal açıldığında body'ye scroll'u engelle
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
-      // Modal kapandığında body scroll'u geri getir
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
 
-  // Modal açıldığında içeriği kaydırılabilir yap
   useEffect(() => {
     if (isOpen && modalRef.current) {
       modalRef.current.scrollTop = 0;
@@ -99,14 +95,12 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
     
     setLoading(true);
     
-    // Validate required fields
     if (!address.full_name || !address.phone_number || !address.pincode || !address.area || !address.city || !address.state) {
       toast.error("Please fill in all required fields.");
       setLoading(false);
       return;
     }
 
-    // Validate phone number format (basic validation)
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
     if (!phoneRegex.test(address.phone_number.replace(/[\s\-\(\)]/g, ''))) {
       toast.error("Please enter a valid phone number.");
@@ -114,7 +108,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
       return;
     }
 
-    // Validate zip code format (US zip codes)
     const zipRegex = /^\d{5}(-\d{4})?$/;
     if (!zipRegex.test(address.pincode)) {
       toast.error("Please enter a valid zip code (5 digits or 5+4 format).");
@@ -128,7 +121,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
     if (success) {
       onAddressAdded();
       onClose();
-      // Reset form
       setAddress({
         full_name: '',
         phone_number: '',
@@ -140,7 +132,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
     }
   };
 
-  // Form reset when modal closes
   useEffect(() => {
     if (!isOpen) {
       setAddress({
@@ -165,7 +156,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
         ref={modalRef}
         className="bg-[#ffffff] rounded-2xl shadow-2xl w-full max-w-md mx-4 my-auto min-h-[200px] max-h-[85vh] overflow-hidden flex flex-col"
       >
-        {/* Header - Sticky */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-[#ffffff] z-10">
           <div className="flex items-center gap-3">
             <FiMapPin className="w-5 h-5 md:w-6 md:h-6 text-[#be531c]" />
@@ -179,10 +169,8 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
           </button>
         </div>
 
-        {/* Form - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           <form onSubmit={onSubmitHandler} className="p-4 md:p-6 space-y-4">
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <FiUser className="w-4 h-4 text-gray-400" />
@@ -199,7 +187,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
               />
             </div>
 
-            {/* Phone Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <FiPhone className="w-4 h-4 text-gray-400" />
@@ -216,7 +203,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
               />
             </div>
 
-            {/* Zip Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <FiMapPin className="w-4 h-4 text-gray-400" />
@@ -233,7 +219,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
               />
             </div>
 
-            {/* Area and Street */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <FiHome className="w-4 h-4 text-gray-400" />
@@ -250,7 +235,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
               />
             </div>
 
-            {/* City and State */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -288,14 +272,12 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
               </div>
             </div>
 
-            {/* Required Fields Note */}
             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
               <p className="text-blue-700 text-xs md:text-sm">
                 * All fields are required
               </p>
             </div>
 
-            {/* Buttons - Sticky */}
             <div className="flex flex-col md:flex-row gap-3 pt-4 pb-2 bg-[#ffffff] sticky bottom-0">
               <button
                 type="button"
@@ -326,7 +308,6 @@ const AddressModal = ({ isOpen, onClose, onAddressAdded, user }) => {
   );
 };
 
-// Login Prompt Component - Sadece adres kısmında gösterilecek
 const LoginPrompt = ({ onLogin, onSignup }) => {
   return (
     <div className="text-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
@@ -347,12 +328,21 @@ const LoginPrompt = ({ onLogin, onSignup }) => {
 };
 
 const OrderSummary = () => {
-  const { currency, cartItems, user, updateCartQuantity, getCartCount, setCartItems, addresses, router } = useAppContext();
+  const { 
+    currency, 
+    cartItems, 
+    user, 
+    updateCartQuantity, 
+    removeCartItem,
+    getCartCount, 
+    addresses, 
+    router 
+  } = useAppContext();
   
   const [selectedAddress, setSelectedAddress] = useState("");
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponDetails, setCouponDetails] = useState(null); // Kupon detaylarını saklamak için
+  const [couponDetails, setCouponDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -364,20 +354,16 @@ const OrderSummary = () => {
   useEffect(() => {
     const checkCouponValidity = () => {
       if (appliedCoupon && couponDetails) {
-        const currentSubtotal = Object.values(cartItems).reduce((sum, item) => 
-          (item?.product?.price ?? 0) * (item?.quantity ?? 0) + sum, 0
-        );
+        const currentSubtotal = Object.values(cartItems).reduce((sum, item) => {
+          return sum + (item?.product?.calculatedTotal || 0);
+        }, 0);
 
-        // Minimum alışveriş tutarı kontrolü
         if (couponDetails.min_purchase_amount && currentSubtotal < couponDetails.min_purchase_amount) {
           toast.error(`Coupon "${appliedCoupon.code}" is no longer valid. Minimum purchase amount of ${currency}${couponDetails.min_purchase_amount.toFixed(2)} required.`);
           setAppliedCoupon(null);
           setCouponDetails(null);
           return;
         }
-
-        // Kullanım limiti kontrolü (opsiyonel - gerçek zamanlı olması için API çağrısı gerekebilir)
-        // Bu kısım opsiyonel, çünkü gerçek zamanlı kontrol için veritabanı sorgusu gerekir
       }
     };
 
@@ -388,23 +374,18 @@ const OrderSummary = () => {
   useEffect(() => {
     const calculateTotals = () => {
       const subtotalRaw = Object.values(cartItems).reduce((sum, item) => {
-        const price = item?.product?.price ?? 0;
-        const quantity = item?.quantity ?? 0;
-        return sum + (price * quantity);
+        return sum + (item?.product?.calculatedTotal || 0);
       }, 0);
 
       let calculatedDiscountAmount = 0;
       if (appliedCoupon && couponDetails) {
-        // Kupon hala geçerli mi kontrol et
-        const currentSubtotal = Object.values(cartItems).reduce((sum, item) => 
-          (item?.product?.price ?? 0) * (item?.quantity ?? 0) + sum, 0
-        );
+        const currentSubtotal = Object.values(cartItems).reduce((sum, item) => {
+          return sum + (item?.product?.calculatedTotal || 0);
+        }, 0);
 
         if (couponDetails.min_purchase_amount && currentSubtotal < couponDetails.min_purchase_amount) {
-          // Kupon geçersiz, indirim uygulama
           calculatedDiscountAmount = 0;
         } else {
-          // Kupon geçerli, indirimi hesapla
           if (couponDetails.discount_type === 'percentage') {
             calculatedDiscountAmount = subtotalRaw * (couponDetails.discount_value / 100);
             if (couponDetails.max_discount_amount && calculatedDiscountAmount > couponDetails.max_discount_amount) {
@@ -432,7 +413,7 @@ const OrderSummary = () => {
     calculateTotals();
   }, [cartItems, appliedCoupon, couponDetails]);
 
-  // Apply coupon function - GÜNCELLENDİ
+  // Apply coupon function
   const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) return toast.error("Please enter a coupon code.");
     setCouponLoading(true);
@@ -458,15 +439,14 @@ const OrderSummary = () => {
         throw new Error("This coupon has reached its usage limit.");
       }
 
-      const currentSubtotal = Object.values(cartItems).reduce((sum, item) => 
-        (item?.product?.price ?? 0) * (item?.quantity ?? 0) + sum, 0
-      );
+      const currentSubtotal = Object.values(cartItems).reduce((sum, item) => {
+        return sum + (item?.product?.calculatedTotal || 0);
+      }, 0);
 
       if (coupon.min_purchase_amount && currentSubtotal < coupon.min_purchase_amount) {
         throw new Error(`Minimum purchase amount of ${currency}${coupon.min_purchase_amount.toFixed(2)} required.`);
       }
 
-      // Kupon bilgilerini ayrıca sakla (minimum tutar kontrolü için)
       setCouponDetails({
         min_purchase_amount: coupon.min_purchase_amount,
         discount_type: coupon.discount_type,
@@ -493,32 +473,27 @@ const OrderSummary = () => {
     }
   };
 
-  // Remove coupon function - GÜNCELLENDİ
+  // Remove coupon function
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponDetails(null);
     toast.success("Coupon removed.");
   };
 
-  // Quantity change function - GÜNCELLENDİ
-  const handleQuantityChange = (productId, newQuantity) => {
+  // Miktar değiştirme - DÜZELTİLMİŞ FİYAT SİSTEMİ
+  const handleQuantityChange = (cartItemId, newQuantity) => {
     if (newQuantity <= 0) {
-      setPendingDelete(productId);
+      setPendingDelete(cartItemId);
       setShowConfirmModal(true);
     } else {
-      updateCartQuantity(productId, newQuantity);
+      updateCartQuantity(cartItemId, newQuantity);
     }
   };
 
-  // Delete confirm function - GÜNCELLENDİ
+  // Silme onayı
   const handleDeleteConfirm = () => {
     if (pendingDelete) {
-      const updatedCart = { ...cartItems };
-      delete updatedCart[pendingDelete];
-      setCartItems(updatedCart);
-      toast.success("Product removed from cart 🛒");
-      
-      // Sepet değişti, kupon geçerliliği useEffect tarafından otomatik kontrol edilecek
+      removeCartItem(pendingDelete);
     }
     setPendingDelete(null);
     setShowConfirmModal(false);
@@ -543,7 +518,6 @@ const OrderSummary = () => {
     router.push('/auth');
   };
 
-  // Handle signup redirect
   const handleSignup = () => {
     router.push('/auth');
   };
@@ -559,11 +533,10 @@ const OrderSummary = () => {
       return;
     }
 
-    // Son bir kupon geçerlilik kontrolü
     if (appliedCoupon && couponDetails) {
-      const currentSubtotal = Object.values(cartItems).reduce((sum, item) => 
-        (item?.product?.price ?? 0) * (item?.quantity ?? 0) + sum, 0
-      );
+      const currentSubtotal = Object.values(cartItems).reduce((sum, item) => {
+        return sum + (item?.product?.calculatedTotal || 0);
+      }, 0);
 
       if (couponDetails.min_purchase_amount && currentSubtotal < couponDetails.min_purchase_amount) {
         toast.error(`Coupon "${appliedCoupon.code}" is no longer valid. Please remove it or add more items to your cart.`);
@@ -602,9 +575,42 @@ const OrderSummary = () => {
     }
   };
 
-  // Sadece modal kapatma işlemi
   const handleAddressAdded = () => {
-    // Bu fonksiyon artık sadece modal'ın kapanması için kullanılıyor
+    // Modal kapatma işlemi
+  };
+
+  // Helper function to get display name for price type
+  const getPriceTypeDisplay = (priceType) => {
+    const typeMap = {
+      'standard': 'Standard',
+      '2_pack': '2-Pack',
+      '3_pack': '3-Pack', 
+      '4_pack': '4-Pack',
+      '5_pack': '5-Pack',
+      '6_pack': '6-Pack',
+      '7_pack': '7-Pack',
+      '8_pack': '8-Pack',
+      '9_pack': '9-Pack',
+      '10_pack': '10-Pack',
+      '11_pack': '11-Pack'
+    };
+    return typeMap[priceType] || priceType;
+  };
+
+  // Helper function to calculate savings - DÜZELTİLMİŞ
+  const calculateSavings = (item) => {
+    if (!item.isPromotional) return null;
+    
+    // Orijinal toplam fiyat (normal fiyat × miktar)
+    const originalTotal = item.product.originalPrice * item.quantity;
+    // Gerçek toplam fiyat (calculatedTotal)
+    const actualTotal = item.product.calculatedTotal;
+    const savings = originalTotal - actualTotal;
+    
+    return {
+      amount: savings,
+      percentage: ((savings / originalTotal) * 100).toFixed(0)
+    };
   };
 
   return (
@@ -653,7 +659,7 @@ const OrderSummary = () => {
           )}
         </div>
 
-        {/* Cart Items List */}
+        {/* Cart Items List - DÜZELTİLMİŞ FİYAT SİSTEMİ */}
         <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 max-h-[40vh] md:max-h-[50vh] overflow-y-auto pr-2">
           {Object.keys(cartItems).length === 0 ? (
             <div className="text-center py-6 md:py-8">
@@ -667,49 +673,86 @@ const OrderSummary = () => {
               </button>
             </div>
           ) : (
-            Object.values(cartItems).map((item, idx) => (
-              <div
-                key={item.product.id || idx}
-                className="flex items-center gap-3 md:gap-4 bg-gray-50 p-3 md:p-4 rounded-xl hover:shadow-md transition-all duration-200"
-              >
-                <div className="w-12 h-12 md:w-16 md:h-16 relative rounded-lg overflow-hidden flex-shrink-0">
-                  <Image
-                    src={item.product.image_urls?.[0] || "/assets/placeholder.jpg"}
-                    alt={item.product.name}
-                    fill
-                    className="object-cover"
-                  />
+            Object.entries(cartItems).map(([cartItemId, item]) => {
+              const savings = calculateSavings(item);
+              
+              return (
+                <div
+                  key={cartItemId}
+                  className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl hover:shadow-md transition-all duration-200 relative ${
+                    item.isPromotional ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                  }`}
+                >
+                  {item.isPromotional && (
+                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      SAVE {savings?.percentage}%
+                    </div>
+                  )}
+                  <div className="w-12 h-12 md:w-16 md:h-16 relative rounded-lg overflow-hidden flex-shrink-0">
+                    <Image
+                      src={item.product.image_urls?.[0] || "/assets/placeholder.jpg"}
+                      alt={item.product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 text-xs md:text-sm truncate">
+                      {item.product.name}
+                      {item.isPromotional && (
+                        <span className="ml-2 text-green-600 text-xs">({getPriceTypeDisplay(item.priceType)} Price)</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs md:text-sm text-gray-500">
+                        {currency}{item.product.price.toFixed(2)} each
+                      </p>
+                      {item.isPromotional && (
+                        <p className="text-xs text-gray-400 line-through">
+                          {currency}{item.product.originalPrice.toFixed(2)} each
+                        </p>
+                      )}
+                    </div>
+                    {savings && (
+                      <p className="text-xs text-green-600 font-semibold mt-1">
+                        You save {currency}{savings.amount.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <button
+                      onClick={() => handleQuantityChange(cartItemId, item.quantity - 1)}
+                      className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg transition text-xs md:text-sm"
+                    >
+                      -
+                    </button>
+                    <span className="w-6 text-center font-medium text-gray-700 text-xs md:text-sm">{item.quantity}</span>
+                    <button
+                      onClick={() => handleQuantityChange(cartItemId, item.quantity + 1)}
+                      className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg transition text-xs md:text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="text-right min-w-[60px] md:min-w-[80px]">
+                    <p className={`font-semibold text-xs md:text-sm ${
+                      item.isPromotional ? 'text-green-600' : 'text-gray-900'
+                    }`}>
+                      {currency}{(item.product.calculatedTotal || 0).toFixed(2)}
+                    </p>
+                    {item.isPromotional && (
+                      <p className="text-xs text-gray-400 line-through">
+                        {currency}{(item.product.originalPrice * item.quantity).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 text-xs md:text-sm truncate">{item.product.name}</p>
-                  <p className="text-xs md:text-sm text-gray-500">{currency}{item.product.price.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-1 md:gap-2">
-                  <button
-                    onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}
-                    className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg transition text-xs md:text-sm"
-                  >
-                    -
-                  </button>
-                  <span className="w-6 text-center font-medium text-gray-700 text-xs md:text-sm">{item.quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
-                    className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg transition text-xs md:text-sm"
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="text-right min-w-[60px] md:min-w-[80px]">
-                  <p className="font-semibold text-gray-900 text-xs md:text-sm">
-                    {currency}{(item.product.price * item.quantity).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
-        {/* Address Selection - Enhanced */}
+        {/* Address Selection */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <div className="flex items-center gap-2">
@@ -746,7 +789,6 @@ const OrderSummary = () => {
             </div>
           )}
 
-          {/* SADECE BURADA GİRİŞ KONTROLÜ GÖSTERİLİYOR */}
           {!user ? (
             <LoginPrompt onLogin={handleLogin} onSignup={handleSignup} />
           ) : addresses.length > 0 ? (
