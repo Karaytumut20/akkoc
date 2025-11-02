@@ -10,7 +10,7 @@ const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 
 export const metadata = {
   title: "Nestcome",
-  description: "Nestcome",
+  description: "Discover luxury homeware, tableware, and decor at Nestcome. Elevate your living spaces with timeless elegance and quality craftsmanship.",
 };
 
 export default function RootLayout({ children }) {
