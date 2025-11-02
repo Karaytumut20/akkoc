@@ -4,62 +4,73 @@ import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
 import { Toaster } from "react-hot-toast";
 import LayoutContent from "@/components/LayoutContent";
-import Script from "next/script"; // ✅ Eksik olan import eklendi!
+import Script from "next/script";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 
 export const metadata = {
   title: "Nestcome",
-  description: "Discover luxury homeware, tableware, and decor at Nestcome. Elevate your living spaces with timeless elegance and quality craftsmanship.",
+  description:
+    "Discover luxury homeware, tableware, and decor at Nestcome. Elevate your living spaces with timeless elegance and quality craftsmanship.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${outfit.className} antialiased text-gray-700 bg-[#ECE4DC]`}>
+      <head>
+        {/* ✅ Schema.org — Google favicon ve logo için */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Nestcome",
+              url: "https://nestcome.com",
+              logo: "https://nestcome.com/favicon.ico",
+            }),
+          }}
+        />
+      </head>
+
+      <body
+        className={`${outfit.className} antialiased text-gray-700 bg-[#ECE4DC]`}
+      >
         <Toaster />
         <AppContextProvider>
           <LayoutContent>{children}</LayoutContent>
 
-          {/* ✅ Google Translate bar'ı gizleyen script */}
+          {/* ✅ Google Translate bar gizleme scripti */}
           <Script id="force-remove-google-bar" strategy="afterInteractive">
-  {`
-    const removeGoogleTranslateBar = () => {
-      // Üstteki çeviri barını sil
-      const banner = document.querySelector('.goog-te-banner-frame.skiptranslate');
-      if (banner) {
-        banner.style.display = 'none';
-        banner.style.visibility = 'hidden';
-      }
-
-      // body top boşluğunu sıfırla
-      document.body.style.top = '0px';
-
-      // Tooltip iframe varsa onu da kaldır
-      const balloon = document.querySelector('.goog-te-balloon-frame');
-      if (balloon) {
-        balloon.style.display = 'none';
-        balloon.style.visibility = 'hidden';
-      }
-
-      // Tooltip divlerini yok et
-      const tooltip = document.getElementById('goog-gt-tt');
-      if (tooltip) {
-        tooltip.remove();
-      }
-    };
-
-    // İlk açılışta ve her dil değişiminde tekrar çalıştır
-    document.addEventListener('DOMContentLoaded', () => {
-      const interval = setInterval(removeGoogleTranslateBar, 500);
-      setTimeout(() => clearInterval(interval), 10000);
-    });
-
-    // Bazı durumlarda Google sonradan inject ettiği için dil değiştiğinde de çalıştırıyoruz
-    window.addEventListener('load', removeGoogleTranslateBar);
-  `}
-</Script>
-
+            {`
+              const removeGoogleTranslateBar = () => {
+                const banner = document.querySelector('.goog-te-banner-frame.skiptranslate');
+                if (banner) {
+                  banner.style.display = 'none';
+                  banner.style.visibility = 'hidden';
+                }
+                document.body.style.top = '0px';
+                const balloon = document.querySelector('.goog-te-balloon-frame');
+                if (balloon) {
+                  balloon.style.display = 'none';
+                  balloon.style.visibility = 'hidden';
+                }
+                const tooltip = document.getElementById('goog-gt-tt');
+                if (tooltip) {
+                  tooltip.remove();
+                }
+              };
+              document.addEventListener('DOMContentLoaded', () => {
+                const interval = setInterval(removeGoogleTranslateBar, 500);
+                setTimeout(() => clearInterval(interval), 10000);
+              });
+              window.addEventListener('load', removeGoogleTranslateBar);
+            `}
+          </Script>
         </AppContextProvider>
       </body>
     </html>
