@@ -159,8 +159,7 @@ const Product = () => {
     setLoading(false);
   }, [id]);
   // Function to check if the current user can review (has purchased, hasn't reviewed yet)
-  const checkIfUserCanReview = useCallback(async () => {
-    // Exit if no user, ID, or product data is available
+const checkIfUserCanReview = useCallback(async () => {
     if (!user || !id || !productData) {
       setUserReview(null);
       setHasPurchased(false);
@@ -168,36 +167,40 @@ const Product = () => {
     }
 
     try {
-        // Check if the user has already left a review for this product
-        const { data: userRev, error: reviewCheckError } = await supabase
+        // DEĞİŞİKLİK BURADA: .maybeSingle() yerine .limit(1) kullanıyoruz.
+        // Bu sayede birden fazla kayıt varsa bile hata vermez, sadece ilkini alır.
+        const { data: userRevData, error: reviewCheckError } = await supabase
           .from("reviews")
           .select("*")
           .eq("product_id", id)
           .eq("user_id", user.id)
-          .maybeSingle(); // Use maybeSingle to handle 0 or 1 result without error
-        if (reviewCheckError) console.error("Error checking user review:", reviewCheckError);
-        setUserReview(userRev || null); // Set user's review or null
+          .limit(1);
 
-        // Check if the user has purchased this product by looking at order_items
+        if (reviewCheckError) {
+            console.error("Error checking user review:", reviewCheckError);
+        }
+        
+        // Dizi boş değilse ilk elemanı al, yoksa null
+        const reviewFound = userRevData && userRevData.length > 0 ? userRevData[0] : null;
+        setUserReview(reviewFound);
+
+        // Satın alma kontrolü (Burası aynı kalabilir)
         const { data: purchaseData, error: purchaseCheckError } = await supabase
           .from("order_items")
-          .select(`id, orders!inner(user_id)`) // Select via inner join to orders table
-          .eq("product_id", id) // Match product ID
-          .eq("orders.user_id", user.id) // Match user ID in the orders table
-          .limit(1); // Only need one record to confirm purchase
+          .select(`id, orders!inner(user_id)`)
+          .eq("product_id", id)
+          .eq("orders.user_id", user.id)
+          .limit(1);
 
         if (purchaseCheckError) console.error("Error checking purchase status:", purchaseCheckError);
-        // Set purchase status based on whether any matching records were found
         setHasPurchased(purchaseData && purchaseData.length > 0);
 
     } catch (err) {
         console.error("Error in checkIfUserCanReview:", err);
-        // Reset states in case of error
         setUserReview(null);
         setHasPurchased(false);
     }
-  }, [user, id, productData]); // Dependencies: run when these change
-
+  }, [user, id, productData]);
   // Fetch product details when the component mounts or ID changes
   useEffect(() => {
     fetchProductDetails();
