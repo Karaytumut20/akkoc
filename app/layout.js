@@ -1,4 +1,5 @@
-// app/layout.jsx
+// app/layout.js
+
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
@@ -8,21 +9,41 @@ import Script from "next/script";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 
+// 👇 GÜNCELLEMEN GEREKEN KISIM BURASI 👇
 export const metadata = {
-  title: "Nestcome",
+  // 1. Sitenin ana adresini buraya mutlaka tanımlamalısın (SEO için en kritik satır)
+  metadataBase: new URL('https://nestcome.com'), 
+
+  title: {
+    default: "Nestcome | Luxury Homeware & Decor",
+    template: "%s | Nestcome" // Alt sayfalarda "Ürün Adı | Nestcome" şeklinde görünmesini sağlar
+  },
   description:
     "Discover luxury homeware, tableware, and decor at Nestcome. Elevate your living spaces with timeless elegance and quality craftsmanship.",
+  
+  // 2. Canonical URL ayarı (Google'a "Orijinal sayfa burasıdır" der)
+  alternates: {
+    canonical: './',
+  },
+
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
+  
+  // Robotların siteni taramasına izin ver
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
+// 👆 GÜNCELLEME SONU 👆
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* ✅ Schema.org — Google favicon ve logo için */}
+        {/* Schema.org verisi doğru, kalabilir */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -44,7 +65,7 @@ export default function RootLayout({ children }) {
         <AppContextProvider>
           <LayoutContent>{children}</LayoutContent>
 
-          {/* ✅ Google Translate bar gizleme scripti */}
+          {/* Google Translate gizleme scripti doğru, kalabilir */}
           <Script id="force-remove-google-bar" strategy="afterInteractive">
             {`
               const removeGoogleTranslateBar = () => {
