@@ -59,48 +59,55 @@ const Product = () => {
     : false;
 
   // Function to fetch product details and reviews
+// Function to fetch product details and reviews
   const fetchProductDetails = useCallback(async () => {
-    if (!id) return; // Exit if no ID is present
-    setLoading(true); // Start loading indicator
+    if (!id) return; 
+    setLoading(true); 
     try {
-      // Fetch product information including category and bulk prices (GÜNCELLENDİ)
+      // Ürün detaylarını çek
       const { data: productInfo, error: productError } = await supabase
         .from("products")
-        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack, price_5_pack, price_6_pack, price_7_pack, price_8_pack, price_9_pack, price_10_pack, price_11_pack") // Tüm paket fiyatlarını çek
-        .eq("id", id) // Filter by product ID
-        .single(); // Expect only one result
+        .select("*, categories(name), price_2_pack, price_3_pack, price_4_pack, price_5_pack, price_6_pack, price_7_pack, price_8_pack, price_9_pack, price_10_pack, price_11_pack")
+        .eq("id", id)
+        .single();
 
-      // Handle product fetch error
       if (productError) {
           console.error("Product fetch error:", productError);
-          toast.error("An error occurred while loading product details.");
+          toast.error("Ürün detayları yüklenirken hata oluştu.");
           setLoading(false);
-          setProductData(null); // Ensure productData is null on error
-          return; // Exit function on error
+          setProductData(null);
+          return;
       }
 
-      // Process image URLs: ensure it's always an array
+      // Görselleri işle
       let imageUrls = [];
       if (typeof productInfo.image_urls === "string") {
         try {
-          imageUrls = JSON.parse(productInfo.image_urls); // Parse if it's a JSON string
+          imageUrls = JSON.parse(productInfo.image_urls);
         } catch {
-          imageUrls = []; // Default to empty array on parse error
+          imageUrls = [];
         }
       } else if (Array.isArray(productInfo.image_urls)) {
-        imageUrls = productInfo.image_urls; // Use if it's already an array
+        imageUrls = productInfo.image_urls;
       }
-      // Update product data state with processed image URLs
       setProductData({ ...productInfo, image_urls: imageUrls });
 
-      // Fetch reviews for the product (without joining users table directly)
+      // --- ⭐ KRİTİK DÜZELTME BURADA: 'images' SÜTUNU EKLENDİ ---
       const { data: reviewData, error: reviewError } = await supabase
         .from("reviews")
-        .select(`id, product_id, user_id, rating, comment, is_approved, created_at`) // Select all necessary review columns
-        .eq("product_id", id) // Filter by product ID
-        .order("created_at", { ascending: false }); // Newest reviews first
+        .select(`
+          id, 
+          product_id, 
+          user_id, 
+          rating, 
+          comment, 
+          is_approved, 
+          created_at, 
+          images 
+        `) // <-- 'images' buraya eklendi
+        .eq("product_id", id)
+        .order("created_at", { ascending: false });
 
-      // Handle review fetch error (log it but continue rendering)
       if (reviewError) {
           console.error("Review fetch error:", reviewError);
           setReviews([]);
@@ -111,56 +118,46 @@ const Product = () => {
           if (finalReviews.length > 0) {
               const userIds = [...new Set(finalReviews.map(r => r.user_id).filter(id => id))];
               
-              // === Yorumu yapan kullanıcı bilgilerini çekme (user_id'ler ile) ===
-              // auth.users tablosundan bilgi çekmek için RPC fonksiyonu kullanıyoruz.
-              // Bu fonksiyonun (get_users_by_ids) Supabase'de tanımlı olması gerekir.
               let usersData = [];
               const { data: fetchedUsers, error: usersError } = await supabase
                   .rpc('get_users_by_ids', { user_ids: userIds }); 
 
               if (usersError) {
-                  // RPC başarısız olursa, bir hata mesajı logla ama devam et
-                  console.error("Kullanıcı bilgileri RPC ile alınamadı:", usersError.message);
+                  console.error("Kullanıcı bilgileri alınamadı:", usersError.message);
               } else {
-                  // Kullanıcı verilerini (id, email, raw_user_meta_data) içeren bir dizi beklenir.
                   usersData = fetchedUsers || [];
               }
-              // =================================================================================
 
-              // Yorumları kullanıcı bilgileriyle birleştir
               finalReviews = finalReviews.map(review => {
                   const userProfile = usersData.find(u => u.id === review.user_id);
                   return {
                       ...review,
                       reviewer: userProfile ? {
                           email: userProfile.email,
-                          // Display Name, Full Name ve Phone'u raw_user_meta_data'dan al
                           display_name: userProfile.raw_user_meta_data?.display_name || null,
-                          full_name: userProfile.raw_user_meta_data?.full_name || null, // Full Name'i metadata'dan al
+                          full_name: userProfile.raw_user_meta_data?.full_name || null,
                           phone: userProfile.raw_user_meta_data?.phone || null,
                       } : null
                   };
               });
           }
 
-          // Güncel verilerle state'leri ayarla
           setReviews(finalReviews);
-          // Ortalama puanı onaylaı yorumlara göre hesapla
+          
           const approvedReviews = finalReviews.filter(r => r.is_approved === true || r.is_approved === 'true' || r.is_approved === 1);
           const totalRating = approvedReviews.reduce((sum, r) => sum + (r.rating || 0), 0);
           setAverageRating(approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0);
       }
 
-    } catch (err) { // Catch any unexpected errors during fetch
-      console.error("General fetch error in product page:", err);
-      toast.error("An unexpected error occurred while loading the page.");
-      setProductData(null); // Reset product data on error
-      setReviews([]); // Reset reviews
+   } catch (err) {
+      console.error("General error:", err);
+      toast.error("An error occurred while loading the page."); // Çevrildi
+      setProductData(null);
+      setReviews([]);
       setAverageRating(0);
     }
-    setLoading(false); // Stop loading indicator
-  }, [id]); // Dependency: re-run if product ID changes
-
+    setLoading(false);
+  }, [id]);
   // Function to check if the current user can review (has purchased, hasn't reviewed yet)
   const checkIfUserCanReview = useCallback(async () => {
     // Exit if no user, ID, or product data is available
